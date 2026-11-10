@@ -1,0 +1,326 @@
+{
+  "assemblies": [
+    {
+      "name": "hg38",
+      "displayName": "Human (hg38)",
+      "sequence": {
+        "type": "ReferenceSequenceTrack",
+        "trackId": "hg38-refseq",
+        "metadata": {
+          "description": "Dec. 2013 (GRCh38/hg38)",
+          "nibPath": "/gbdb/hg38",
+          "organism": "Human",
+          "defaultPos": "chr7:155799529-155812871",
+          "active": 1,
+          "orderKey": 50,
+          "genome": "Human",
+          "scientificName": "Homo sapiens",
+          "htmlPath": "/gbdb/hg38/html/description.html",
+          "hgNearOk": 1,
+          "hgPbOk": 0,
+          "sourceName": "GRCh38 Genome Reference Consortium Human Reference 38 (GCA_000001405.15)",
+          "taxId": 9606,
+          "id": "hg38",
+          "name": "hg38",
+          "accession": "hg38",
+          "commonName": "Human",
+          "jbrowseConfig": "https://jbrowse.org/ucsc/hg38/config.json",
+          "jbrowseMinimalConfig": "https://jbrowse.org/ucsc/hg38/minimal.json",
+          "blatDb": "hg38"
+        },
+        "adapter": {
+          "type": "TwoBitAdapter",
+          "uri": "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit",
+          "chromSizes": "https://jbrowse.org/ucsc/hg38/hg38.chrom.sizes"
+        }
+      },
+      "refNameAliases": {
+        "adapter": {
+          "type": "RefNameAliasAdapter",
+          "uri": "https://jbrowse.org/ucsc/hg38/hg38.chromAlias.txt"
+        }
+      },
+      "cytobands": {
+        "adapter": {
+          "type": "CytobandAdapter",
+          "uri": "https://jbrowse.org/ucsc/hg38/hg38.cytoBand.txt.gz"
+        }
+      },
+      "circularRefNames": [
+        "chrM"
+      ],
+      "geneticCodes": {
+        "chrM": 2
+      }
+    }
+  ],
+  "plugins": [
+    {
+      "name": "Blat",
+      "storePlugin": "Blat",
+      "url": "https://jbrowse.org/plugins/jbrowse-plugin-blat/latest/dist/jbrowse-plugin-blat.umd.production.min.js"
+    },
+    {
+      "name": "MafViewer",
+      "url": "https://jbrowse.org/plugins/jbrowse-plugin-mafviewer/latest/dist/jbrowse-plugin-mafviewer.umd.production.min.js"
+    },
+    {
+      "name": "Hubs",
+      "storePlugin": "Hubs",
+      "url": "https://jbrowse.org/plugins/@cmdcolin/jbrowse-plugin-hubs/latest/dist/jbrowse-plugin-hubs.umd.production.min.js"
+    },
+    {
+      "name": "Protein3d",
+      "storePlugin": "Protein3d",
+      "url": "https://jbrowse.org/plugins/jbrowse-plugin-protein3d/latest/dist/jbrowse-plugin-protein3d.umd.production.min.js"
+    },
+    {
+      "name": "MsaView",
+      "storePlugin": "MsaView",
+      "url": "https://jbrowse.org/plugins/jbrowse-plugin-msaview/latest/dist/jbrowse-plugin-msaview.umd.production.min.js"
+    }
+  ],
+  "aggregateTextSearchAdapters": [
+    {
+      "type": "TrixTextSearchAdapter",
+      "textSearchAdapterId": "hg38-index",
+      "ixFilePath": {
+        "uri": "https://jbrowse.org/ucsc/hg38/trix/hg38.ix",
+        "locationType": "UriLocation"
+      },
+      "ixxFilePath": {
+        "uri": "https://jbrowse.org/ucsc/hg38/trix/hg38.ixx",
+        "locationType": "UriLocation"
+      },
+      "assemblyNames": [
+        "hg38"
+      ]
+    }
+  ],
+  "tracks": [
+    {
+      "trackId": "hg38-clinvarMain",
+      "name": "ClinVar Variants - ClinVar SNVs",
+      "type": "FeatureTrack",
+      "assemblyNames": [
+        "hg38"
+      ],
+      "adapter": {
+        "type": "BigBedAdapter",
+        "uri": "https://hgdownload.soe.ucsc.edu/gbdb/hg38/bbi/clinvar/clinvarMain.bb"
+      },
+      "metadata": {
+        "ucsc": {
+          "bigDataUrl": "https://jbrowse.org/gbdb/hg38/bbi/clinvar/clinvarMain.bb",
+          "decorator.default.bigDataUrl": "https://jbrowse.org/gbdb/hg38/bbi/clinvar/clinvarMainDecor.bb",
+          "decorator.default.blockMode": "hide",
+          "decorator.default.glyphMode": "hide",
+          "filter._varLen": "0",
+          "filterByRange._varLen": "on",
+          "filterLabel._originCode": "Alelle Origin",
+          "filterLimits._varLen": "0:49",
+          "filterType._allTypeCode": "multiple",
+          "filterType._clinSignCode": "multiple",
+          "filterType._originCode": "multiple",
+          "filterValues._allTypeCode": "SUBST|single nucleotide variant - SUBST,STRUCT|translocation and fusion - STRUCT,LOSS|deletion and copy loss - LOSS,GAIN|duplication and copy gain - GAIN,INS|indel and insertion - INS,INV|inversion - INV,SEQALT|undetermined - SEQALT,SEQLEN|repeat change - SEQLEN",
+          "filterValues._clinSignCode": "BN|benign,LB|likely benign,CF|conflicting,PG|pathogenic,LP|likely pathogenic,RF|risk factor,OT|other,VUS|vus",
+          "filterValues._originCode": "GERM|germline,SOM|somatic,GERMSOM|germline/somatic,UNK|unknown",
+          "filterValues.molConseq": "genic downstream transcript variant|genic downstream transcript variant,no sequence alteration|no sequence alteration,inframe indel|inframe indel,stop lost|stop lost,genic upstream transcript variant|genic upstream transcript variant,initiatior codon variant|initiatior codon variant,inframe insertion|inframe insertion,inframe deletion|inframe deletion,splice acceptor variant|splice acceptor variant,splice donor variant|splice donor variant,5 prime UTR variant|5 prime UTR variant,nonsense|nonsense,non-coding transcript variant|non-coding transcript variant,3 prime UTR variant|3 prime UTR variant,frameshift variant|frameshift variant,intron variant|intron variant,synonymous variant|synonymous variant,missense variant|missense variant,|unknown,initiator codon variant|initiator codon variant",
+          "group": "phenDis",
+          "itemRgb": "on",
+          "labelFields": "_label",
+          "longLabel": "ClinVar Short Nucleotide Variants < 50bp",
+          "maxWindowCoverage": "10000000",
+          "mouseOverField": "_mouseOver",
+          "noScoreFilter": "on",
+          "parent": "clinvar",
+          "priority": "1",
+          "searchIndex": "_dbVarSsvId,snpId,vcvId",
+          "shortLabel": "ClinVar SNVs",
+          "showCfg": "on",
+          "track": "clinvarMain",
+          "type": "bigBed 12 +",
+          "urls": "rcvAcc=\"https://www.ncbi.nlm.nih.gov/clinvar/$$/\" geneId=\"https://www.ncbi.nlm.nih.gov/gene/$$\" snpId=\"https://www.ncbi.nlm.nih.gov/snp/$$\" nsvId=\"https://www.ncbi.nlm.nih.gov/dbvar/variants/$$/\" origName=\"https://www.ncbi.nlm.nih.gov/clinvar/variation/$$/\"",
+          "visibility": "hide",
+          "html": ""
+        }
+      },
+      "description": "ClinVar Short Nucleotide Variants < 50bp",
+      "category": [
+        "Phenotypes, Variants, and Literature"
+      ],
+      "formatDetails": {
+        "feature": "jexl:{'rcvAcc':feature.rcvAcc?(replaceAll((''+feature.rcvAcc),',','')==(''+feature.rcvAcc)?'<a href=\"'+'https://www.ncbi.nlm.nih.gov/clinvar/'+split((''+feature.rcvAcc),'|')[0]+'/'+'\">'+(split((''+feature.rcvAcc),'|')[1]?split((''+feature.rcvAcc),'|')[1]:(''+feature.rcvAcc))+'</a>':feature.rcvAcc):feature.rcvAcc,'geneId':feature.geneId?(replaceAll((''+feature.geneId),',','')==(''+feature.geneId)?'<a href=\"'+'https://www.ncbi.nlm.nih.gov/gene/'+split((''+feature.geneId),'|')[0]+'\">'+(split((''+feature.geneId),'|')[1]?split((''+feature.geneId),'|')[1]:(''+feature.geneId))+'</a>':feature.geneId):feature.geneId,'snpId':feature.snpId?(replaceAll((''+feature.snpId),',','')==(''+feature.snpId)?'<a href=\"'+'https://www.ncbi.nlm.nih.gov/snp/'+split((''+feature.snpId),'|')[0]+'\">'+(split((''+feature.snpId),'|')[1]?split((''+feature.snpId),'|')[1]:(''+feature.snpId))+'</a>':feature.snpId):feature.snpId,'nsvId':feature.nsvId?(replaceAll((''+feature.nsvId),',','')==(''+feature.nsvId)?'<a href=\"'+'https://www.ncbi.nlm.nih.gov/dbvar/variants/'+split((''+feature.nsvId),'|')[0]+'/'+'\">'+(split((''+feature.nsvId),'|')[1]?split((''+feature.nsvId),'|')[1]:(''+feature.nsvId))+'</a>':feature.nsvId):feature.nsvId,'origName':feature.origName?(replaceAll((''+feature.origName),',','')==(''+feature.origName)?'<a href=\"'+'https://www.ncbi.nlm.nih.gov/clinvar/variation/'+split((''+feature.origName),'|')[0]+'/'+'\">'+(split((''+feature.origName),'|')[1]?split((''+feature.origName),'|')[1]:(''+feature.origName))+'</a>':feature.origName):feature.origName}"
+      },
+      "displays": [
+        {
+          "type": "LinearBasicDisplay",
+          "displayId": "hg38-clinvarMain-LinearBasicDisplay",
+          "labels": {
+            "name": "jexl:get(feature,'_label')"
+          },
+          "tooltip": "jexl:get(feature,'_mouseOver')",
+          "encoding": {
+            "color": {
+              "field": "_clinSignCode",
+              "scale": {
+                "type": "ordinal",
+                "domain": [
+                  "PG",
+                  "LP",
+                  "VUS",
+                  "RF",
+                  "CF",
+                  "LB",
+                  "BN",
+                  "OT"
+                ],
+                "range": [
+                  "rgb(210,0,0)",
+                  "rgb(210,0,0)",
+                  "rgb(0,0,128)",
+                  "rgb(0,0,128)",
+                  "rgb(137,121,212)",
+                  "rgb(0,210,0)",
+                  "rgb(0,210,0)",
+                  "rgb(128,128,128)"
+                ],
+                "names": [
+                  "Pathogenic",
+                  "Likely pathogenic",
+                  "Uncertain significance",
+                  "Risk factor",
+                  "Conflicting",
+                  "Likely benign",
+                  "Benign",
+                  "Other"
+                ]
+              },
+              "legend": {
+                "title": "Clinical significance"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "FeatureTrack",
+      "trackId": "hg38-ncbiRefSeqCurated",
+      "name": "NCBI RefSeq - RefSeq Curated",
+      "assemblyNames": [
+        "hg38"
+      ],
+      "adapter": {
+        "type": "Gff3TabixAdapter",
+        "gffGzLocation": {
+          "uri": "https://jbrowse.org/ucsc/hg38/ncbiRefSeqCurated.gff.gz"
+        },
+        "index": {
+          "indexType": "CSI",
+          "location": {
+            "uri": "https://jbrowse.org/ucsc/hg38/ncbiRefSeqCurated.gff.gz.csi"
+          }
+        }
+      },
+      "metadata": {
+        "ucsc": {
+          "baseColorDefault": "genomicCodons",
+          "baseColorUseCds": "given",
+          "color": "12,12,120",
+          "idXref": "ncbiRefSeqLink mrnaAcc name",
+          "longLabel": "NCBI RefSeq genes, curated subset (NM_*, NR_*, NP_* or YP_*)",
+          "parent": "refSeqComposite on",
+          "priority": "2",
+          "shortLabel": "RefSeq Curated",
+          "track": "ncbiRefSeqCurated",
+          "html": ""
+        },
+        "differsFromUcsc": {
+          "note": "UCSC's table has no NCBI transcript attributes. Where a transcript's accession.version, span and exons match NCBI's GFF3 exactly, this track adds NCBI's feature type, tag (MANE Select, RefSeq Select), exception and transl_except. JBrowse picks a gene's representative isoform by that tag and translates selenocysteine through transl_except, so those transcripts can draw and translate differently than in the UCSC Genome Browser.",
+          "ncbiAnnotationSource": "NCBI RefSeq GCF_000001405.40-RS_2025_08",
+          "ncbiAnnotationDate": "2025-08-01",
+          "matchedTranscripts": "104996 of 105019"
+        }
+      },
+      "description": "NCBI RefSeq genes, curated subset (NM_*, NR_*, NP_* or YP_*) (differs from UCSC: NCBI's tags and transl_except added where transcripts match NCBI's annotation)",
+      "category": [
+        "Genes and Gene Predictions"
+      ]
+    },
+    {
+      "type": "FeatureTrack",
+      "trackId": "interfaces",
+      "name": "Predicted interface codons (AlphaFold DB complexes)",
+      "assemblyNames": [
+        "hg38"
+      ],
+      "category": [
+        "Interface atlas"
+      ],
+      "description": "Codons of residues within 5 \u00c5 of a partner in an AlphaFold DB heterodimer with ipSAE \u2265 0.6, residue pLDDT \u2265 70. One feature per partner.",
+      "adapter": {
+        "type": "BedAdapter",
+        "bedLocation": {
+          "uri": "interfaces.bed"
+        }
+      },
+      "displays": [
+        {
+          "type": "LinearBasicDisplay",
+          "displayId": "interfaces-display",
+          "renderer": {
+            "type": "SvgFeatureRenderer",
+            "color1": "jexl:'rgb('+get(feature,'itemRgb')+')'"
+          }
+        }
+      ]
+    },
+    {
+      "type": "FeatureTrack",
+      "trackId": "interface-variants",
+      "name": "ClinVar missense at a predicted interface",
+      "assemblyNames": [
+        "hg38"
+      ],
+      "category": [
+        "Interface atlas"
+      ],
+      "description": "ClinVar missense variants (EBI Proteins API) whose residue sits at a confident predicted interface. Red pathogenic, orange uncertain, grey benign.",
+      "adapter": {
+        "type": "BedAdapter",
+        "bedLocation": {
+          "uri": "interface_variants.bed"
+        }
+      },
+      "displays": [
+        {
+          "type": "LinearBasicDisplay",
+          "displayId": "interface-variants-display",
+          "renderer": {
+            "type": "SvgFeatureRenderer",
+            "color1": "jexl:'rgb('+get(feature,'itemRgb')+')'"
+          }
+        }
+      ]
+    }
+  ],
+  "defaultSession": {
+    "name": "Interface atlas",
+    "views": [
+      {
+        "type": "LinearGenomeView",
+        "init": {
+          "assembly": "hg38",
+          "loc": "chr16:56190614-56338854",
+          "tracks": [
+            "hg38-ncbiRefSeqCurated",
+            "interfaces",
+            "interface-variants",
+            "hg38-clinvarMain"
+          ]
+        }
+      }
+    ]
+  }
+}
