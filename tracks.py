@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 
 from atlas import DATA, OUT, get_json
 
-SITE = Path(__file__).resolve().parent / "site"
+SITE = Path(__file__).resolve().parent / "site" / "jbrowse"
 CONFIDENT = 0.6
 MIN_PLDDT = 70
 COLOURS = {"pathogenic": "200,40,40", "uncertain": "235,140,40", "benign": "120,120,120"}

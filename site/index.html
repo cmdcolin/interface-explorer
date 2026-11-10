@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Interface atlas</title>
+    <meta name="description" content="Which codons of human disease genes sit at a predicted protein–protein interface (AlphaFold DB complexes), and which ClinVar variants fall there." />
+    <link rel="icon" href="jbrowse/favicon.ico" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#/">Interface atlas</a>
+      <nav>
+        <a href="#/">Genes</a>
+        <a href="#/about">About</a>
+        <a href="jbrowse/">Genome browser</a>
+      </nav>
+    </header>
+    <main id="app" aria-live="polite"></main>
+    <footer class="site-footer">
+      Prototype. Predicted complexes from
+      <a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a> (CC-BY 4.0),
+      variants from <a href="https://www.ncbi.nlm.nih.gov/clinvar/">ClinVar</a>
+      via the <a href="https://www.ebi.ac.uk/proteins/api/doc/">EBI Proteins API</a>,
+      viewer <a href="https://jbrowse.org/jb2/">JBrowse 2</a>.
+      <a href="https://github.com/cmdcolin/interface-atlas">Source</a>.
+    </footer>
+    <script src="app.js" type="module"></script>
+  </body>
+</html>

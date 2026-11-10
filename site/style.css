@@ -1,0 +1,276 @@
+:root {
+  color-scheme: light;
+  --surface: #fcfcfb;
+  --surface-2: #f2f1ed;
+  --border: #dedcd5;
+  --text: #0b0b0b;
+  --text-2: #52514e;
+  --link: #1f63b5;
+  --interface: #2a78d6;
+  --pathogenic: #c42c2c;
+  --uncertain: #d97a14;
+  --benign: #7a7975;
+  --chip-text: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --surface: #1a1a19;
+    --surface-2: #242422;
+    --border: #3a3936;
+    --text: #f0efec;
+    --text-2: #c3c2b7;
+    --link: #79aef0;
+    --interface: #3987e5;
+    --pathogenic: #e66767;
+    --uncertain: #e8a046;
+    --benign: #a19f98;
+    --chip-text: #111110;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--text);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+a {
+  color: var(--link);
+}
+
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  font-weight: 650;
+  font-size: 18px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.site-header nav {
+  display: flex;
+  gap: 18px;
+}
+
+main {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+}
+
+h1 {
+  font-size: 26px;
+  margin: 8px 0 4px;
+}
+
+h2 {
+  font-size: 18px;
+  margin: 32px 0 8px;
+}
+
+.lede {
+  color: var(--text-2);
+  max-width: 760px;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.tile {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+}
+
+.tile .value {
+  font-size: 26px;
+  font-weight: 650;
+}
+
+.tile .label {
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.note {
+  border-left: 3px solid var(--uncertain);
+  padding: 6px 12px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  max-width: 760px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  margin: 12px 0;
+}
+
+input[type="search"] {
+  font: inherit;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  min-width: 240px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+th {
+  color: var(--text-2);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+th button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+td.num,
+th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+tr:hover td {
+  background: var(--surface-2);
+}
+
+.chip {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--chip-text);
+}
+
+.chip.pathogenic {
+  background: var(--pathogenic);
+}
+
+.chip.uncertain {
+  background: var(--uncertain);
+}
+
+.chip.benign {
+  background: var(--benign);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.button {
+  display: inline-block;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--text);
+  background: var(--surface-2);
+  font-size: 14px;
+}
+
+.button.primary {
+  background: var(--interface);
+  border-color: var(--interface);
+  color: #fff;
+}
+
+.filters label {
+  margin-right: 12px;
+  font-size: 14px;
+}
+
+.map {
+  width: 100%;
+  height: auto;
+  margin: 8px 0 4px;
+}
+
+.map .axis {
+  stroke: var(--text-2);
+}
+
+.map .tick {
+  fill: var(--text-2);
+  font-size: 11px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 5px;
+  vertical-align: baseline;
+}
+
+.muted {
+  color: var(--text-2);
+}
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 16px;
+  color: var(--text-2);
+  font-size: 13px;
+  text-align: center;
+}

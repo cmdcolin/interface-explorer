@@ -107,6 +107,7 @@ def protein_interfaces(accession):
                 residues = interface_residues(atoms[own_chain["chainId"]], atoms[partner["chainId"]])
                 results.append(
                     {
+                        "entity": entity,
                         "partner": partner.get("uniprotAccession"),
                         "partner_gene": partner.get("gene"),
                         "iptm": complex_entry.get("complexPredictionAccuracy_ipTM"),
@@ -148,7 +149,16 @@ def protein_variants(accession):
             kinds = {s["type"] for s in feature.get("clinicalSignificances", []) if "ClinVar" in s.get("sources", [])}
             label = "pathogenic" if kinds & PATHOGENIC and not kinds & BENIGN else "benign" if kinds & BENIGN and not kinds & PATHOGENIC else "uncertain" if kinds & UNCERTAIN else None
             if label:
-                variants.append({"position": int(feature["begin"]), "label": label, "change": f"{feature.get('wildType')}{feature['begin']}{feature.get('mutatedType')}", "genomic": feature.get("genomicLocation", [])})
+                clinvar = next((x["id"] for x in feature.get("xrefs", []) if x.get("name") == "ClinVar"), None)
+                variants.append(
+                    {
+                        "position": int(feature["begin"]),
+                        "label": label,
+                        "change": f"{feature.get('wildType')}{feature['begin']}{feature.get('mutatedType')}",
+                        "genomic": feature.get("genomicLocation", []),
+                        "clinvar": clinvar,
+                    }
+                )
     return variants
 
 

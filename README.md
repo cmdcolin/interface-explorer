@@ -4,7 +4,9 @@
 an interface in an AlphaFold DB predicted complex, and which ClinVar missense
 variants fall there. This is a prototype on 150 random human disease proteins.
 
-**Live:** https://cmdcolin.github.io/interface-atlas/ (opens on GNAO1)
+**Live:** https://cmdcolin.github.io/interface-atlas/: a searchable gene
+table, a page per gene (partners, a protein map and its interface variants),
+and launches into JBrowse at `/jbrowse/`.
 
 ## Tracks
 
@@ -44,9 +46,13 @@ variants fall there. This is a prototype on 150 random human disease proteins.
   ClinVar variants. Downloads are cached in `data/`.
 - `python3 analyze.py`: computes the enrichment and writes
   `out/analysis.json`.
-- `python3 tracks.py`: writes `site/interfaces.bed`,
-  `site/interface_variants.bed` and `site/config.json`.
-- On push, GitHub Actions adds JBrowse Web 5.0.0-beta.21 and deploys `site/` to Pages.
+- `python3 tracks.py`: writes the JBrowse files `site/jbrowse/config.json`,
+  `interfaces.bed` and `interface_variants.bed`.
+- `python3 site.py`: writes the website's data, `site/data/summary.json`,
+  `genes.json` and one `genes/<GENE>.json` per gene. The site itself is
+  `site/index.html`, `app.js` and `style.css`, with no build step.
+- On push, GitHub Actions unzips JBrowse Web 5.0.0-beta.21 into `/jbrowse/`
+  and deploys `site/` to Pages.
 
 Requires Python 3 with numpy, scipy, biopython and requests.
 

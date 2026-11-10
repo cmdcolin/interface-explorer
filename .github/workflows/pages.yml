@@ -25,10 +25,10 @@ jobs:
       - name: Add JBrowse Web
         run: |
           curl -sSL -o jbrowse.zip https://github.com/GMOD/jbrowse-components/releases/download/v5.0.0-beta.21/jbrowse-web-v5.0.0-beta.21.zip
-          mkdir _site
-          unzip -q jbrowse.zip -d _site
-          rm -rf _site/test_data
-          cp site/* _site/
+          mkdir -p _site/jbrowse
+          unzip -q jbrowse.zip -d _site/jbrowse
+          rm -rf _site/jbrowse/test_data
+          cp -r site/. _site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
