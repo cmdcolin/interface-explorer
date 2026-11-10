@@ -59,14 +59,7 @@ def bed_track(track_id, name, file, description):
         "assemblyNames": ["hg38"],
         "category": ["Interface atlas"],
         "description": description,
-        "adapter": {"type": "BedAdapter", "bedLocation": {"uri": file}},
-        "displays": [
-            {
-                "type": "LinearBasicDisplay",
-                "displayId": f"{track_id}-display",
-                "renderer": {"type": "SvgFeatureRenderer", "color1": "jexl:'rgb('+get(feature,'itemRgb')+')'"},
-            }
-        ],
+        "adapter": {"type": "BedAdapter", "uri": file},
     }
 
 

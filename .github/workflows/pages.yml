@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Add JBrowse Web
         run: |
-          curl -sSL -o jbrowse.zip https://github.com/GMOD/jbrowse-components/releases/download/v4.3.0/jbrowse-web-v4.3.0.zip
+          curl -sSL -o jbrowse.zip https://github.com/GMOD/jbrowse-components/releases/download/v5.0.0-beta.21/jbrowse-web-v5.0.0-beta.21.zip
           mkdir _site
           unzip -q jbrowse.zip -d _site
           rm -rf _site/test_data

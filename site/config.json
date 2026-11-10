@@ -261,20 +261,8 @@
       "description": "Codons of residues within 5 \u00c5 of a partner in an AlphaFold DB heterodimer with ipSAE \u2265 0.6, residue pLDDT \u2265 70. One feature per partner.",
       "adapter": {
         "type": "BedAdapter",
-        "bedLocation": {
-          "uri": "interfaces.bed"
-        }
-      },
-      "displays": [
-        {
-          "type": "LinearBasicDisplay",
-          "displayId": "interfaces-display",
-          "renderer": {
-            "type": "SvgFeatureRenderer",
-            "color1": "jexl:'rgb('+get(feature,'itemRgb')+')'"
-          }
-        }
-      ]
+        "uri": "interfaces.bed"
+      }
     },
     {
       "type": "FeatureTrack",
@@ -289,20 +277,8 @@
       "description": "ClinVar missense variants (EBI Proteins API) whose residue sits at a confident predicted interface. Red pathogenic, orange uncertain, grey benign.",
       "adapter": {
         "type": "BedAdapter",
-        "bedLocation": {
-          "uri": "interface_variants.bed"
-        }
-      },
-      "displays": [
-        {
-          "type": "LinearBasicDisplay",
-          "displayId": "interface-variants-display",
-          "renderer": {
-            "type": "SvgFeatureRenderer",
-            "color1": "jexl:'rgb('+get(feature,'itemRgb')+')'"
-          }
-        }
-      ]
+        "uri": "interface_variants.bed"
+      }
     }
   ],
   "defaultSession": {

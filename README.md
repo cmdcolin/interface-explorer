@@ -46,7 +46,7 @@ variants fall there. This is a prototype on 150 random human disease proteins.
   `out/analysis.json`.
 - `python3 tracks.py`: writes `site/interfaces.bed`,
   `site/interface_variants.bed` and `site/config.json`.
-- On push, GitHub Actions adds JBrowse Web 4.3.0 and deploys `site/` to Pages.
+- On push, GitHub Actions adds JBrowse Web 5.0.0-beta.21 and deploys `site/` to Pages.
 
 Requires Python 3 with numpy, scipy, biopython and requests.
 
