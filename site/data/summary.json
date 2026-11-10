@@ -1,0 +1,38 @@
+{
+  "sampled": 150,
+  "withPartner": 40,
+  "genes": 40,
+  "partners": 114,
+  "variantsAtInterface": {
+    "pathogenic": 117,
+    "uncertain": 409,
+    "benign": 37
+  },
+  "enrichment": {
+    "all": {
+      "proteins informative": 32,
+      "pathogenic at interface": "115/600",
+      "benign at interface": "36/322",
+      "Mantel–Haenszel odds ratio": 2.36,
+      "95% CI (bootstrap over proteins)": [
+        1.3,
+        4.71
+      ]
+    },
+    "orderedSurface": {
+      "proteins informative": 22,
+      "pathogenic at interface": "56/168",
+      "benign at interface": "27/157",
+      "Mantel–Haenszel odds ratio": 4.69,
+      "95% CI (bootstrap over proteins)": [
+        2.04,
+        15.41
+      ]
+    }
+  },
+  "thresholds": {
+    "ipsae": 0.6,
+    "plddt": 70,
+    "contact": 5
+  }
+}
