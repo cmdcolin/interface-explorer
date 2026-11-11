@@ -259,6 +259,10 @@ function plddtColor(score) {
   return PLDDT_BANDS.find(([min]) => score >= min)[1]
 }
 
+function residueBands(runs) {
+  return runs.flatMap(([band, length]) => Array(length).fill(band))
+}
+
 function editText(edit) {
   const range = edit.start === edit.end ? `${edit.start}` : `${edit.start}–${edit.end}`
   const changed = [...edit.replacement].filter((letter, k) => edit.original?.[k] !== letter).length
@@ -287,8 +291,8 @@ function isoformMap(record) {
   const scale = x => left + ((x - 1) / Math.max(record.length - 1, 1)) * (width - left - 20)
   const step = (width - left - 20) / record.length
   const rows = [
-    { label: 'Canonical', plddt: record.canonical.plddt, segments: [[1, 1, record.length]], edits: [] },
-    ...record.isoforms.map(i => ({ label: i.accession, plddt: i.plddt, segments: i.segments, edits: i.edits })),
+    { label: 'Canonical', plddt: residueBands(record.canonical.plddt), segments: [[1, 1, record.length]], edits: [] },
+    ...record.isoforms.map(i => ({ label: i.accession, plddt: residueBands(i.plddt), segments: i.segments, edits: i.edits })),
   ]
   const bars = (row, y) => {
     const runs = []

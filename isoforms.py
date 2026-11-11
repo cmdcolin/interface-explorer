@@ -12,6 +12,7 @@ from tracks import CONFIDENT, MIN_PLDDT, coding_positions
 SITE_DATA = Path(__file__).resolve().parent / "site" / "data"
 FOLDED = 70
 UNFOLDED = 50
+BANDS = (90, FOLDED, UNFOLDED, 0)
 MOST = 0.5
 
 
@@ -38,6 +39,17 @@ def plddt(model):
     return get_json(model["plddtDocUrl"], DATA / "plddt" / f"{model['entryId']}.json", keep=lambda doc: [round(score) for score in doc["confidenceScore"]])
 
 
+def band_runs(scores):
+    runs = []
+    for score in scores:
+        band = next(b for b in BANDS if score >= b)
+        if runs and runs[-1][0] == band:
+            runs[-1][1] += 1
+        else:
+            runs.append([band, 1])
+    return runs
+
+
 def confident_interfaces(atlas_protein):
     interfaces = {
         complex_entry["partner_gene"] or complex_entry["partner"]: {int(r) for r, score in complex_entry["residues"].items() if score >= MIN_PLDDT}
@@ -58,7 +70,7 @@ def isoform_record(isoform_id, info, model, sequence, positions, scores, canonic
         "cif": model["cifUrl"],
         "length": len(sequence),
         "meanPlddt": round(sum(scores) / len(scores), 1),
-        "plddt": scores,
+        "plddt": band_runs(scores),
         "segments": segments(positions),
         "edits": [{"start": s, "end": e, "original": canonical_sequence[s - 1 : e], "replacement": r} for s, e, r in info["edits"]],
         "refseq": transcripts.get(isoform_id, []),
@@ -103,7 +115,7 @@ def gene_record(entry, atlas_by_accession, variants):
             "model": models[accession]["entryId"],
             "cif": models[accession]["cifUrl"],
             "meanPlddt": round(sum(canonical_plddt) / len(canonical_plddt), 1),
-            "plddt": canonical_plddt,
+            "plddt": band_runs(canonical_plddt),
             "refseq": transcripts.get(displayed, []),
         },
         "described": len(isoforms),

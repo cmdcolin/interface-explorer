@@ -259,37 +259,47 @@ def g_alpha_summaries(records, atlas_by_accession, variants):
     return sorted(summaries, key=lambda s: -s["structures"])
 
 
-def complex_record(structure, atlas_by_accession, variants):
-    cif = mmcif(structure["pdb"])
-    rows = atoms(cif)
-    receptor_base = receptor_accession(structure["entry"])
+def receptor_chain(rows, structure, receptor_base):
     chain = [a for a in rows if a["chain"] == structure["chain"]]
     own = lambda a: a["source"] and a["source"][0].split("-")[0] == receptor_base
-    receptor_atoms = [a if own(a) else {**a, "source": None} for a in chain] if any(own(a) for a in chain) else aligned_sources(chain, receptor_base)
+    return [a if own(a) else {**a, "source": None} for a in chain] if any(own(a) for a in chain) else aligned_sources(chain, receptor_base)
+
+
+def g_alpha_chains(rows, cif, structure):
     g_entities = g_alpha_entities(cif)
     is_g_alpha = lambda a: a["source"] and G_ALPHA.match(uniprot(a["source"][0])["gene"])
-    g_chains = {}
+    chains = {}
     for a in rows:
         if a["entity"] in g_entities or is_g_alpha(a):
-            g_chains.setdefault(a["chain"], []).append(a)
-    chimeras = {chain for chain, chain_atoms in g_chains.items() if not any(a["source"] for a in chain_atoms)}
+            chains.setdefault(a["chain"], []).append(a)
+    chimeras = {chain for chain, chain_atoms in chains.items() if not any(a["source"] for a in chain_atoms)}
     g_atoms = [
         a if is_g_alpha(a) else {**a, "source": None}
-        for chain, chain_atoms in g_chains.items()
+        for chain, chain_atoms in chains.items()
         for a in (chimera_sources(chain_atoms, SUBTYPE_GENE.get(structure["g_subtype"])) if chain in chimeras else chain_atoms)
     ]
-    if not (receptor_atoms and g_atoms):
-        return None
+    return g_atoms, bool(chimeras)
+
+
+def interface_record(structure, receptor_base, receptor_atoms, g_atoms, chimera, atlas_by_accession, variants):
     sources = {a["source"][0] for a in receptor_atoms + g_atoms if a["source"]}
     orthologs = {accession: human_ortholog(uniprot(accession)) for accession in sources}
     receptor_sides = to_human(contacts(receptor_atoms, g_atoms), orthologs)
     g_sides = to_human(contacts(g_atoms, receptor_atoms), orthologs)
-    receptor_human = next(o["accession"] for a, o in orthologs.items() if a.split("-")[0] == receptor_base)
-    receptor_gene = orthologs[next(a for a in orthologs if a.split("-")[0] == receptor_base)]["gene"]
-    g_proteins = [side(accession, residues, orthologs, variants, receptor_gene, bool(chimeras)) for accession, residues in sorted(g_sides.items())]
-    receptor = side(receptor_human, receptor_sides.get(receptor_human, {}), orthologs, variants, sorted(g["gene"] for g in g_proteins))
+    receptor_human = next(o for a, o in orthologs.items() if a.split("-")[0] == receptor_base)
+    g_proteins = [side(accession, residues, orthologs, variants, receptor_human["gene"], chimera) for accession, residues in sorted(g_sides.items())]
+    receptor = side(receptor_human["accession"], receptor_sides.get(receptor_human["accession"], {}), orthologs, variants, sorted(g["gene"] for g in g_proteins))
     receptor["afdb"] = receptor_agreement(atlas_by_accession, receptor)
     return {**{key: structure[key] for key in ("pdb", "method", "resolution", "state", "species", "g_family", "g_subtype", "g_note", "receptor")}, "receptorSide": receptor, "gProteins": g_proteins}
+
+
+def complex_record(structure, atlas_by_accession, variants):
+    cif = mmcif(structure["pdb"])
+    rows = atoms(cif)
+    receptor_base = receptor_accession(structure["entry"])
+    receptor_atoms = receptor_chain(rows, structure, receptor_base)
+    g_atoms, chimera = g_alpha_chains(rows, cif, structure)
+    return interface_record(structure, receptor_base, receptor_atoms, g_atoms, chimera, atlas_by_accession, variants) if receptor_atoms and g_atoms else None
 
 
 def interface_lines(records):
