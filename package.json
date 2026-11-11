@@ -1,0 +1,36 @@
+{
+  "name": "interface-atlas",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.16.1",
+  "scripts": {
+    "atlas": "node src/atlas.ts",
+    "clinvar": "node src/clinvar.ts",
+    "analyze": "node src/analyze.ts",
+    "gpcr": "node src/gpcr.ts",
+    "tracks": "node src/tracks.ts",
+    "pages": "node src/pages.ts",
+    "isoforms": "node src/isoforms.ts",
+    "all": "pnpm atlas && pnpm clinvar && pnpm analyze && pnpm gpcr && pnpm tracks && pnpm pages && pnpm isoforms",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write src"
+  },
+  "dependencies": {
+    "g2p_mapper": "^2.3.1",
+    "p2s_mapper": "^3.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3",
+    "vitest": "^5.1.0"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "arrowParens": "avoid",
+    "proseWrap": "always"
+  }
+}

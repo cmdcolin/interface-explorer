@@ -137,29 +137,34 @@ one.
 
 ## Run
 
-- `make all` runs every step below in order; `make test` runs the unit tests.
-- `python3 atlas.py [workers]`: fetches the complexes, models and monomer
-  context for every disease protein. Downloads are cached in `data/`; keep
-  workers at 3–4, since AlphaFold DB rate-limits. Proteins that fail are
-  listed in `out/atlas_failures.json`.
-- `python3 clinvar.py`: downloads ClinVar's `variant_summary.txt.gz` and writes
-  `out/clinvar.json` for every reviewed human protein.
-- `python3 analyze.py`: the enrichment, in `out/analysis.json`.
-- `python3 gpcr.py`: the experimental GPCR–G protein interfaces, as
+- `pnpm install`, then `pnpm all` runs every step below in order; `pnpm test`
+  runs the unit tests and `pnpm typecheck` the type check.
+- `pnpm atlas [workers]`: fetches the complexes, models and monomer context for
+  every disease protein, into `out/atlas.json`. Downloads are cached in
+  `data/`; keep workers at 3–4, since AlphaFold DB rate-limits. Proteins that
+  fail are listed in `out/atlas_failures.json`.
+- `pnpm clinvar`: downloads ClinVar's `variant_summary.txt.gz` and writes
+  `out/clinvar.ndjson` for every reviewed human protein.
+- `pnpm analyze`: the enrichment, in `out/analysis.json`.
+- `pnpm gpcr`: the experimental GPCR–G protein interfaces, as
   `site/jbrowse/gpcr_interfaces.bb`, `gpcr_interface_variants.bb` and
   `site/data/gpcr.json`.
-- `python3 tracks.py`: `site/jbrowse/config.json`, `interfaces.bb` and
+- `pnpm tracks`: `site/jbrowse/config.json`, `interfaces.bb` and
   `interface_variants.bb`.
-- `python3 pages.py`: `site/data/summary.json`, `genes.json` and
+- `pnpm pages`: `site/data/summary.json`, `genes.json` and
   `genes/<GENE>.json`.
-- `python3 isoforms.py [workers]`: `site/data/isoforms.json` and
+- `pnpm isoforms [workers]`: `site/data/isoforms.json` and
   `isoforms/<GENE>.json`.
-- The site is `site/index.html`, `app.js` and `style.css`, with no build step.
-  On push, GitHub Actions unzips JBrowse Web 5.0.0-beta.21 into `/jbrowse/` and
-  deploys `site/` to Pages.
+- The pipeline is TypeScript in `src/`, run directly by Node with no build
+  step. Genome ↔ protein positions come from
+  [g2p_mapper](https://github.com/GMOD/g2p_mapper) and sequence alignment from
+  [p2s_mapper](https://github.com/GMOD/p2s_mapper), the libraries behind the
+  JBrowse protein3d plugin.
+- The site is `site/index.html`, `app.js` and `style.css`, also with no build
+  step. On push, GitHub Actions unzips JBrowse Web 5.0.0-beta.21 into
+  `/jbrowse/` and deploys `site/` to Pages.
 
-Requires Python 3 with the packages in `requirements.txt` (numpy, scipy,
-biopython and requests) and UCSC's `bedToBigBed`.
+Requires Node 24 or later, pnpm, and UCSC's `bedToBigBed`.
 
 ## Data and credits
 

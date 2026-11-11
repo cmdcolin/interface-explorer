@@ -302,7 +302,7 @@
       "category": [
         "Interface atlas"
       ],
-      "description": "Codons of residues within 5 \u00c5 of a partner in an AlphaFold DB heterodimer with ipSAE \u2265 0.6, residue pLDDT \u2265 70. One feature per partner.",
+      "description": "Codons of residues within 5 Å of a partner in an AlphaFold DB heterodimer with ipSAE ≥ 0.6, residue pLDDT ≥ 70. One feature per partner.",
       "adapter": {
         "type": "BigBedAdapter",
         "uri": "interfaces.bb"
@@ -327,14 +327,14 @@
     {
       "type": "FeatureTrack",
       "trackId": "gpcr-interfaces",
-      "name": "Experimental GPCR\u2013G protein interface codons (PDB)",
+      "name": "Experimental GPCR–G protein interface codons (PDB)",
       "assemblyNames": [
         "hg38"
       ],
       "category": [
         "Interface atlas"
       ],
-      "description": "Codons of residues within 5 \u00c5 of the partner in cryo-EM and X-ray receptor\u2013G protein complexes of biogenic amine receptors, selected from GPCRdb. One feature per structure and side, e.g. DRD1\u2013GNAS (7JVQ).",
+      "description": "Codons of residues within 5 Å of the partner in cryo-EM and X-ray receptor–G protein complexes of biogenic amine receptors, selected from GPCRdb. One feature per structure and side, e.g. DRD1–GNAS (7JVQ).",
       "adapter": {
         "type": "BigBedAdapter",
         "uri": "gpcr_interfaces.bb"
@@ -343,14 +343,14 @@
     {
       "type": "FeatureTrack",
       "trackId": "gpcr-interface-variants",
-      "name": "ClinVar missense at an experimental GPCR\u2013G protein interface",
+      "name": "ClinVar missense at an experimental GPCR–G protein interface",
       "assemblyNames": [
         "hg38"
       ],
       "category": [
         "Interface atlas"
       ],
-      "description": "ClinVar missense variants (NCBI variant_summary) whose residue contacts the partner in an experimental receptor\u2013G protein complex. Red pathogenic, orange uncertain, grey benign.",
+      "description": "ClinVar missense variants (NCBI variant_summary) whose residue contacts the partner in an experimental receptor–G protein complex. Red pathogenic, orange uncertain, grey benign.",
       "adapter": {
         "type": "BigBedAdapter",
         "uri": "gpcr_interface_variants.bb"
