@@ -177,7 +177,10 @@ function proteinMap(gene) {
 }
 
 async function genePage(name) {
-  const [gene, isoforms] = await Promise.all([load(`data/genes/${encodeURIComponent(name)}.json`), load('data/isoforms.json')])
+  const [gene, isoforms, summary] = await Promise.all([load(`data/genes/${encodeURIComponent(name)}.json`), load('data/isoforms.json'), load('data/summary.json')])
+  const am = summary.alphaMissense
+  const amClass = score => (score > am.likelyPathogenic ? 'pathogenic' : score < am.likelyBenign ? 'benign' : 'uncertain')
+  const amTitle = { pathogenic: 'likely pathogenic', uncertain: 'ambiguous', benign: 'likely benign' }
   const isoformRow = isoforms.genes.find(r => r.accession === gene.accession)
   const pad = Math.round((gene.end - gene.start) * 0.05) + 200
   app.innerHTML = `
@@ -222,20 +225,29 @@ async function genePage(name) {
       ${Object.keys(LABELS)
         .map(label => `<label><input type="checkbox" value="${label}" checked /> ${chip(label)} ${gene.counts[label]}</label>`)
         .join('')}
+      <label>Sort by <select id="variant-sort"><option value="position">position</option><option value="alphaMissense">AlphaMissense</option></select></label>
     </div>
+    <p class="muted">
+      <a href="https://doi.org/10.1126/science.adg7492">AlphaMissense</a> predicts how likely a substitution is to be pathogenic, from 0 to 1:
+      above ${am.likelyPathogenic} is likely pathogenic, below ${am.likelyBenign} likely benign. It is a prediction from sequence and the
+      single-protein structure, and does not see the partner.
+    </p>
     <div class="table-wrap"><table id="variants">
-      <thead><tr><th>Change</th><th>ClinVar</th><th>Touches</th><th>Genome</th><th>Structure</th></tr></thead>
+      <thead><tr><th>Change</th><th>ClinVar</th><th class="num">AlphaMissense</th><th>Touches</th><th>Genome</th><th>Structure</th></tr></thead>
       <tbody></tbody>
     </table></div>`
   const render = () => {
     const shown = new Set([...document.querySelectorAll('.filters input:checked')].map(i => i.value))
+    const byScore = document.getElementById('variant-sort').value === 'alphaMissense'
     document.querySelector('#variants tbody').innerHTML = gene.variants
       .filter(v => shown.has(v.label))
+      .toSorted((a, b) => (byScore ? (b.alphaMissense ?? -1) - (a.alphaMissense ?? -1) : 0))
       .map(v => {
         const partner = gene.partners.find(p => v.partners.includes(p.gene))
         return `<tr>
           <td>${esc(v.change)}</td>
           <td class="nowrap">${chip(v.label)} <a href="https://www.ncbi.nlm.nih.gov/clinvar/variation/${v.variation}/" title="${esc(v.review)}">VCV${String(v.variation).padStart(9, '0')}</a></td>
+          <td class="num">${v.alphaMissense === undefined ? '<span class="muted" title="AlphaMissense has no score for this substitution">—</span>' : `<span class="count ${amClass(v.alphaMissense)}" title="AlphaMissense: ${amTitle[amClass(v.alphaMissense)]}">${v.alphaMissense.toFixed(2)}</span>`}</td>
           <td>${v.partners.map(esc).join(', ')}</td>
           <td class="nowrap"><a href="${genomeLink(v.chrom, v.pos - 30, v.pos + 30)}">chr${esc(v.chrom)}:${v.pos.toLocaleString()}</a></td>
           <td class="nowrap"><a href="${complexLink(gene.gene, partner.entity, `chr${v.chrom}:${v.pos - 30}-${v.pos + 30}`, `chr${v.chrom}:${v.pos}${v.allele ? ` ${v.allele}` : ''}`)}">with ${esc(partner.gene)}</a></td>
@@ -243,7 +255,7 @@ async function genePage(name) {
       })
       .join('')
   }
-  document.querySelectorAll('.filters input').forEach(i => i.addEventListener('change', render))
+  document.querySelectorAll('.filters input, .filters select').forEach(i => i.addEventListener('change', render))
   render()
 }
 
@@ -592,6 +604,7 @@ async function about() {
       <li>Their heterodimers from AlphaFold DB's 2026 complex release (AlphaFold-Multimer), kept at ipSAE ≥ ${t.ipsae}, the AlphaFold DB team's threshold.</li>
       <li>Interface residues: any heavy atom within ${t.contact} Å of the partner, residue pLDDT ≥ ${t.plddt}. Mapped to hg38 codons with EBI Proteins API coordinates.</li>
       <li>Variants: single-nucleotide missense variants classified pathogenic, likely pathogenic, uncertain, likely benign or benign in NCBI's weekly ClinVar <code>variant_summary</code> (downloaded ${esc(summary.provenance.clinvarDownloaded)}), on a RefSeq transcript UniProt maps to the canonical isoform. Conflicting classifications are left out, and so is any variant whose wild-type residue does not match the canonical sequence at its position.</li>
+      <li>Each variant's <a href="https://doi.org/10.1126/science.adg7492">AlphaMissense</a> pathogenicity, from the published table of every substitution in the canonical proteins. Of the ${summary.variantsAtInterface.uncertain.toLocaleString()} variants of uncertain significance at an interface, it scores ${summary.alphaMissense.uncertainScored.toLocaleString()} and calls ${summary.alphaMissense.uncertainLikelyPathogenic.toLocaleString()} (${percent(summary.alphaMissense.uncertainLikelyPathogenic, summary.alphaMissense.uncertainScored)}) likely pathogenic.</li>
     </ul>
     <h2>Does the interface mean anything?</h2>
     <p>Within each protein, pathogenic missense variants sit at a predicted interface more often than benign ones:</p>

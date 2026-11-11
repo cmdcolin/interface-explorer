@@ -3,6 +3,12 @@ import { join } from 'node:path'
 import { positionRuns } from 'p2s_mapper'
 
 import {
+  isLikelyPathogenic,
+  LIKELY_BENIGN,
+  LIKELY_PATHOGENIC,
+  readScores,
+} from './alphamissense.ts'
+import {
   confidentResidues,
   isConfident,
   partnerName,
@@ -39,6 +45,7 @@ export function geneRecord(
   protein: AtlasProtein,
   variants: Variant[],
   coding: Pick<CodingPositions, 'chrom' | 'strand' | 'start' | 'end'>,
+  scores = new Map<string, number>(),
 ) {
   const atResidue = new Map<number, string[]>()
   const partners = protein.interfaces
@@ -70,6 +77,7 @@ export function geneRecord(
           {
             change: variant.change,
             label: variant.label,
+            alphaMissense: scores.get(variant.change),
             position: variant.position,
             partners: [...new Set(names)].sort(),
             variation: variant.variation,
@@ -115,6 +123,7 @@ async function main() {
   )
   const accessions = new Set(proteins.map(p => p.accession))
   const variants = await readVariants(accession => accessions.has(accession))
+  const scores = readScores()
   const analysis = record(readJson(join(OUT, 'analysis.json')))
   const mapped = await Promise.all(
     proteins.map(async protein => ({
@@ -124,7 +133,14 @@ async function main() {
   )
   const genes = mapped.flatMap(({ protein, coding }) =>
     coding
-      ? [geneRecord(protein, variants.get(protein.accession) ?? [], coding)]
+      ? [
+          geneRecord(
+            protein,
+            variants.get(protein.accession) ?? [],
+            coding,
+            scores.get(protein.accession),
+          ),
+        ]
       : [],
   )
   const unmapped = mapped.flatMap(({ protein, coding }) =>
@@ -154,6 +170,9 @@ async function main() {
     .sort((a, b) => (a.gene < b.gene ? -1 : a.gene > b.gene ? 1 : 0))
   const summaryCounts = record(analysis.summary)
   const controlled = record(analysis.controlled_for_order_and_surface)
+  const uncertain = genes
+    .flatMap(g => g.variants)
+    .filter(v => v.label === 'uncertain')
   const summary = {
     proteins: summaryCounts['disease proteins'],
     withPartner: summaryCounts['with any predicted hetero complex'],
@@ -161,6 +180,15 @@ async function main() {
     unmapped: unmapped.length,
     partners: genes.reduce((n, g) => n + g.partners.length, 0),
     variantsAtInterface: labelCounts(genes.flatMap(g => g.variants)),
+    alphaMissense: {
+      uncertainScored: uncertain.filter(v => v.alphaMissense !== undefined)
+        .length,
+      uncertainLikelyPathogenic: uncertain.filter(v =>
+        isLikelyPathogenic(v.alphaMissense),
+      ).length,
+      likelyBenign: LIKELY_BENIGN,
+      likelyPathogenic: LIKELY_PATHOGENIC,
+    },
     enrichment: {
       all: controlled['all residues'],
       orderedSurface: controlled['ordered and surface (pLDDT ≥ 70, RSA ≥ 0.2)'],

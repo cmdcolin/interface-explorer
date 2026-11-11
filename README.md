@@ -9,8 +9,9 @@ one.
 
 - **Genes:** a searchable table of the 1,331 disease genes with a confident
   predicted partner. Each gene page lists its partners, a protein map and the
-  ClinVar variants at an interface. It launches JBrowse on the genome, or a
-  variant inside its complex beside the genome with the variant marked.
+  ClinVar variants at an interface, each with its AlphaMissense score. It
+  launches JBrowse on the genome, or a variant inside its complex beside the
+  genome with the variant marked.
 - **Isoforms:** for disease genes with AlphaFold DB isoform models, where each
   isoform differs from the canonical protein, whether the part they share keeps
   its predicted fold, and which pathogenic sites and partner interfaces it
@@ -50,6 +51,9 @@ one.
   pathogenic, 23,233 of uncertain significance and 822 benign. Examples:
   VHL's 48 pathogenic variants at the elongin C interface, and GNAO1's at the
   Gβ (L13P, I19M, L23F) and RGS (T182I, Q205P, R206) interfaces.
+- AlphaMissense scores 23,068 of the 23,233 uncertain ones and calls 10,756
+  (47%) likely pathogenic, against 88% of the pathogenic and 17% of the benign
+  variants at an interface. It sees one protein at a time, not the partner.
 - 98.8% of those variants' genomic positions fall inside their gene's
   interface codons, an independent check of the residue → codon mapping. The
   rest belong to proteins encoded by several identical genes (histones H3.3
@@ -120,6 +124,9 @@ one.
   variant is mapped through that isoform to the canonical residue. Transcripts
   UniProt assigns to no isoform are used only when 95% of their variants match
   the canonical sequence, and every variant's wild-type residue must match.
+- **AlphaMissense:** the published pathogenicity of every substitution in the
+  canonical proteins, joined to each variant by UniProt accession and change.
+  Above 0.564 is likely pathogenic and below 0.34 likely benign.
 - **GPCRs:** PDBe's updated mmCIF gives each atom's UniProt position (SIFTS).
   The receptor chain is GPCRdb's preferred chain, aligned to its UniProt
   sequence where SIFTS does not map it; Gα chains are found by SIFTS gene or
@@ -145,6 +152,9 @@ one.
   fail are listed in `out/atlas_failures.json`.
 - `pnpm clinvar`: downloads ClinVar's `variant_summary.txt.gz` and writes
   `out/clinvar.ndjson` for every reviewed human protein.
+- `pnpm alphamissense`: downloads AlphaMissense's 1.2 GB
+  `AlphaMissense_aa_substitutions.tsv.gz` and writes `out/alphamissense.json`,
+  a score for each variant in `out/clinvar.ndjson`.
 - `pnpm analyze`: the enrichment, in `out/analysis.json`.
 - `pnpm gpcr`: the experimental GPCR–G protein interfaces, as
   `site/jbrowse/gpcr_interfaces.bb`, `gpcr_interface_variants.bb` and
@@ -175,6 +185,8 @@ Requires Node 24 or later, pnpm, and UCSC's `bedToBigBed`.
   models (EMBL-EBI, Google DeepMind, NVIDIA, Seoul National University),
   CC-BY 4.0.
 - [ClinVar](https://www.ncbi.nlm.nih.gov/clinvar/) (NCBI) classifications.
+- [AlphaMissense](https://zenodo.org/records/10813168) predictions (Google
+  DeepMind), CC-BY 4.0.
 - [UniProt](https://www.uniprot.org/) (CC-BY 4.0): the disease proteins, their
   isoforms and RefSeq cross-references.
 - [EBI Proteins API](https://www.ebi.ac.uk/proteins/api/doc/) protein → genome

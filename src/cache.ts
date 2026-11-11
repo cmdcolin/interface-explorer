@@ -1,4 +1,13 @@
-import { existsSync, readFileSync } from 'node:fs'
+import {
+  createWriteStream,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+} from 'node:fs'
+import { dirname } from 'node:path'
+import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { gunzipSync, gzipSync } from 'node:zlib'
 
@@ -6,6 +15,7 @@ import { parseJson, readJson, writeAtomically } from './json.ts'
 
 const ATTEMPTS = 9
 const TIMEOUT = 300_000
+const DOWNLOAD_TIMEOUT = 3_600_000
 
 async function request(
   url: URL,
@@ -60,4 +70,19 @@ export async function getText(url: string, path: string) {
     }
   }
   return gunzipSync(readFileSync(path)).toString('utf8')
+}
+
+export async function download(url: string, path: string) {
+  if (!existsSync(path)) {
+    const partial = `${path}.part`
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT),
+    })
+    if (!response.ok || !response.body) {
+      throw new Error(`${url}: HTTP ${response.status}`)
+    }
+    mkdirSync(dirname(path), { recursive: true })
+    await pipeline(Readable.fromWeb(response.body), createWriteStream(partial))
+    renameSync(partial, path)
+  }
 }

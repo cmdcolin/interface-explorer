@@ -2,17 +2,16 @@ import { once } from 'node:events'
 import {
   createReadStream,
   createWriteStream,
-  existsSync,
   mkdirSync,
   renameSync,
   statSync,
 } from 'node:fs'
 import { join } from 'node:path'
 import { createInterface } from 'node:readline'
-import { Readable } from 'node:stream'
-import { finished, pipeline } from 'node:stream/promises'
+import { finished } from 'node:stream/promises'
 import { createGunzip } from 'node:zlib'
 
+import { download } from './cache.ts'
 import { LABELS as SIGNIFICANCE } from './constants.ts'
 import type { Label } from './constants.ts'
 import { DATA, OUT } from './paths.ts'
@@ -75,21 +74,6 @@ interface Mapping {
 interface Mutation {
   position: number
   change: string
-}
-
-async function download() {
-  if (!existsSync(SUMMARY)) {
-    const partial = SUMMARY.replace(/\.gz$/, '.part')
-    const response = await fetch(SUMMARY_URL, {
-      signal: AbortSignal.timeout(600_000),
-    })
-    if (!response.ok || !response.body) {
-      throw new Error(`${SUMMARY_URL}: HTTP ${response.status}`)
-    }
-    mkdirSync(DATA, { recursive: true })
-    await pipeline(Readable.fromWeb(response.body), createWriteStream(partial))
-    renameSync(partial, SUMMARY)
-  }
 }
 
 export function downloaded() {
@@ -277,7 +261,7 @@ async function writeVariants(lines: Iterable<string>) {
 }
 
 async function main() {
-  await download()
+  await download(SUMMARY_URL, SUMMARY)
   const byTranscript = await missenseByTranscript()
   const tally = new Map<string, number>()
   const variants = new Map<string, Variant[]>()
