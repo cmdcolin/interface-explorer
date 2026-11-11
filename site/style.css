@@ -171,6 +171,10 @@ th button {
   cursor: pointer;
 }
 
+td.nowrap {
+  white-space: nowrap;
+}
+
 td.num,
 th.num {
   text-align: right;

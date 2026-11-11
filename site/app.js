@@ -213,9 +213,9 @@ async function genePage(name) {
       .map(
         v => `<tr>
           <td>${esc(v.change)}</td>
-          <td>${chip(v.label)} ${v.clinvar ? `<a href="https://www.ncbi.nlm.nih.gov/clinvar/${esc(v.clinvar)}">${esc(v.clinvar)}</a>` : ''}</td>
+          <td class="nowrap">${chip(v.label)} ${v.clinvar ? `<a href="https://www.ncbi.nlm.nih.gov/clinvar/${esc(v.clinvar)}">${esc(v.clinvar)}</a>` : ''}</td>
           <td>${v.partners.map(esc).join(', ')}</td>
-          <td><a href="${genomeLink(v.chrom, v.pos - 30, v.pos + 30)}">chr${esc(v.chrom)}:${v.pos.toLocaleString()}</a></td>
+          <td class="nowrap"><a href="${genomeLink(v.chrom, v.pos - 30, v.pos + 30)}">chr${esc(v.chrom)}:${v.pos.toLocaleString()}</a></td>
         </tr>`,
       )
       .join('')
