@@ -587,7 +587,7 @@ async function about() {
       <li>All ${summary.proteins.toLocaleString()} reviewed human proteins with a UniProt disease annotation.</li>
       <li>Their heterodimers from AlphaFold DB's 2026 complex release (AlphaFold-Multimer), kept at ipSAE ≥ ${t.ipsae}, the AlphaFold DB team's threshold.</li>
       <li>Interface residues: any heavy atom within ${t.contact} Å of the partner, residue pLDDT ≥ ${t.plddt}. Mapped to hg38 codons with EBI Proteins API coordinates.</li>
-      <li>Variants: single-nucleotide missense variants classified pathogenic, likely pathogenic, uncertain, likely benign or benign in NCBI's weekly ClinVar <code>variant_summary</code>, on a RefSeq transcript UniProt maps to the canonical isoform. Conflicting classifications are left out, and so is any variant whose wild-type residue does not match the canonical sequence at its position.</li>
+      <li>Variants: single-nucleotide missense variants classified pathogenic, likely pathogenic, uncertain, likely benign or benign in NCBI's weekly ClinVar <code>variant_summary</code> (downloaded ${esc(summary.provenance.clinvarDownloaded)}), on a RefSeq transcript UniProt maps to the canonical isoform. Conflicting classifications are left out, and so is any variant whose wild-type residue does not match the canonical sequence at its position.</li>
     </ul>
     <h2>Does the interface mean anything?</h2>
     <p>Within each protein, pathogenic missense variants sit at a predicted interface more often than benign ones:</p>

@@ -34,6 +34,9 @@
   "thresholds": {
     "ipsae": 0.6,
     "plddt": 70,
-    "contact": 5
+    "contact": 5.0
+  },
+  "provenance": {
+    "clinvarDownloaded": "2026-11-11"
   }
 }

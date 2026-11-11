@@ -1,4 +1,5 @@
 import csv
+from datetime import date
 from collections import Counter
 import gzip
 import json
@@ -38,6 +39,10 @@ def download():
                 for chunk in response.iter_content(1 << 20):
                     out.write(chunk)
         partial.rename(SUMMARY)
+
+
+def downloaded():
+    return date.fromtimestamp(SUMMARY.stat().st_mtime).isoformat()
 
 
 def missense_by_transcript():

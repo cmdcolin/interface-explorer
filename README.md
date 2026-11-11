@@ -150,7 +150,7 @@ one.
   `site/data/gpcr.json`.
 - `python3 tracks.py`: `site/jbrowse/config.json`, `interfaces.bb` and
   `interface_variants.bb`.
-- `python3 site.py`: `site/data/summary.json`, `genes.json` and
+- `python3 pages.py`: `site/data/summary.json`, `genes.json` and
   `genes/<GENE>.json`.
 - `python3 isoforms.py [workers]`: `site/data/isoforms.json` and
   `isoforms/<GENE>.json`.

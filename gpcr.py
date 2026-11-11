@@ -237,8 +237,9 @@ def g_alpha_summaries(records, atlas_by_accession, variants):
     by_g = {}
     for record in records:
         for g in record["gProteins"]:
-            entry = by_g.setdefault(g["accession"], {"gene": g["gene"], "accession": g["accession"], "length": len(uniprot(g["accession"])["sequence"]), "locus": g["locus"], "counts": {}, "receptors": []})
+            entry = by_g.setdefault(g["accession"], {"gene": g["gene"], "accession": g["accession"], "length": len(uniprot(g["accession"])["sequence"]), "locus": g["locus"], "counts": {}, "receptors": [], "chimeras": 0})
             entry["receptors"].append(f"{record['receptorSide']['gene']} ({record['pdb']}{', chimera' if g['chimera'] else ''})")
+            entry["chimeras"] += g["chimera"]
             for residue in g["residues"]:
                 entry["counts"][residue] = entry["counts"].get(residue, 0) + 1
     summaries = []
@@ -250,7 +251,7 @@ def g_alpha_summaries(records, atlas_by_accession, variants):
             **entry,
             "counts": sorted(entry["counts"].items()),
             "structures": len(entry["receptors"]),
-            "chimeraOnly": all("chimera" in receptor for receptor in entry["receptors"]),
+            "chimeraOnly": entry["chimeras"] == len(entry["receptors"]),
             "afdbReceptors": [p[0] for p in predictions],
             "afdb": agreement(experimental, predicted, f"{len(predictions)} GPCRs") if predicted else None,
             "variants": [{key: v[key] for key in ("change", "label", "position", "variation")} for v in variants.get(accession, []) if v["position"] in experimental],

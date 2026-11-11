@@ -21,7 +21,7 @@ tracks: atlas clinvar gpcr
 	$(PYTHON) tracks.py
 
 site: atlas clinvar analyze
-	$(PYTHON) site.py
+	$(PYTHON) pages.py
 
 isoforms: atlas clinvar
 	$(PYTHON) isoforms.py $(WORKERS)

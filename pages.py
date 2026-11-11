@@ -2,8 +2,8 @@ import json
 from collections import Counter
 from pathlib import Path
 
-from atlas import OUT
-from clinvar import with_variants
+from atlas import CONTACT, OUT
+from clinvar import downloaded, with_variants
 from tracks import CONFIDENT, MIN_PLDDT, coding_positions
 
 DATA_DIR = Path(__file__).resolve().parent / "site" / "data"
@@ -115,7 +115,8 @@ def main():
             "all": controlled["all residues"],
             "orderedSurface": controlled["ordered and surface (pLDDT ≥ 70, RSA ≥ 0.2)"],
         },
-        "thresholds": {"ipsae": CONFIDENT, "plddt": MIN_PLDDT, "contact": 5},
+        "thresholds": {"ipsae": CONFIDENT, "plddt": MIN_PLDDT, "contact": CONTACT},
+        "provenance": {"clinvarDownloaded": downloaded()},
     }
     (DATA_DIR / "genes.json").write_text(json.dumps(sorted(index, key=lambda g: g["gene"]), ensure_ascii=False))
     (DATA_DIR / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False))
