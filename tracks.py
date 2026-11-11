@@ -77,9 +77,40 @@ def absolute(node):
     return node
 
 
+SIGNIFICANCE_COLORS = {
+    "PG": "rgb(210,0,0)",
+    "LP": "rgb(240,100,100)",
+    "VUS": "rgb(0,0,128)",
+    "RF": "rgb(90,90,190)",
+    "CF": "rgb(137,121,212)",
+    "LB": "rgb(100,200,100)",
+    "BN": "rgb(0,160,0)",
+    "OT": "rgb(128,128,128)",
+}
+
+
+def with_significance_rows(track):
+    basic = next(d for d in track["displays"] if d["type"] == "LinearBasicDisplay")
+    color = basic["encoding"]["color"]
+    codes = color["scale"]["domain"]
+    rows = {
+        "type": "LinearMultiRowFeatureDisplay",
+        "marks": [{"mark": "rect"}],
+        "rows": {
+            "field": color["field"],
+            "sort": codes,
+            "labels": dict(zip(codes, color["scale"]["names"])),
+            "colors": {code: SIGNIFICANCE_COLORS[code] for code in codes},
+        },
+        "legend": {"show": False},
+    }
+    return {**track, "displays": [*track["displays"], rows]}
+
+
 def write_config(default_locus):
     hg38 = absolute(get_json(HG38, DATA / "hg38_config.json"))
-    tracks = [t for t in hg38["tracks"] if t["trackId"] in KEPT_TRACKS] + [
+    kept = [t for t in hg38["tracks"] if t["trackId"] in KEPT_TRACKS]
+    tracks = [with_significance_rows(t) if t["trackId"] == "hg38-clinvarMain" else t for t in kept] + [
         bed_track("interfaces", "Predicted interface codons (AlphaFold DB complexes)", "interfaces.bb", f"Codons of residues within 5 Å of a partner in an AlphaFold DB heterodimer with ipSAE ≥ {CONFIDENT}, residue pLDDT ≥ {MIN_PLDDT}. One feature per partner."),
         bed_track("interface-variants", "ClinVar missense at a predicted interface", "interface_variants.bb", "ClinVar missense variants (NCBI variant_summary) whose residue sits at a confident predicted interface. Red pathogenic, orange uncertain, grey benign."),
     ]
