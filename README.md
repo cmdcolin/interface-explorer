@@ -16,7 +16,10 @@ one.
   its predicted fold, and which pathogenic sites and partner interfaces it
   lacks. Each isoform opens superposed on the canonical model, linked to its own
   transcript.
-- **JBrowse** at `/jbrowse/`, with the two tracks below.
+- **GPCRs:** experimental receptor–G protein interfaces from 23 cryo-EM and
+  X-ray complexes of biogenic amine receptors, the receptor-facing surface of
+  each Gα, and how AlphaFold DB's predicted interfaces compare.
+- **JBrowse** at `/jbrowse/`, with the tracks below.
 
 ## Tracks
 
@@ -26,7 +29,11 @@ one.
   pLDDT ≥ 70.
 - **ClinVar missense at a predicted interface:** red is pathogenic, orange is
   uncertain significance, grey is benign.
-- Both are bigBed. Alongside: NCBI RefSeq genes and UCSC's ClinVar track.
+- **Experimental GPCR–G protein interface codons** and **ClinVar missense at
+  an experimental GPCR–G protein interface**: the same, from the PDB complexes
+  on the GPCRs page, one feature per structure and side, e.g. "DRD1–GNAS
+  (7JVQ)".
+- All are bigBed. Alongside: NCBI RefSeq genes and UCSC's ClinVar track.
 
 ## What we found (all 5,350 UniProt disease proteins)
 
@@ -64,6 +71,23 @@ one.
   from confident (pLDDT ≥ 70) to very low (< 50), e.g. PRDM1 isoform 3 and
   MYLK isoform 4.
 
+## GPCRs and their G proteins (23 experimental complexes)
+
+- The structures are a GPCRdb selection of dopamine, serotonin, adrenergic and
+  histamine receptors made by BioHackathon Europe 2026 Project 9
+  (`gpcr_structures.tsv`): 23 with a G protein bound, 22 without.
+- Gαs has no AlphaFold DB complex at all, but 8 experimental Gs complexes put
+  44 of its residues against a receptor. 10 ClinVar pathogenic variants sit
+  on them, most on the C-terminal α5 helix: R342Q, R347T, G353R, F376V, C379Y,
+  D381V, Q384E, R385H, L388R and E392K.
+- Where AlphaFold DB has a comparable prediction, it finds the experimental
+  surface: its GPCR complexes of Gαi1 cover 90% of the residues the 10
+  experimental Gi1 complexes use (68% of its residues are among them), its
+  RHO–Gαo complex covers 88% of 5-HT1B–Gαo's, and its DRD5–Golf complex covers
+  87% of the receptor residues DRD5 uses against Gs.
+- On the receptor side, 78 ClinVar variants of uncertain significance and 2
+  benign ones contact the G protein; none is classified pathogenic.
+
 ## Caveats
 
 - Coverage: AlphaFold DB modelled STRING physical-interaction pairs only;
@@ -91,6 +115,12 @@ one.
   variant is mapped through that isoform to the canonical residue. Transcripts
   UniProt assigns to no isoform are used only when 95% of their variants match
   the canonical sequence, and every variant's wild-type residue must match.
+- **GPCRs:** PDBe's updated mmCIF gives each atom's UniProt position (SIFTS).
+  The receptor chain is GPCRdb's preferred chain, aligned to its UniProt
+  sequence where SIFTS does not map it; Gα chains are found by SIFTS gene or
+  entity name. Non-human proteins are aligned to the human ortholog. Four
+  engineered chimeric Gα chains map to no gene, so only their receptor side is
+  used.
 - **Isoforms:** each isoform's sequence is rebuilt from UniProt's
   alternative-sequence edits and must equal its AlphaFold DB model's sequence;
   that gives each isoform residue its canonical position. A replaced stretch
@@ -103,8 +133,11 @@ one.
   context for every disease protein. Downloads are cached in `data/`; keep
   workers at 3–4, since AlphaFold DB rate-limits.
 - `python3 clinvar.py`: downloads ClinVar's `variant_summary.txt.gz` and writes
-  `out/clinvar.json`.
+  `out/clinvar.json` for every reviewed human protein.
 - `python3 analyze.py`: the enrichment, in `out/analysis.json`.
+- `python3 gpcr.py`: the experimental GPCR–G protein interfaces, as
+  `site/jbrowse/gpcr_interfaces.bb`, `gpcr_interface_variants.bb` and
+  `site/data/gpcr.json`.
 - `python3 tracks.py`: `site/jbrowse/config.json`, `interfaces.bb` and
   `interface_variants.bb`.
 - `python3 site.py`: `site/data/summary.json`, `genes.json` and
@@ -128,6 +161,9 @@ Requires Python 3 with numpy, scipy, biopython and requests, and UCSC's
   isoforms and RefSeq cross-references.
 - [EBI Proteins API](https://www.ebi.ac.uk/proteins/api/doc/) protein → genome
   coordinates.
+- [RCSB PDB](https://www.rcsb.org/) structures with
+  [PDBe](https://www.ebi.ac.uk/pdbe/) SIFTS residue mappings, selected from
+  [GPCRdb](https://gpcrdb.org/) by BioHackathon Europe 2026 Project 9.
 - hg38 assembly, gene and ClinVar track configuration from
   [jbrowse.org/ucsc/hg38](https://jbrowse.org/ucsc/hg38/config.json); viewer:
   [JBrowse 2](https://jbrowse.org/jb2/) with the protein3d plugin.

@@ -58,16 +58,19 @@ def get_file(url, path):
     return gzip.decompress(path.read_bytes()).decode()
 
 
+ENTRY_FIELDS = "accession,gene_primary,sequence,cc_alternative_products,ft_var_seq,xref_refseq,xref_mane-select"
+
+
+def uniprot_entries(query, path):
+    return get_json("https://rest.uniprot.org/uniprotkb/stream", path, {"query": query, "fields": ENTRY_FIELDS, "format": "json"})["results"]
+
+
 def disease_entries():
-    return get_json(
-        "https://rest.uniprot.org/uniprotkb/stream",
-        DATA / "uniprot_disease.json",
-        {
-            "query": "organism_id:9606 AND reviewed:true AND cc_disease:*",
-            "fields": "accession,gene_primary,sequence,cc_alternative_products,ft_var_seq,xref_refseq,xref_mane-select",
-            "format": "json",
-        },
-    )["results"]
+    return uniprot_entries("organism_id:9606 AND reviewed:true AND cc_disease:*", DATA / "uniprot_disease.json")
+
+
+def human_entries():
+    return uniprot_entries("organism_id:9606 AND reviewed:true", DATA / "uniprot_human.json")
 
 
 def disease_proteins():

@@ -316,3 +316,20 @@ details summary {
 td.wide {
   min-width: 13rem;
 }
+
+.count {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.count.pathogenic {
+  color: var(--pathogenic);
+}
+
+.count.uncertain {
+  color: var(--uncertain);
+}
+
+.count.benign {
+  color: var(--benign);
+}

@@ -323,6 +323,38 @@
         "type": "BigBedAdapter",
         "uri": "interface_variants.bb"
       }
+    },
+    {
+      "type": "FeatureTrack",
+      "trackId": "gpcr-interfaces",
+      "name": "Experimental GPCR\u2013G protein interface codons (PDB)",
+      "assemblyNames": [
+        "hg38"
+      ],
+      "category": [
+        "Interface atlas"
+      ],
+      "description": "Codons of residues within 5 \u00c5 of the partner in 23 cryo-EM and X-ray receptor\u2013G protein complexes of biogenic amine receptors, selected from GPCRdb. One feature per structure and side, e.g. DRD1\u2013GNAS (7JVQ).",
+      "adapter": {
+        "type": "BigBedAdapter",
+        "uri": "gpcr_interfaces.bb"
+      }
+    },
+    {
+      "type": "FeatureTrack",
+      "trackId": "gpcr-interface-variants",
+      "name": "ClinVar missense at an experimental GPCR\u2013G protein interface",
+      "assemblyNames": [
+        "hg38"
+      ],
+      "category": [
+        "Interface atlas"
+      ],
+      "description": "ClinVar missense variants (NCBI variant_summary) whose residue contacts the partner in an experimental receptor\u2013G protein complex. Red pathogenic, orange uncertain, grey benign.",
+      "adapter": {
+        "type": "BigBedAdapter",
+        "uri": "gpcr_interface_variants.bb"
+      }
     }
   ],
   "defaultSession": {

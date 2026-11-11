@@ -6,7 +6,7 @@ import re
 
 import requests
 
-from atlas import DATA, OUT, disease_entries
+from atlas import DATA, OUT, human_entries
 from sequences import apply_edits, displayed_isoform, edits_by_isoform, mane_transcript, refseq_by_isoform
 
 SUMMARY_URL = "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz"
@@ -112,7 +112,7 @@ def main():
     download()
     by_transcript = missense_by_transcript()
     tally = Counter()
-    variants = {entry["primaryAccession"]: protein_variants(entry, by_transcript, tally) for entry in disease_entries()}
+    variants = {entry["primaryAccession"]: protein_variants(entry, by_transcript, tally) for entry in human_entries()}
     OUT.mkdir(exist_ok=True)
     VARIANTS.write_text(json.dumps(variants))
     counts = {label: sum(v["label"] == label for vs in variants.values() for v in vs) for label in ["pathogenic", "uncertain", "benign"]}

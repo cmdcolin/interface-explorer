@@ -443,6 +443,125 @@ async function isoformPage(name) {
     </p>`
 }
 
+const GPCR_TRACKS = ['hg38-ncbiRefSeqCurated', 'gpcr-interfaces', 'gpcr-interface-variants', 'hg38-clinvarMain']
+
+function pdbStructureLink(gene, pdbId, locus) {
+  const view = {
+    type: 'ProteinView',
+    gene,
+    pdbId,
+    connectedView: { assembly: 'hg38', ...(locus ? { loc: locus } : {}), tracks: GPCR_TRACKS },
+  }
+  return `jbrowse/?session=spec-${encodeURIComponent(JSON.stringify({ views: [view] }))}`
+}
+
+function variantCounts(variants) {
+  return Object.keys(LABELS)
+    .map(label => [label, variants.filter(v => v.label === label).length])
+    .filter(([, n]) => n)
+    .map(([label, n]) => `<span class="count ${label}">${n} ${LABELS[label].toLowerCase()}</span>`)
+    .join(', ')
+}
+
+function variantDetails(variants) {
+  return variants.length
+    ? `<details><summary>${variantCounts(variants)}</summary>${variants.map(v => `<a href="https://www.ncbi.nlm.nih.gov/clinvar/variation/${v.variation}/">${esc(v.change)}</a> <span class="muted">${LABELS[v.label]}</span>`).join(', ')}</details>`
+    : '—'
+}
+
+function agreementText(afdb) {
+  return afdb
+    ? `${Math.round(afdb.recall * 100)}% <span class="muted">of these; ${Math.round(afdb.precision * 100)}% of the ${afdb.predicted} AFDB residues (vs ${esc(afdb.partner)})</span>`
+    : '<span class="muted" title="AlphaFold DB has no complex of this receptor with a Gα">—</span>'
+}
+
+function sideCell(count, variants) {
+  return `${count} residues<br />${variantDetails(variants)}`
+}
+
+function surfaceMap(g) {
+  const length = g.length
+  const width = 1000
+  const scale = x => 20 + ((x - 1) / Math.max(length - 1, 1)) * (width - 40)
+  const most = Math.max(...g.counts.map(([, n]) => n))
+  const marks = g.variants.filter(v => v.label !== 'benign')
+  return `
+    <svg class="map" viewBox="0 0 ${width} 76" role="img" aria-label="${esc(g.gene)} residues contacting a receptor, by number of structures">
+      ${marks.map(v => `<rect x="${scale(v.position) - 1.5}" y="0" width="3" height="9" fill="var(--${v.label})"><title>${esc(v.change)} ${LABELS[v.label]}</title></rect>`).join('')}
+      ${g.counts.map(([r, n]) => `<rect x="${scale(r) - 1.25}" y="${46 - (30 * n) / most}" width="2.5" height="${(30 * n) / most}" fill="var(--interface)"><title>residue ${r}: contacts the receptor in ${n} of ${g.structures} structures</title></rect>`).join('')}
+      <line class="axis" x1="20" x2="${width - 20}" y1="48" y2="48" />
+      ${[1, Math.round(length / 4), Math.round(length / 2), Math.round((3 * length) / 4), length].map(x => `<text class="tick" x="${scale(x)}" y="66" text-anchor="middle">${x}</text>`).join('')}
+    </svg>`
+}
+
+async function gpcrPage() {
+  const data = await load('data/gpcr.json')
+  app.innerHTML = `
+    <h1>GPCRs and their G proteins</h1>
+    <p class="lede">
+      Experimental receptor–G protein interfaces from ${data.complexes.length} cryo-EM and X-ray complexes of
+      biogenic amine receptors (dopamine, serotonin, adrenergic and histamine), selected from
+      <a href="https://gpcrdb.org/">GPCRdb</a> by BioHackathon Europe 2026 Project 9. Residues within 5 Å of
+      the partner are mapped to human codons, shown beside AlphaFold DB's predicted interfaces, and
+      carried into JBrowse as the "experimental GPCR–G protein interface" tracks.
+    </p>
+    <h2>The receptor-facing surface of each Gα</h2>
+    <p class="muted">Bars: how many structures put a receptor within 5 Å of the residue. Marks above: ClinVar pathogenic (red) and uncertain (orange) missense.</p>
+    ${data.gAlphas
+      .map(
+        g => `
+      <h3>${esc(g.gene)} <span class="muted">in ${g.structures} structure${g.structures > 1 ? 's' : ''}: ${g.receptors.map(esc).join(', ')}</span></h3>
+      ${surfaceMap(g)}
+      <p>
+        ${g.counts.length} residues contact a receptor. ClinVar on them: ${variantDetails(g.variants)}<br />
+        AlphaFold DB: ${g.afdb ? `its predicted GPCR complexes (${g.afdbReceptors.map(esc).join(', ')}) cover ${agreementText(g.afdb)}` : 'no predicted complex with a GPCR'}.
+      </p>`,
+      )
+      .join('')}
+    <h2>Complexes</h2>
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>Receptor</th><th>G protein</th><th>Structure</th><th>Receptor side</th><th>Gα side</th>
+        <th>AlphaFold DB covers, receptor side</th><th>Open</th>
+      </tr></thead>
+      <tbody>${data.complexes
+        .map(c => {
+          const r = c.receptorSide
+          const gResidues = c.gProteins.reduce((n, g) => n + g.residues.length, 0)
+          return `<tr>
+            <td class="nowrap">${esc(r.gene)}${c.species !== 'Human' ? ` <span class="muted">${esc(c.species)}</span>` : ''}</td>
+            <td>${esc(c.g_subtype)} <span class="muted">${esc(c.g_note)}</span></td>
+            <td class="nowrap"><a href="https://www.rcsb.org/structure/${esc(c.pdb)}">${esc(c.pdb)}</a> <span class="muted">${esc(c.method)}, ${esc(c.resolution)} Å</span></td>
+            <td>${sideCell(r.residues.length, r.variants)}</td>
+            <td>${c.gProteins.length ? sideCell(gResidues, c.gProteins.flatMap(g => g.variants)) : '<span class="muted" title="An engineered chimera that SIFTS maps to no single gene">chimera, not mapped</span>'}</td>
+            <td>${agreementText(r.afdb)}</td>
+            <td class="nowrap">${r.locus ? `<a href="jbrowse/?assembly=hg38&loc=${esc(r.locus)}&tracks=${GPCR_TRACKS.join(',')}">Genome</a> · ` : ''}<a href="${pdbStructureLink(r.gene, c.pdb, r.locus)}">3D</a></td>
+          </tr>`
+        })
+        .join('')}</tbody>
+    </table></div>
+    <h2>The other structures in the set</h2>
+    <p class="muted">Receptors without a G protein bound, mostly inactive-state X-ray structures: the reference conformations.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Receptor</th><th>State</th><th>Structure</th><th>Open</th></tr></thead>
+      <tbody>${data.others
+        .map(
+          o => `<tr>
+            <td class="nowrap">${esc(o.gene)}${o.species !== 'Human' ? ` <span class="muted">${esc(o.species)}</span>` : ''}</td>
+            <td>${esc(o.state)} <span class="muted">${esc(o.degree_active)}% active</span></td>
+            <td class="nowrap"><a href="https://www.rcsb.org/structure/${esc(o.pdb)}">${esc(o.pdb)}</a> <span class="muted">${esc(o.method)}, ${esc(o.resolution)} Å</span></td>
+            <td><a href="${pdbStructureLink(o.gene, o.pdb)}">3D</a></td>
+          </tr>`,
+        )
+        .join('')}</tbody>
+    </table></div>
+    <p class="note">
+      The G proteins in these complexes are often engineered: dominant-negative Gαi1, mini-Gs and mini-Gq.
+      SIFTS maps most of them to a single gene. Four chimeras map to none, so only their receptor side is shown.
+      Non-human receptors and G proteins are aligned to the human protein before mapping to codons.
+    </p>`
+}
+
 async function about() {
   const summary = await load('data/summary.json')
   const t = summary.thresholds
@@ -463,6 +582,12 @@ async function about() {
       <li>Only folded (pLDDT ≥ 70), surface-exposed residues: ${oddsText(summary.enrichment.orderedSurface)}</li>
     </ul>
     <p>Mantel–Haenszel odds ratios across proteins, with intervals from resampling proteins. The second line rules out "folded vs disordered" as the explanation.</p>
+    <h2>GPCRs</h2>
+    <ul>
+      <li>23 experimental receptor–G protein complexes of biogenic amine receptors, from a GPCRdb selection made by BioHackathon Europe 2026 Project 9, plus 22 receptor structures without a G protein.</li>
+      <li>Contacts: heavy atoms within 5 Å between receptor and Gα. PDBe's SIFTS annotation gives each residue's UniProt position; a receptor chain SIFTS does not map is aligned to its UniProt sequence. Non-human proteins are aligned to the human ortholog.</li>
+      <li>Four G proteins are engineered chimeras that SIFTS maps to no gene; only their receptor side is shown.</li>
+    </ul>
     <h2>Isoforms</h2>
     <ul>
       <li>AlphaFold DB's monomer models of UniProt's alternative isoforms, for disease genes with at least one modelled besides the canonical.</li>
@@ -487,6 +612,8 @@ async function route() {
       await isoformPage(decodeURIComponent(arg))
     } else if (page === 'isoforms') {
       await isoformIndex()
+    } else if (page === 'gpcr') {
+      await gpcrPage()
     } else if (page === 'about') {
       await about()
     } else {
