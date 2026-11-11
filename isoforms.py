@@ -39,11 +39,12 @@ def plddt(model):
 
 
 def confident_interfaces(atlas_protein):
-    return {
+    interfaces = {
         complex_entry["partner_gene"] or complex_entry["partner"]: {int(r) for r, score in complex_entry["residues"].items() if score >= MIN_PLDDT}
         for complex_entry in (atlas_protein or {}).get("interfaces", [])
         if (complex_entry["ipsae"] or 0) >= CONFIDENT
     }
+    return {partner: residues for partner, residues in interfaces.items() if residues}
 
 
 def isoform_record(isoform_id, info, model, sequence, positions, scores, canonical_sequence, canonical_plddt, transcripts, pathogenic, interfaces):
