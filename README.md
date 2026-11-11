@@ -163,6 +163,9 @@ one.
 - The site is `site/index.html`, `app.js` and `style.css`, also with no build
   step. On push, GitHub Actions unzips JBrowse Web 5.0.0-beta.21 into
   `/jbrowse/` and deploys `site/` to Pages.
+- A summary deck is in `slides/`: `make` there builds
+  `interface-atlas-summary.pdf` with LuaLaTeX, and `make screenshots` retakes
+  its screenshots with headless Chrome.
 
 Requires Node 24 or later, pnpm, and UCSC's `bedToBigBed`.
 
