@@ -1,12 +1,12 @@
 import json
-import re
+from collections import Counter
 from pathlib import Path
 
 from atlas import OUT
+from clinvar import with_variants
 from tracks import CONFIDENT, MIN_PLDDT, coding_positions
 
 DATA_DIR = Path(__file__).resolve().parent / "site" / "data"
-HGVS = re.compile(r"NC_0000(\d\d)\.\d+:g\.(\d+)")
 
 
 def runs(residues):
@@ -19,13 +19,8 @@ def runs(residues):
     return ", ".join(f"{a}" if a == b else f"{a}–{b}" for a, b in spans)
 
 
-def chromosome(number):
-    return {"23": "X", "24": "Y"}.get(number.lstrip("0"), number.lstrip("0"))
-
-
-def gene_record(protein):
-    length = max(int(k) for k in protein["context"])
-    chrom, strand, positions = coding_positions(protein["accession"], length)
+def gene_record(protein, chrom, strand, positions):
+    length = protein["length"]
     partners = []
     at_residue = {}
     for complex_entry in sorted(protein["interfaces"], key=lambda c: -(c["ipsae"] or 0)):
@@ -48,17 +43,18 @@ def gene_record(protein):
             )
     variants = []
     for variant in protein["variants"]:
-        match = next((HGVS.search(g) for g in variant["genomic"] if HGVS.search(g)), None)
-        if variant["position"] in at_residue and match:
+        if variant["position"] in at_residue:
             variants.append(
                 {
                     "change": variant["change"],
                     "label": variant["label"],
                     "position": variant["position"],
                     "partners": sorted(set(at_residue[variant["position"]])),
-                    "clinvar": variant.get("clinvar"),
-                    "chrom": chromosome(match.group(1)),
-                    "pos": int(match.group(2)),
+                    "variation": variant["variation"],
+                    "review": variant["review"],
+                    "chrom": variant["chrom"],
+                    "pos": variant["pos"],
+                    "allele": variant["allele"],
                 }
             )
     for partner in partners:
@@ -82,15 +78,21 @@ def gene_record(protein):
 
 
 def main():
-    proteins = json.loads((OUT / "atlas.json").read_text())
+    proteins = with_variants(json.loads((OUT / "atlas.json").read_text()))
     analysis = json.loads((OUT / "analysis.json").read_text())
-    genes = [gene_record(p) for p in proteins if any((c["ipsae"] or 0) >= CONFIDENT for c in p["interfaces"])]
+    confident = [p for p in proteins if any((c["ipsae"] or 0) >= CONFIDENT for c in p["interfaces"])]
+    mapped = [(p, coding_positions(p["accession"], p["length"])) for p in confident]
+    genes = [gene_record(p, *coordinates) for p, coordinates in mapped if coordinates]
+    unmapped = [p["gene"] for p, coordinates in mapped if not coordinates]
+    repeated = Counter(g["gene"] for g in genes)
     (DATA_DIR / "genes").mkdir(parents=True, exist_ok=True)
     for record in genes:
-        (DATA_DIR / "genes" / f"{record['gene']}.json").write_text(json.dumps(record, ensure_ascii=False))
+        record["page"] = record["gene"] if repeated[record["gene"]] == 1 else f"{record['gene']}_{record['accession']}"
+        (DATA_DIR / "genes" / f"{record['page']}.json").write_text(json.dumps(record, ensure_ascii=False))
     index = [
         {
             "gene": g["gene"],
+            "page": g["page"],
             "accession": g["accession"],
             "partners": len(g["partners"]),
             "topPartner": g["partners"][0]["gene"],
@@ -103,9 +105,10 @@ def main():
     ]
     controlled = analysis["controlled_for_order_and_surface"]
     summary = {
-        "sampled": analysis["summary"]["proteins sampled"],
+        "proteins": analysis["summary"]["disease proteins"],
         "withPartner": analysis["summary"]["with any predicted hetero complex"],
         "genes": len(genes),
+        "unmapped": len(unmapped),
         "partners": sum(len(g["partners"]) for g in genes),
         "variantsAtInterface": {label: sum(g["counts"][label] for g in genes) for label in ["pathogenic", "uncertain", "benign"]},
         "enrichment": {
@@ -116,7 +119,7 @@ def main():
     }
     (DATA_DIR / "genes.json").write_text(json.dumps(sorted(index, key=lambda g: g["gene"]), ensure_ascii=False))
     (DATA_DIR / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False))
-    print(f"{len(genes)} gene pages, {summary['partners']} partners, {summary['variantsAtInterface']}")
+    print(f"{len(genes)} gene pages, {summary['partners']} partners, {summary['variantsAtInterface']}; {len(unmapped)} genes with a confident partner left out because their coding coordinates don't map: {unmapped[:20]}")
 
 
 if __name__ == "__main__":

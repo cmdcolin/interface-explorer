@@ -1,15 +1,19 @@
 import json
 import re
+import subprocess
 from pathlib import Path
 from urllib.parse import urljoin
 
-from atlas import DATA, OUT, get_json
+from atlas import DATA, OUT, get_file, get_json
+from clinvar import with_variants
 
 SITE = Path(__file__).resolve().parent / "site" / "jbrowse"
 CONFIDENT = 0.6
 MIN_PLDDT = 70
 COLOURS = {"pathogenic": "200,40,40", "uncertain": "235,140,40", "benign": "120,120,120"}
-HGVS = re.compile(r"NC_0000(\d\d)\.\d+:g\.(\d+)")
+
+
+CHROMOSOMES = {**{c: c for c in [*map(str, range(1, 23)), "X", "Y"]}, "Mitochondrion": "M"}
 
 
 def coding_positions(accession, length):
@@ -19,10 +23,11 @@ def coding_positions(accession, length):
         reverse = location.get("reverseStrand", False)
         positions = []
         for exon in location.get("exon", []):
-            begin, end = exon["genomeLocation"]["begin"]["position"], exon["genomeLocation"]["end"]["position"]
+            span = exon["genomeLocation"]
+            begin, end = (span.get("begin") or span["position"])["position"], (span.get("end") or span["position"])["position"]
             positions += list(range(begin, end - 1, -1)) if reverse else list(range(begin, end + 1))
-        if len(positions) in (3 * length, 3 * length + 3):
-            return f"chr{location['chromosome']}", "-" if reverse else "+", positions
+        if location["chromosome"] in CHROMOSOMES and len(positions) in (3 * length, 3 * length + 3):
+            return f"chr{CHROMOSOMES[location['chromosome']]}", "-" if reverse else "+", positions
     return None
 
 
@@ -43,10 +48,6 @@ def bed12(chrom, strand, blocks, name, score, colour):
     return f"{chrom}\t{start}\t{end}\t{name}\t{score}\t{strand}\t{start}\t{end}\t{colour}\t{len(blocks)}\t{sizes}\t{starts}"
 
 
-def chromosome(number):
-    return {"23": "chrX", "24": "chrY"}.get(number.lstrip("0"), f"chr{number.lstrip('0')}")
-
-
 HG38 = "https://jbrowse.org/ucsc/hg38/config.json"
 KEPT_TRACKS = ["hg38-ncbiRefSeqCurated", "hg38-clinvarMain"]
 
@@ -59,7 +60,7 @@ def bed_track(track_id, name, file, description):
         "assemblyNames": ["hg38"],
         "category": ["Interface atlas"],
         "description": description,
-        "adapter": {"type": "BedAdapter", "uri": file},
+        "adapter": {"type": "BigBedAdapter", "uri": file},
     }
 
 
@@ -79,8 +80,8 @@ def absolute(node):
 def write_config(default_locus):
     hg38 = absolute(get_json(HG38, DATA / "hg38_config.json"))
     tracks = [t for t in hg38["tracks"] if t["trackId"] in KEPT_TRACKS] + [
-        bed_track("interfaces", "Predicted interface codons (AlphaFold DB complexes)", "interfaces.bed", f"Codons of residues within 5 Å of a partner in an AlphaFold DB heterodimer with ipSAE ≥ {CONFIDENT}, residue pLDDT ≥ {MIN_PLDDT}. One feature per partner."),
-        bed_track("interface-variants", "ClinVar missense at a predicted interface", "interface_variants.bed", "ClinVar missense variants (EBI Proteins API) whose residue sits at a confident predicted interface. Red pathogenic, orange uncertain, grey benign."),
+        bed_track("interfaces", "Predicted interface codons (AlphaFold DB complexes)", "interfaces.bb", f"Codons of residues within 5 Å of a partner in an AlphaFold DB heterodimer with ipSAE ≥ {CONFIDENT}, residue pLDDT ≥ {MIN_PLDDT}. One feature per partner."),
+        bed_track("interface-variants", "ClinVar missense at a predicted interface", "interface_variants.bb", "ClinVar missense variants (NCBI variant_summary) whose residue sits at a confident predicted interface. Red pathogenic, orange uncertain, grey benign."),
     ]
     config = {
         "assemblies": hg38["assemblies"],
@@ -95,14 +96,23 @@ def write_config(default_locus):
     (SITE / "config.json").write_text(json.dumps(config, indent=2))
 
 
+def write_bigbed(name, lines, bed_type):
+    sizes = DATA / "hg38.chrom.sizes"
+    if not sizes.exists():
+        sizes.write_text(get_file("https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.chrom.sizes", DATA / "hg38.chrom.sizes.gz"))
+    bed = OUT / f"{name}.bed"
+    bed.write_text("\n".join(sorted(lines, key=lambda line: (line.split("\t")[0], int(line.split("\t")[1])))) + "\n")
+    subprocess.run(["bedToBigBed", "-tab", f"-type={bed_type}", bed, sizes, SITE / f"{name}.bb"], check=True)
+
+
 def main():
-    proteins = json.loads((OUT / "atlas.json").read_text())
+    proteins = with_variants(json.loads((OUT / "atlas.json").read_text()))
     interfaces, variants, unmapped = [], [], []
     for protein in proteins:
         confident = [c for c in protein["interfaces"] if (c["ipsae"] or 0) >= CONFIDENT]
         if confident:
-            length = max(int(k) for k in protein["context"]) if protein.get("context") else None
-            mapped = coding_positions(protein["accession"], length) if length else None
+            length = protein["length"]
+            mapped = coding_positions(protein["accession"], length)
             if not mapped:
                 unmapped.append(protein["gene"])
             else:
@@ -117,16 +127,15 @@ def main():
                         name = f"{protein['gene']}–{complex_entry['partner_gene'] or complex_entry['partner']} (ipSAE {complex_entry['ipsae']:.2f})"
                         interfaces.append(bed12(chrom, strand, merge(codons), name, int(1000 * complex_entry["ipsae"]), "40,110,200"))
                 for variant in protein["variants"]:
-                    match = next((HGVS.search(g) for g in variant["genomic"] if HGVS.search(g)), None)
-                    if match and variant["position"] in partners_at:
-                        start = int(match.group(2)) - 1
-                        partners = ", ".join(sorted(partners_at[variant["position"]]))
+                    if variant["position"] in partners_at:
+                        start = variant["pos"] - 1
+                        touched = sorted(partners_at[variant["position"]])
+                        partners = ", ".join(touched[:5]) + (f" and {len(touched) - 5} more" if len(touched) > 5 else "")
                         name = f"{protein['gene']} {variant['change']} {variant['label']}; interface with {partners}"
-                        variants.append(f"{chromosome(match.group(1))}\t{start}\t{start + 1}\t{name}\t0\t{strand}\t{start}\t{start + 1}\t{COLOURS[variant['label']]}")
+                        variants.append(f"chr{variant['chrom']}\t{start}\t{start + 1}\t{name}\t0\t{strand}\t{start}\t{start + 1}\t{COLOURS[variant['label']]}")
     SITE.mkdir(exist_ok=True)
-    order = lambda line: (line.split("\t")[0], int(line.split("\t")[1]))
-    (SITE / "interfaces.bed").write_text("\n".join(sorted(interfaces, key=order)) + "\n")
-    (SITE / "interface_variants.bed").write_text("\n".join(sorted(variants, key=order)) + "\n")
+    write_bigbed("interfaces", interfaces, "bed12")
+    write_bigbed("interface_variants", variants, "bed9")
     preferred = next((line for line in interfaces if line.split("\t")[3].startswith("GNAO1–")), interfaces[0]).split("\t")
     write_config(f"{preferred[0]}:{int(preferred[1]) - 2000}-{int(preferred[2]) + 2000}")
     print(f"{len(interfaces)} interface features, {len(variants)} variants at confident interfaces; unmapped: {unmapped}")

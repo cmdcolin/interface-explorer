@@ -11,6 +11,10 @@
   --uncertain: #d97a14;
   --benign: #7a7975;
   --chip-text: #ffffff;
+  --plddt-very-high: #0053d6;
+  --plddt-confident: #65cbf3;
+  --plddt-low: #ffdb13;
+  --plddt-very-low: #ff7d45;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -159,7 +163,6 @@ td {
 th {
   color: var(--text-2);
   font-weight: 600;
-  white-space: nowrap;
 }
 
 th button {
@@ -172,6 +175,10 @@ th button {
 }
 
 td.nowrap {
+  white-space: nowrap;
+}
+
+td.num {
   white-space: nowrap;
 }
 
@@ -277,4 +284,35 @@ tr:hover td {
   color: var(--text-2);
   font-size: 13px;
   text-align: center;
+}
+
+.map .row-label {
+  font-size: 12px;
+  fill: var(--text-2);
+}
+
+.map .baseline {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.map .replaced {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 2;
+}
+
+.replaced-swatch {
+  background: none;
+  border: 1.5px dashed var(--text);
+}
+
+details summary {
+  cursor: pointer;
+  color: var(--link);
+}
+
+td.wide {
+  min-width: 13rem;
 }

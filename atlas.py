@@ -1,7 +1,7 @@
 import gzip
 import json
-import random
 import sys
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -17,25 +17,26 @@ from scipy.spatial import cKDTree
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT / "data"
 OUT = ROOT / "out"
-SAMPLE = 150
-MAX_COMPLEXES = 15
+MAX_COMPLEXES = 30
 CONTACT = 5.0
-SEED = 0
-PATHOGENIC = {"Pathogenic", "Likely pathogenic", "Pathogenic/Likely pathogenic"}
-BENIGN = {"Benign", "Likely benign", "Benign/Likely benign"}
-UNCERTAIN = {"Variant of uncertain significance"}
 
 
-def get_json(url, path, params=None):
+def write_atomically(path, content):
+    partial = path.with_name(f"{path.name}.{threading.get_ident()}.part")
+    partial.write_bytes(content)
+    partial.replace(path)
+
+
+def get_json(url, path, params=None, keep=lambda data: data):
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
-        for attempt in range(6):
+        for attempt in range(9):
             response = requests.get(url, params=params, timeout=120)
             if response.status_code in (400, 404):
-                path.write_text("null")
+                write_atomically(path, b"null")
                 break
             if response.ok:
-                path.write_text(response.text)
+                write_atomically(path, json.dumps(keep(response.json())).encode())
                 break
             time.sleep(2**attempt)
         if not path.exists():
@@ -46,10 +47,10 @@ def get_json(url, path, params=None):
 def get_file(url, path):
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
-        for attempt in range(6):
+        for attempt in range(9):
             response = requests.get(url, timeout=300)
             if response.ok:
-                path.write_bytes(gzip.compress(response.content))
+                write_atomically(path, gzip.compress(response.content))
                 break
             time.sleep(2**attempt)
         if not path.exists():
@@ -57,14 +58,21 @@ def get_file(url, path):
     return gzip.decompress(path.read_bytes()).decode()
 
 
-def sample_proteins():
-    rows = get_json(
+def disease_entries():
+    return get_json(
         "https://rest.uniprot.org/uniprotkb/stream",
-        DATA / "disease_proteins.json",
-        {"query": "organism_id:9606 AND reviewed:true AND cc_disease:*", "fields": "accession,gene_primary,length", "format": "json"},
+        DATA / "uniprot_disease.json",
+        {
+            "query": "organism_id:9606 AND reviewed:true AND cc_disease:*",
+            "fields": "accession,gene_primary,sequence,cc_alternative_products,ft_var_seq,xref_refseq,xref_mane-select",
+            "format": "json",
+        },
     )["results"]
-    usable = [(r["primaryAccession"], r.get("genes", [{}])[0].get("geneName", {}).get("value", "")) for r in rows]
-    return random.Random(SEED).sample(usable, SAMPLE)
+
+
+def disease_proteins():
+    return [(e["primaryAccession"], e.get("genes", [{}])[0].get("geneName", {}).get("value", ""), e["sequence"]["value"]) for e in disease_entries()]
+
 
 
 def atoms_by_chain(cif):
@@ -93,7 +101,7 @@ def interface_residues(own, partner):
 
 def protein_interfaces(accession):
     complexes = get_json(f"https://alphafold.ebi.ac.uk/api/complex/{accession}", DATA / "complexes" / f"{accession}.json") or []
-    hetero = sorted((c for c in complexes if c.get("assemblyType") == "Hetero"), key=lambda c: -(c.get("complexPredictionAccuracy_ipTM") or 0))
+    hetero = sorted((c for c in complexes if c.get("assemblyType") == "Hetero"), key=lambda c: -(c.get("complexPredictionAccuracy_ipSAE") or 0))
     results = []
     for complex_entry in hetero[:MAX_COMPLEXES]:
         entity = complex_entry["modelEntityId"]
@@ -141,43 +149,35 @@ def protein_context(accession):
     return context
 
 
-def protein_variants(accession):
-    data = get_json(f"https://www.ebi.ac.uk/proteins/api/variation/{accession}", DATA / "variants" / f"{accession}.json", {"format": "json"}) or {}
-    variants = []
-    for feature in data.get("features", []):
-        if feature.get("consequenceType") == "missense" and feature.get("begin") == feature.get("end"):
-            kinds = {s["type"] for s in feature.get("clinicalSignificances", []) if "ClinVar" in s.get("sources", [])}
-            label = "pathogenic" if kinds & PATHOGENIC and not kinds & BENIGN else "benign" if kinds & BENIGN and not kinds & PATHOGENIC else "uncertain" if kinds & UNCERTAIN else None
-            if label:
-                clinvar = next((x["id"] for x in feature.get("xrefs", []) if x.get("name") == "ClinVar"), None)
-                variants.append(
-                    {
-                        "position": int(feature["begin"]),
-                        "label": label,
-                        "change": f"{feature.get('wildType')}{feature['begin']}{feature.get('mutatedType')}",
-                        "genomic": feature.get("genomicLocation", []),
-                        "clinvar": clinvar,
-                    }
-                )
-    return variants
-
-
 def process(entry):
-    accession, gene = entry
-    interfaces = protein_interfaces(accession)
-    context = protein_context(accession) if interfaces["hetero"] else {}
-    return {"accession": accession, "gene": gene, **interfaces, "context": context, "variants": protein_variants(accession)}
+    accession, gene, sequence = entry
+    try:
+        interfaces = protein_interfaces(accession)
+        with_complex = interfaces["hetero"] > 0
+        return {
+            "accession": accession,
+            "gene": gene,
+            "length": len(sequence),
+            **interfaces,
+            "context": protein_context(accession) if with_complex else {},
+        }
+    except Exception as error:
+        return {"accession": accession, "gene": gene, "error": f"{type(error).__name__}: {error}"}
 
 
 def main(workers=6):
-    proteins = sample_proteins()
+    proteins = disease_proteins()
     with ThreadPoolExecutor(int(workers)) as pool:
         results = []
         for result in pool.map(process, proteins):
             results.append(result)
-            print(f"{len(results)}/{len(proteins)} {result['gene']}: {result['hetero']} hetero complexes, {len(result['variants'])} classified missense", flush=True)
+            if len(results) % 250 == 0:
+                print(f"{len(results)}/{len(proteins)}", flush=True)
+    failed = [r for r in results if "error" in r]
+    done = [r for r in results if "error" not in r]
     OUT.mkdir(exist_ok=True)
-    (OUT / "atlas.json").write_text(json.dumps(results))
+    (OUT / "atlas.json").write_text(json.dumps(done))
+    print(f"{len(done)} proteins, {sum(r['hetero'] > 0 for r in done)} with a hetero complex; {len(failed)} failed: {[r['accession'] for r in failed][:20]}")
 
 
 if __name__ == "__main__":

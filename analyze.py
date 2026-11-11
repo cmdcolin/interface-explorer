@@ -3,9 +3,11 @@ from pathlib import Path
 
 import numpy as np
 
+from clinvar import with_variants
+
 ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "out"
-THRESHOLDS = {"ipTM": [0.3, 0.5, 0.6, 0.7, 0.8], "ipSAE": [0.2, 0.4, 0.5, 0.6, 0.7]}
+THRESHOLDS = {"ipTM": [0.5, 0.6, 0.7, 0.8, 0.9], "ipSAE": [0.6, 0.7, 0.8, 0.9]}
 METRIC = {"ipTM": "iptm", "ipSAE": "ipsae"}
 CONFIDENT = ("ipsae", 0.6)
 MIN_PLDDT = 70
@@ -58,14 +60,14 @@ def bootstrap(rows, seed=0):
 
 
 def main():
-    proteins = json.loads((OUT / "atlas.json").read_text())
+    proteins = with_variants(json.loads((OUT / "atlas.json").read_text()))
     with_complex = [p for p in proteins if p["hetero"]]
     confident = [p for p in proteins if any((c[CONFIDENT[0]] or 0) >= CONFIDENT[1] for c in p["interfaces"])]
     summary = {
-        "proteins sampled": len(proteins),
+        "disease proteins": len(proteins),
         "with any predicted hetero complex": len(with_complex),
         f"with a partner at ipSAE ≥ {CONFIDENT[1]}": len(confident),
-        "classified missense variants": {label: sum(v["label"] == label for p in proteins for v in p["variants"]) for label in ["pathogenic", "benign", "uncertain"]},
+        "classified missense variants in proteins with a complex": {label: sum(v["label"] == label for p in with_complex for v in p["variants"]) for label in ["pathogenic", "benign", "uncertain"]},
     }
     enrichment = {}
     for name, thresholds in THRESHOLDS.items():
