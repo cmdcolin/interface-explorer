@@ -113,7 +113,7 @@ def write_config(default_locus):
     tracks = [with_significance_rows(t) if t["trackId"] == "hg38-clinvarMain" else t for t in kept] + [
         bed_track("interfaces", "Predicted interface codons (AlphaFold DB complexes)", "interfaces.bb", f"Codons of residues within 5 Å of a partner in an AlphaFold DB heterodimer with ipSAE ≥ {CONFIDENT}, residue pLDDT ≥ {MIN_PLDDT}. One feature per partner."),
         bed_track("interface-variants", "ClinVar missense at a predicted interface", "interface_variants.bb", "ClinVar missense variants (NCBI variant_summary) whose residue sits at a confident predicted interface. Red pathogenic, orange uncertain, grey benign."),
-        bed_track("gpcr-interfaces", "Experimental GPCR–G protein interface codons (PDB)", "gpcr_interfaces.bb", "Codons of residues within 5 Å of the partner in 23 cryo-EM and X-ray receptor–G protein complexes of biogenic amine receptors, selected from GPCRdb. One feature per structure and side, e.g. DRD1–GNAS (7JVQ)."),
+        bed_track("gpcr-interfaces", "Experimental GPCR–G protein interface codons (PDB)", "gpcr_interfaces.bb", "Codons of residues within 5 Å of the partner in cryo-EM and X-ray receptor–G protein complexes of biogenic amine receptors, selected from GPCRdb. One feature per structure and side, e.g. DRD1–GNAS (7JVQ)."),
         bed_track("gpcr-interface-variants", "ClinVar missense at an experimental GPCR–G protein interface", "gpcr_interface_variants.bb", "ClinVar missense variants (NCBI variant_summary) whose residue contacts the partner in an experimental receptor–G protein complex. Red pathogenic, orange uncertain, grey benign."),
     ]
     config = {

@@ -76,15 +76,20 @@ one.
 - The structures are a GPCRdb selection of dopamine, serotonin, adrenergic and
   histamine receptors made by BioHackathon Europe 2026 Project 9
   (`gpcr_structures.tsv`): 23 with a G protein bound, 22 without.
-- Gαs has no AlphaFold DB complex at all, but 8 experimental Gs complexes put
-  44 of its residues against a receptor. 10 ClinVar pathogenic variants sit
-  on them, most on the C-terminal α5 helix: R342Q, R347T, G353R, F376V, C379Y,
-  D381V, Q384E, R385H, L388R and E392K.
+- Gαs has no AlphaFold DB complex with a GPCR, but 8 experimental Gs complexes
+  and the Gαs scaffold of 4 engineered chimeras put 46 of its residues against
+  a receptor. 10 ClinVar pathogenic variants sit on them, most on the
+  C-terminal α5 helix: R342Q, R347T, G353R, F376V, C379Y, D381V, Q384E, R385H,
+  L388R and E392K.
 - Where AlphaFold DB has a comparable prediction, it finds the experimental
   surface: its GPCR complexes of Gαi1 cover 90% of the residues the 10
   experimental Gi1 complexes use (68% of its residues are among them), its
   RHO–Gαo complex covers 88% of 5-HT1B–Gαo's, and its DRD5–Golf complex covers
-  87% of the receptor residues DRD5 uses against Gs.
+  87% of the receptor residues DRD5 uses against Gs. Its GPCR complexes of Gαq
+  cover all 11 α5 residues the three mini-Gq chimeras carry.
+- Every receptor is looked up in AlphaFold DB, disease protein or not. Only
+  DRD5 (with Golf) and HRH4 (with Gα14, covering 66% of the residues HRH4 uses
+  against Gi1) have a predicted complex with a Gα.
 - On the receptor side, 78 ClinVar variants of uncertain significance and 2
   benign ones contact the G protein; none is classified pathogenic.
 
@@ -118,9 +123,12 @@ one.
 - **GPCRs:** PDBe's updated mmCIF gives each atom's UniProt position (SIFTS).
   The receptor chain is GPCRdb's preferred chain, aligned to its UniProt
   sequence where SIFTS does not map it; Gα chains are found by SIFTS gene or
-  entity name. Non-human proteins are aligned to the human ortholog. Four
-  engineered chimeric Gα chains map to no gene, so only their receptor side is
-  used.
+  entity name. Non-human proteins are aligned to the human ortholog; a contact
+  residue that differs from the human one is still mapped, and marked. Four
+  engineered chimeric Gα chains map to no gene: each is split into segments by
+  the human Gα it matches best, favouring the Gα the structure is annotated
+  with, so a mini-Gq gives its α5 helix to GNAQ and its scaffold to GNAS. Only
+  receptor–Gα contacts are counted, not those with Gβγ.
 - **Isoforms:** each isoform's sequence is rebuilt from UniProt's
   alternative-sequence edits and must equal its AlphaFold DB model's sequence;
   that gives each isoform residue its canonical position. A replaced stretch
@@ -129,9 +137,11 @@ one.
 
 ## Run
 
+- `make all` runs every step below in order; `make test` runs the unit tests.
 - `python3 atlas.py [workers]`: fetches the complexes, models and monomer
   context for every disease protein. Downloads are cached in `data/`; keep
-  workers at 3–4, since AlphaFold DB rate-limits.
+  workers at 3–4, since AlphaFold DB rate-limits. Proteins that fail are
+  listed in `out/atlas_failures.json`.
 - `python3 clinvar.py`: downloads ClinVar's `variant_summary.txt.gz` and writes
   `out/clinvar.json` for every reviewed human protein.
 - `python3 analyze.py`: the enrichment, in `out/analysis.json`.
@@ -148,8 +158,8 @@ one.
   On push, GitHub Actions unzips JBrowse Web 5.0.0-beta.21 into `/jbrowse/` and
   deploys `site/` to Pages.
 
-Requires Python 3 with numpy, scipy, biopython and requests, and UCSC's
-`bedToBigBed`.
+Requires Python 3 with the packages in `requirements.txt` (numpy, scipy,
+biopython and requests) and UCSC's `bedToBigBed`.
 
 ## Data and credits
 

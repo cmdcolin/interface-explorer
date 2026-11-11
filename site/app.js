@@ -463,20 +463,31 @@ function variantCounts(variants) {
     .join(', ')
 }
 
-function variantDetails(variants) {
+function variantDetails(variants, differing = []) {
   return variants.length
-    ? `<details><summary>${variantCounts(variants)}</summary>${variants.map(v => `<a href="https://www.ncbi.nlm.nih.gov/clinvar/variation/${v.variation}/">${esc(v.change)}</a> <span class="muted">${LABELS[v.label]}</span>`).join(', ')}</details>`
+    ? `<details><summary>${variantCounts(variants)}</summary>${variants.map(v => `<a href="https://www.ncbi.nlm.nih.gov/clinvar/variation/${v.variation}/">${esc(v.change)}</a>${differing.includes(v.position) ? '<span title="The structure has a different residue here than the human protein">*</span>' : ''} <span class="muted">${LABELS[v.label]}</span>`).join(', ')}</details>`
     : '—'
 }
 
-function agreementText(afdb) {
+function residueCount(n) {
+  return `${n} residue${n === 1 ? '' : 's'}`
+}
+
+function agreementText(afdb, partial) {
   return afdb
-    ? `${Math.round(afdb.recall * 100)}% <span class="muted">of these; ${Math.round(afdb.precision * 100)}% of the ${afdb.predicted} AFDB residues (vs ${esc(afdb.partner)})</span>`
+    ? `${Math.round(afdb.recall * 100)}% <span class="muted">of these${partial ? '' : `; ${Math.round(afdb.precision * 100)}% of the ${afdb.predicted} AFDB residues`} (vs ${esc(afdb.partner)})</span>`
     : '<span class="muted" title="AlphaFold DB has no complex of this receptor with a Gα">—</span>'
 }
 
-function sideCell(count, variants) {
-  return `${count} residues<br />${variantDetails(variants)}`
+function sideCell(side) {
+  const differing = side.differing.length
+  return `${residueCount(side.residues.length)}${differing ? ` <span class="muted" title="Residues ${side.differing.join(', ')} differ from the human protein in this structure">(${differing} not as in human)</span>` : ''}<br />${variantDetails(side.variants, side.differing)}`
+}
+
+function gAlphaCell(gProteins) {
+  return gProteins.length
+    ? gProteins.map(g => `${gProteins.length > 1 || g.chimera ? `${esc(g.gene)}${g.chimera ? ' <span class="muted">segment</span>' : ''}: ` : ''}${sideCell(g)}`).join('<br />')
+    : '<span class="muted" title="No part of this Gα matches a human Gα sequence">not mapped</span>'
 }
 
 function surfaceMap(g) {
@@ -502,7 +513,7 @@ async function gpcrPage() {
       Experimental receptor–G protein interfaces from ${data.complexes.length} cryo-EM and X-ray complexes of
       biogenic amine receptors (dopamine, serotonin, adrenergic and histamine), selected from
       <a href="https://gpcrdb.org/">GPCRdb</a> by BioHackathon Europe 2026 Project 9. Residues within 5 Å of
-      the partner are mapped to human codons, shown beside AlphaFold DB's predicted interfaces, and
+      the partner, between the receptor and Gα, are mapped to human codons, shown beside AlphaFold DB's predicted interfaces, and
       carried into JBrowse as the "experimental GPCR–G protein interface" tracks.
     </p>
     <h2>The receptor-facing surface of each Gα</h2>
@@ -513,8 +524,8 @@ async function gpcrPage() {
       <h3>${esc(g.gene)} <span class="muted">in ${g.structures} structure${g.structures > 1 ? 's' : ''}: ${g.receptors.map(esc).join(', ')}</span></h3>
       ${surfaceMap(g)}
       <p>
-        ${g.counts.length} residues contact a receptor. ClinVar on them: ${variantDetails(g.variants)}<br />
-        AlphaFold DB: ${g.afdb ? `its predicted GPCR complexes (${g.afdbReceptors.map(esc).join(', ')}) cover ${agreementText(g.afdb)}` : 'no predicted complex with a GPCR'}.
+        ${residueCount(g.counts.length)} contact${g.counts.length === 1 ? 's' : ''} a receptor${g.chimeraOnly ? ', counting only the segments of engineered chimeras that carry this sequence' : ''}. ClinVar on them: ${variantDetails(g.variants)}<br />
+        AlphaFold DB: ${g.afdb ? `its predicted GPCR complexes (${g.afdbReceptors.map(esc).join(', ')}) cover ${agreementText(g.afdb, g.chimeraOnly)}` : 'no predicted complex with a GPCR'}.
       </p>`,
       )
       .join('')}
@@ -527,13 +538,12 @@ async function gpcrPage() {
       <tbody>${data.complexes
         .map(c => {
           const r = c.receptorSide
-          const gResidues = c.gProteins.reduce((n, g) => n + g.residues.length, 0)
           return `<tr>
             <td class="nowrap">${esc(r.gene)}${c.species !== 'Human' ? ` <span class="muted">${esc(c.species)}</span>` : ''}</td>
             <td>${esc(c.g_subtype)} <span class="muted">${esc(c.g_note)}</span></td>
             <td class="nowrap"><a href="https://www.rcsb.org/structure/${esc(c.pdb)}">${esc(c.pdb)}</a> <span class="muted">${esc(c.method)}, ${esc(c.resolution)} Å</span></td>
-            <td>${sideCell(r.residues.length, r.variants)}</td>
-            <td>${c.gProteins.length ? sideCell(gResidues, c.gProteins.flatMap(g => g.variants)) : '<span class="muted" title="An engineered chimera that SIFTS maps to no single gene">chimera, not mapped</span>'}</td>
+            <td>${sideCell(r)}</td>
+            <td>${gAlphaCell(c.gProteins)}</td>
             <td>${agreementText(r.afdb)}</td>
             <td class="nowrap">${r.locus ? `<a href="jbrowse/?assembly=hg38&loc=${esc(r.locus)}&tracks=${GPCR_TRACKS.join(',')}">Genome</a> · ` : ''}<a href="${pdbStructureLink(r.gene, c.pdb, r.locus)}">3D</a></td>
           </tr>`
@@ -557,13 +567,17 @@ async function gpcrPage() {
     </table></div>
     <p class="note">
       The G proteins in these complexes are often engineered: dominant-negative Gαi1, mini-Gs and mini-Gq.
-      SIFTS maps most of them to a single gene. Four chimeras map to none, so only their receptor side is shown.
-      Non-human receptors and G proteins are aligned to the human protein before mapping to codons.
+      SIFTS maps most of them to a single gene. ${data.complexes.filter(c => c.gProteins.some(g => g.chimera)).length} are chimeras it maps to none:
+      each of their segments is assigned to the human Gα whose sequence it carries, so a mini-Gq contributes its Gαq α5 helix to GNAQ and its scaffold to GNAS.
+      Non-human receptors and G proteins are aligned to the human protein before mapping to codons; a residue that differs from the human one is still mapped, and marked.
+      Only receptor–Gα contacts are counted, not those with Gβγ. The Gα-side comparison sets these amine-receptor structures against AlphaFold DB's
+      complexes with other GPCRs, so the share of predicted residues seen here is a lower bound.
     </p>`
 }
 
 async function about() {
-  const summary = await load('data/summary.json')
+  const [summary, gpcr] = await Promise.all([load('data/summary.json'), load('data/gpcr.json')])
+  const chimeras = gpcr.complexes.filter(c => c.gProteins.some(g => g.chimera)).length
   const t = summary.thresholds
   app.innerHTML = `
     <h1>About</h1>
@@ -584,9 +598,10 @@ async function about() {
     <p>Mantel–Haenszel odds ratios across proteins, with intervals from resampling proteins. The second line rules out "folded vs disordered" as the explanation.</p>
     <h2>GPCRs</h2>
     <ul>
-      <li>23 experimental receptor–G protein complexes of biogenic amine receptors, from a GPCRdb selection made by BioHackathon Europe 2026 Project 9, plus 22 receptor structures without a G protein.</li>
+      <li>${gpcr.complexes.length} experimental receptor–G protein complexes of biogenic amine receptors, from a GPCRdb selection made by BioHackathon Europe 2026 Project 9, plus ${gpcr.others.length} receptor structures without a G protein.</li>
       <li>Contacts: heavy atoms within 5 Å between receptor and Gα. PDBe's SIFTS annotation gives each residue's UniProt position; a receptor chain SIFTS does not map is aligned to its UniProt sequence. Non-human proteins are aligned to the human ortholog.</li>
-      <li>Four G proteins are engineered chimeras that SIFTS maps to no gene; only their receptor side is shown.</li>
+      <li>${chimeras} G proteins are engineered chimeras that SIFTS maps to no gene. Each stretch of such a chain is assigned to the human Gα it matches best, favouring the Gα the structure is annotated with.</li>
+      <li>Every receptor and Gα here is looked up in AlphaFold DB, whether or not it is a disease protein.</li>
     </ul>
     <h2>Isoforms</h2>
     <ul>

@@ -168,7 +168,7 @@ def process(entry):
         return {"accession": accession, "gene": gene, "error": f"{type(error).__name__}: {error}"}
 
 
-def main(workers=6):
+def main(workers=4):
     proteins = disease_proteins()
     with ThreadPoolExecutor(int(workers)) as pool:
         results = []
@@ -180,7 +180,8 @@ def main(workers=6):
     done = [r for r in results if "error" not in r]
     OUT.mkdir(exist_ok=True)
     (OUT / "atlas.json").write_text(json.dumps(done))
-    print(f"{len(done)} proteins, {sum(r['hetero'] > 0 for r in done)} with a hetero complex; {len(failed)} failed: {[r['accession'] for r in failed][:20]}")
+    (OUT / "atlas_failures.json").write_text(json.dumps(failed, indent=2))
+    print(f"{len(done)} proteins, {sum(r['hetero'] > 0 for r in done)} with a hetero complex; {len(failed)} failed, listed in {OUT / 'atlas_failures.json'}")
 
 
 if __name__ == "__main__":

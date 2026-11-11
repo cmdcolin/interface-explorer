@@ -1,16 +1,13 @@
 import json
-from pathlib import Path
 
 import numpy as np
 
+from atlas import OUT
 from clinvar import with_variants
+from tracks import CONFIDENT, MIN_PLDDT
 
-ROOT = Path(__file__).resolve().parent
-OUT = ROOT / "out"
 THRESHOLDS = {"ipTM": [0.5, 0.6, 0.7, 0.8, 0.9], "ipSAE": [0.6, 0.7, 0.8, 0.9]}
 METRIC = {"ipTM": "iptm", "ipSAE": "ipsae"}
-CONFIDENT = ("ipsae", 0.6)
-MIN_PLDDT = 70
 BOOTSTRAPS = 2000
 
 
@@ -62,11 +59,11 @@ def bootstrap(rows, seed=0):
 def main():
     proteins = with_variants(json.loads((OUT / "atlas.json").read_text()))
     with_complex = [p for p in proteins if p["hetero"]]
-    confident = [p for p in proteins if any((c[CONFIDENT[0]] or 0) >= CONFIDENT[1] for c in p["interfaces"])]
+    confident = [p for p in proteins if any((c["ipsae"] or 0) >= CONFIDENT for c in p["interfaces"])]
     summary = {
         "disease proteins": len(proteins),
         "with any predicted hetero complex": len(with_complex),
-        f"with a partner at ipSAE ≥ {CONFIDENT[1]}": len(confident),
+        f"with a partner at ipSAE ≥ {CONFIDENT}": len(confident),
         "classified missense variants in proteins with a complex": {label: sum(v["label"] == label for p in with_complex for v in p["variants"]) for label in ["pathogenic", "benign", "uncertain"]},
     }
     enrichment = {}
@@ -83,7 +80,7 @@ def main():
             }
     controlled = {}
     for name, keep in CONTROLS.items():
-        rows = tables([p for p in with_complex if p.get("context")], "ipsae", CONFIDENT[1], keep)
+        rows = tables([p for p in with_complex if p.get("context")], "ipsae", CONFIDENT, keep)
         a, b, c, d = rows.sum(axis=0) if len(rows) else (0, 0, 0, 0)
         controlled[name] = {
             "proteins informative": int(len(rows)),
@@ -94,11 +91,11 @@ def main():
         }
     uncertain = []
     for protein in proteins:
-        best = interface_score(protein, CONFIDENT[0])
+        best = interface_score(protein, "ipsae")
         for variant in protein["variants"]:
-            if variant["label"] == "uncertain" and best.get(variant["position"], 0) >= CONFIDENT[1]:
+            if variant["label"] == "uncertain" and best.get(variant["position"], 0) >= CONFIDENT:
                 partners = sorted(
-                    {c["partner_gene"] or c["partner"] for c in protein["interfaces"] if (c[CONFIDENT[0]] or 0) >= CONFIDENT[1] and str(variant["position"]) in c["residues"]}
+                    {c["partner_gene"] or c["partner"] for c in protein["interfaces"] if (c["ipsae"] or 0) >= CONFIDENT and str(variant["position"]) in c["residues"]}
                 )
                 uncertain.append((protein["gene"], variant["change"], round(best[variant["position"]], 2), ", ".join(partners)))
     uncertain.sort(key=lambda row: -row[2])
@@ -108,4 +105,5 @@ def main():
     print(json.dumps(result, indent=2, ensure_ascii=False))
 
 
-main()
+if __name__ == "__main__":
+    main()

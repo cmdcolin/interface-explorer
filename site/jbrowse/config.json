@@ -334,7 +334,7 @@
       "category": [
         "Interface atlas"
       ],
-      "description": "Codons of residues within 5 \u00c5 of the partner in 23 cryo-EM and X-ray receptor\u2013G protein complexes of biogenic amine receptors, selected from GPCRdb. One feature per structure and side, e.g. DRD1\u2013GNAS (7JVQ).",
+      "description": "Codons of residues within 5 \u00c5 of the partner in cryo-EM and X-ray receptor\u2013G protein complexes of biogenic amine receptors, selected from GPCRdb. One feature per structure and side, e.g. DRD1\u2013GNAS (7JVQ).",
       "adapter": {
         "type": "BigBedAdapter",
         "uri": "gpcr_interfaces.bb"

@@ -1,23 +1,30 @@
 import csv
+import io
 import json
 import re
-import shlex
 from pathlib import Path
 
 import numpy as np
 from Bio import Align
 from Bio.Align import substitution_matrices
+from Bio.PDB.MMCIF2Dict import MMCIF2Dict
 from Bio.SeqUtils import seq1
 from scipy.spatial import cKDTree
 
-from atlas import CONTACT, DATA, OUT, get_file, get_json
+from atlas import CONTACT, DATA, OUT, get_file, get_json, protein_interfaces
 from clinvar import VARIANTS
 from tracks import COLOURS, CONFIDENT, MIN_PLDDT, bed12, coding_positions, merge, write_bigbed
 
 ROOT = Path(__file__).resolve().parent
 STRUCTURES = ROOT / "gpcr_structures.tsv"
 SITE_DATA = ROOT / "site" / "data"
-G_ALPHA = re.compile(r"^GNA(S|L|Z|Q|O1|I[1-3]|T[1-3]|1[1-5])$")
+G_ALPHA_GENES = ["GNAS", "GNAL", "GNAQ", "GNA11", "GNA14", "GNA15", "GNAI1", "GNAI2", "GNAI3", "GNAO1", "GNAZ", "GNAT1", "GNAT2", "GNAT3", "GNA12", "GNA13"]
+G_ALPHA = re.compile(f"^({'|'.join(G_ALPHA_GENES)})$")
+SUBTYPE_GENE = {"αs": "GNAS", "αq": "GNAQ", "αi1": "GNAI1", "αo": "GNAO1"}
+WINDOW = 5
+WINDOW_IDENTITY = 0.6
+SWITCH = 4
+DECLARED_WEIGHT = 1.25
 G_ALPHA_ENTITY = re.compile(r"(?i)subunit alpha|mini-?G|G protein subunit [sqio]\b")
 INTERFACE_COLOUR = "0,140,90"
 ALIGNER = Align.PairwiseAligner(mode="global", substitution_matrix=substitution_matrices.load("BLOSUM62"), open_gap_score=-10, extend_gap_score=-0.5)
@@ -70,24 +77,16 @@ def human_ortholog(info):
 
 
 def mmcif(pdb):
-    return get_file(f"https://www.ebi.ac.uk/pdbe/entry-files/download/{pdb.lower()}_updated.cif", DATA / "pdbe" / f"{pdb.lower()}.cif.gz")
+    return MMCIF2Dict(io.StringIO(get_file(f"https://www.ebi.ac.uk/pdbe/entry-files/download/{pdb.lower()}_updated.cif", DATA / "pdbe" / f"{pdb.lower()}.cif.gz")))
 
 
-def loop_rows(cif, category, split=str.split):
-    header, rows = [], []
-    for line in cif.splitlines():
-        if line.startswith(f"_{category}."):
-            header.append(line.split(".", 1)[1].strip())
-        elif header and (line.startswith(("#", "loop_", "_"))):
-            if rows:
-                break
-        elif header:
-            rows.append(dict(zip(header, split(line))))
-    return rows
+def category_rows(cif, category):
+    columns = {key.split(".", 1)[1]: values for key, values in cif.items() if key.startswith(f"_{category}.")}
+    return [dict(zip(columns, row)) for row in zip(*columns.values())]
 
 
 def g_alpha_entities(cif):
-    return {e["id"] for e in loop_rows(cif, "entity", shlex.split) if G_ALPHA_ENTITY.search(e.get("pdbx_description", ""))}
+    return {e["id"] for e in category_rows(cif, "entity") if G_ALPHA_ENTITY.search(e.get("pdbx_description", ""))}
 
 
 def atoms(cif):
@@ -100,17 +99,63 @@ def atoms(cif):
             "source": (row["pdbx_sifts_xref_db_acc"], int(row["pdbx_sifts_xref_db_num"])) if row["pdbx_sifts_xref_db_name"] == "UNP" and row["pdbx_sifts_xref_db_num"] not in ("?", ".") else None,
             "xyz": (float(row["Cartn_x"]), float(row["Cartn_y"]), float(row["Cartn_z"])),
         }
-        for row in loop_rows(cif, "atom_site")
+        for row in category_rows(cif, "atom_site")
         if row["pdbx_PDB_model_num"] == "1" and row["type_symbol"] != "H" and row["label_seq_id"] not in (".", "?")
     ]
 
 
-def aligned_sources(chain_atoms, accession):
+def chain_sequence(chain_atoms):
     residues = dict(sorted({(a["seq"], a["comp"]) for a in chain_atoms}))
-    sequence = "".join(seq1(residues[k]) or "X" for k in residues)
+    return list(residues), "".join(seq1(comp) or "X" for comp in residues.values())
+
+
+def with_sources(chain_atoms, source_by_seq):
+    return [{**a, "source": source_by_seq.get(a["seq"])} for a in chain_atoms]
+
+
+def aligned_sources(chain_atoms, accession):
+    numbers, sequence = chain_sequence(chain_atoms)
     pairs, _ = residue_map(sequence, uniprot(accession)["sequence"])
-    by_index = {seq: pairs.get(index) for index, seq in enumerate(residues, start=1)}
-    return [{**a, "source": (accession, by_index[a["seq"]]) if by_index[a["seq"]] else None} for a in chain_atoms]
+    return with_sources(chain_atoms, {seq: (accession, pairs[index]) for index, seq in enumerate(numbers, start=1) if index in pairs})
+
+
+def g_alpha_references():
+    return [(gene, c["primaryAccession"], c["sequence"]["value"]) for gene in G_ALPHA_GENES for c in human_candidates(gene) if c["sequence"]["value"]]
+
+
+def window_identity(matches, index):
+    window = matches[max(0, index - WINDOW) : index + WINDOW + 1]
+    return sum(window) / len(window)
+
+
+def segment_path(scores):
+    totals = [row[0] for row in scores]
+    choices = []
+    for index in range(1, len(scores[0])):
+        leader = max(range(len(scores)), key=lambda c: totals[c])
+        previous = [c if totals[c] >= totals[leader] - SWITCH else leader for c in range(len(scores))]
+        choices.append(previous)
+        totals = [max(totals[c], totals[leader] - SWITCH) + scores[c][index] for c in range(len(scores))]
+    path = [max(range(len(scores)), key=lambda c: totals[c])]
+    for previous in reversed(choices):
+        path.append(previous[path[-1]])
+    return path[::-1]
+
+
+def chimera_sources(chain_atoms, preferred_gene):
+    numbers, sequence = chain_sequence(chain_atoms)
+    aligned = sorted(
+        ((gene, accession, reference, *residue_map(sequence, reference)) for gene, accession, reference in g_alpha_references()),
+        key=lambda item: (item[0] != preferred_gene, -item[4]),
+    )
+    matches = [[k in pairs and sequence[k - 1] == reference[pairs[k] - 1] for k in range(1, len(sequence) + 1)] for _, _, reference, pairs, _ in aligned]
+    sources = {}
+    weighted = [[match * (DECLARED_WEIGHT if gene == preferred_gene else 1) for match in row] for row, (gene, *_) in zip(matches, aligned)]
+    for index, (seq, choice) in enumerate(zip(numbers, segment_path(weighted))):
+        _, accession, _, pairs, _ = aligned[choice]
+        if index + 1 in pairs and window_identity(matches[choice], index) >= WINDOW_IDENTITY:
+            sources[seq] = (accession, pairs[index + 1])
+    return with_sources(chain_atoms, sources)
 
 
 def receptor_accession(entry):
@@ -123,20 +168,20 @@ def receptor_accession(entry):
 
 def contacts(own, other):
     distances, _ = cKDTree(np.array([a["xyz"] for a in other])).query(np.array([a["xyz"] for a in own]), distance_upper_bound=CONTACT)
-    return {a["source"] for a, distance in zip(own, distances) if np.isfinite(distance) and a["source"]}
+    return {a["source"]: seq1(a["comp"]) for a, distance in zip(own, distances) if np.isfinite(distance) and a["source"]}
 
 
 def to_human(residues, orthologs):
     by_gene = {}
-    for accession, number in residues:
+    for (accession, number), letter in residues.items():
         human = orthologs[accession]
         position = human["pairs"].get(number)
         if position:
-            by_gene.setdefault(human["accession"], set()).add(position)
+            by_gene.setdefault(human["accession"], {})[position] = letter
     return by_gene
 
 
-def side(accession, residues, orthologs, variants, partner):
+def side(accession, residues, orthologs, variants, partner, chimera=False):
     human = next(o for o in orthologs.values() if o["accession"] == accession)
     mapped = coding_positions(accession, len(human["sequence"]))
     return {
@@ -144,6 +189,8 @@ def side(accession, residues, orthologs, variants, partner):
         "accession": accession,
         "identity": round(min(o["identity"] for o in orthologs.values() if o["accession"] == accession), 2),
         "residues": sorted(residues),
+        "differing": sorted(position for position, letter in residues.items() if human["sequence"][position - 1] != letter),
+        "chimera": chimera,
         "locus": f"{mapped[0]}:{min(mapped[2])}-{max(mapped[2])}" if mapped else None,
         "variants": [
             {key: v[key] for key in ("change", "label", "position", "variation", "chrom", "pos", "allele")}
@@ -162,10 +209,14 @@ def gpcr_accessions():
     )["results"]}
 
 
+def atlas_entry(atlas_by_accession, accession):
+    return atlas_by_accession.get(accession) or protein_interfaces(accession)
+
+
 def predicted_interfaces(atlas_by_accession, own, partners):
     return [
         (c["partner_gene"] or c["partner"], c["ipsae"], {int(r) for r, plddt in c["residues"].items() if plddt >= MIN_PLDDT})
-        for c in sorted(atlas_by_accession.get(own, {}).get("interfaces", []), key=lambda c: -(c["ipsae"] or 0))
+        for c in sorted(atlas_entry(atlas_by_accession, own)["interfaces"], key=lambda c: -(c["ipsae"] or 0))
         if (c["ipsae"] or 0) >= CONFIDENT and partners(c)
     ]
 
@@ -187,7 +238,7 @@ def g_alpha_summaries(records, atlas_by_accession, variants):
     for record in records:
         for g in record["gProteins"]:
             entry = by_g.setdefault(g["accession"], {"gene": g["gene"], "accession": g["accession"], "length": len(uniprot(g["accession"])["sequence"]), "locus": g["locus"], "counts": {}, "receptors": []})
-            entry["receptors"].append(f"{record['receptorSide']['gene']} ({record['pdb']})")
+            entry["receptors"].append(f"{record['receptorSide']['gene']} ({record['pdb']}{', chimera' if g['chimera'] else ''})")
             for residue in g["residues"]:
                 entry["counts"][residue] = entry["counts"].get(residue, 0) + 1
     summaries = []
@@ -199,6 +250,7 @@ def g_alpha_summaries(records, atlas_by_accession, variants):
             **entry,
             "counts": sorted(entry["counts"].items()),
             "structures": len(entry["receptors"]),
+            "chimeraOnly": all("chimera" in receptor for receptor in entry["receptors"]),
             "afdbReceptors": [p[0] for p in predictions],
             "afdb": agreement(experimental, predicted, f"{len(predictions)} GPCRs") if predicted else None,
             "variants": [{key: v[key] for key in ("change", "label", "position", "variation")} for v in variants.get(accession, []) if v["position"] in experimental],
@@ -214,18 +266,27 @@ def complex_record(structure, atlas_by_accession, variants):
     own = lambda a: a["source"] and a["source"][0].split("-")[0] == receptor_base
     receptor_atoms = [a if own(a) else {**a, "source": None} for a in chain] if any(own(a) for a in chain) else aligned_sources(chain, receptor_base)
     g_entities = g_alpha_entities(cif)
-    g_atoms = [a for a in rows if a["entity"] in g_entities or (a["source"] and G_ALPHA.match(uniprot(a["source"][0])["gene"]))]
+    is_g_alpha = lambda a: a["source"] and G_ALPHA.match(uniprot(a["source"][0])["gene"])
+    g_chains = {}
+    for a in rows:
+        if a["entity"] in g_entities or is_g_alpha(a):
+            g_chains.setdefault(a["chain"], []).append(a)
+    chimeras = {chain for chain, chain_atoms in g_chains.items() if not any(a["source"] for a in chain_atoms)}
+    g_atoms = [
+        a if is_g_alpha(a) else {**a, "source": None}
+        for chain, chain_atoms in g_chains.items()
+        for a in (chimera_sources(chain_atoms, SUBTYPE_GENE.get(structure["g_subtype"])) if chain in chimeras else chain_atoms)
+    ]
     if not (receptor_atoms and g_atoms):
         return None
-    g_atoms = [a if a["source"] and G_ALPHA.match(uniprot(a["source"][0])["gene"]) else {**a, "source": None} for a in g_atoms]
     sources = {a["source"][0] for a in receptor_atoms + g_atoms if a["source"]}
     orthologs = {accession: human_ortholog(uniprot(accession)) for accession in sources}
     receptor_sides = to_human(contacts(receptor_atoms, g_atoms), orthologs)
     g_sides = to_human(contacts(g_atoms, receptor_atoms), orthologs)
     receptor_human = next(o["accession"] for a, o in orthologs.items() if a.split("-")[0] == receptor_base)
-    g_genes = sorted({orthologs[a]["gene"] for a in sources if G_ALPHA.match(orthologs[a]["gene"])})
-    receptor = side(receptor_human, receptor_sides.get(receptor_human, set()), orthologs, variants, g_genes)
-    g_proteins = [side(accession, residues, orthologs, variants, receptor["gene"]) for accession, residues in sorted(g_sides.items())]
+    receptor_gene = orthologs[next(a for a in orthologs if a.split("-")[0] == receptor_base)]["gene"]
+    g_proteins = [side(accession, residues, orthologs, variants, receptor_gene, bool(chimeras)) for accession, residues in sorted(g_sides.items())]
+    receptor = side(receptor_human, receptor_sides.get(receptor_human, {}), orthologs, variants, sorted(g["gene"] for g in g_proteins))
     receptor["afdb"] = receptor_agreement(atlas_by_accession, receptor)
     return {**{key: structure[key] for key in ("pdb", "method", "resolution", "state", "species", "g_family", "g_subtype", "g_note", "receptor")}, "receptorSide": receptor, "gProteins": g_proteins}
 
@@ -234,7 +295,7 @@ def interface_lines(records):
     features, marks = [], []
     for record in records:
         receptor = record["receptorSide"]
-        for own, partner in [(receptor, "+".join(g["gene"] for g in record["gProteins"])), *((g, receptor["gene"]) for g in record["gProteins"])]:
+        for own, partner in [(receptor, "+".join(g["gene"] for g in record["gProteins"]) or f"G{record['g_subtype']}"), *((g, receptor["gene"]) for g in record["gProteins"])]:
             coordinates = coding_positions_for(own)
             if coordinates and own["residues"]:
                 chrom, strand, positions = coordinates
