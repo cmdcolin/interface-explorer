@@ -35,6 +35,8 @@
   `genes/<GENE>.json`, with each disease protein's UniProt domains and regions
   (one UniProt download, cached in `data/uniprot_disease_features.json`) and
   which chain of each AlphaFold DB complex is the gene's.
+- `pnpm findings`: regenerates `docs/findings.md` from `site/data/summary.json`,
+  `out/gnomad.json` and the interface tracks, so its numbers never go stale.
 - `pnpm isoforms [workers]`: `site/data/isoforms.json` and
   `isoforms/<GENE>.json`.
 - The pipeline is TypeScript in `src/`, run directly by Node with no build
