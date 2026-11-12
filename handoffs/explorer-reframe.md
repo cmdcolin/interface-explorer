@@ -15,8 +15,10 @@ description: "Reframe the site from a findings paper to an app for exploring dis
   for exploring those, with the statistics as evidence that the predicted
   interfaces are worth exploring.
 - **State as of 2026-11-12:** renamed to Interface explorer, URL
-  `/interface-explorer/`. Framing changes below not started. Claim a step
-  here before starting it.
+  `/interface-explorer/`. Home headline now reads "Explore pathogenic
+  variants at protein interfaces", with the odds ratio as supporting evidence
+  in the lede; the rest of the hero and the other framing changes below are
+  not started. Claim a step here before starting it.
 
 ## Framing changes
 

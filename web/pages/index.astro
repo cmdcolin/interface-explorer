@@ -40,11 +40,11 @@ const tiles = [
   <section class="hero">
     <div class="hero-top">
       <div>
-        <h1>Pathogenic variants concentrate at protein interfaces</h1>
+        <h1>Explore pathogenic variants at protein interfaces</h1>
         <p class="lede">
-          Within the same disease protein, a pathogenic ClinVar missense variant is
-          <strong>{odds(s.enrichment.all).toFixed(1)}×</strong> as likely as a benign one to sit where an
-          <a href="https://alphafold.ebi.ac.uk/">AlphaFold</a> predicted partner touches.
+          See which <a href="https://alphafold.ebi.ac.uk/">AlphaFold</a> predicted partner a ClinVar missense variant
+          touches, in 3D and on the genome. The interfaces carry signal: within the same disease protein, a pathogenic
+          variant is <strong>{odds(s.enrichment.all).toFixed(1)}×</strong> as likely as a benign one to sit on one.
         </p>
         <Fragment set:html={interfaceDiagram()} />
       </div>
