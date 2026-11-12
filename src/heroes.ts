@@ -32,14 +32,16 @@ await screenshots(
     },
     {
       name: 'three-places-to-start',
-      url: () => `${LIVE}isoforms/APP/`,
+      url: local => `${local}isoforms/APP/`,
+      clip: '.map-wrap',
       height: 800,
       wait: 10,
     },
     {
       name: 'are-the-interfaces-real',
-      url: () => `${LIVE}gene/PRPH2/?partner=ROM1`,
-      height: 800,
+      url: local => `${local}gene/PRPH2/?partner=ROM1`,
+      clip: '.structure-section',
+      height: 1600,
       wait: 30,
     },
     {
