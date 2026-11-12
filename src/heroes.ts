@@ -52,6 +52,13 @@ await screenshots(
       wait: 25,
     },
     {
+      name: 'slc35a2-switch',
+      url: local => `${local}blog/2026-11-12-slc35a2-switch/`,
+      clip: '.complex-view .structure',
+      height: 1600,
+      wait: 25,
+    },
+    {
       name: 'sars-cov-2',
       url: local =>
         `${local}blog/2026-11-12-sars-cov-2/#three-worth-a-second-look`,

@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
+import type { mdResult } from '../../src/md.ts'
+
 import type {
   Gene,
   GeneRow,
@@ -32,6 +34,9 @@ export const geneRows = once<GeneRow[]>('genes.json')
 export const leadRows = once<Lead[]>('leads.json')
 export const gpcr = once<Gpcr>('gpcr.json')
 export const viral = once<Viral>('viral.json')
+type Md = Awaited<ReturnType<typeof mdResult>>
+
+export const md = once<Md>('md.json')
 export const isoformIndex = once<IsoformIndex>('isoforms.json')
 export const isoformTotals = once<IsoformTotals>('isoformTotals.json')
 export const gene = (page: string) => read<Gene>(`genes/${page}.json`)

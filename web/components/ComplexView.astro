@@ -1,9 +1,9 @@
 ---
 import { href } from '../lib/site.ts'
-import type { complexView } from '../lib/gpcr.ts'
+import type { SceneModel, ScenePartner, SceneVariant } from '../lib/scene.ts'
 
 interface Props {
-  view: ReturnType<typeof complexView>
+  view?: { partner: ScenePartner; variants: SceneVariant[]; model: SceneModel }
 }
 
 const { view } = Astro.props
