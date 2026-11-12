@@ -407,6 +407,17 @@ function summaryRow(gene: GeneRecord, page: string) {
   }
 }
 
+export function isoformTotals(
+  rows: { modelled: number; interfaceLost: number; pathogenicLost: number }[],
+) {
+  return {
+    genes: rows.length,
+    alternativeIsoforms: rows.reduce((n, row) => n + row.modelled - 1, 0),
+    lackingInterface: rows.reduce((n, row) => n + row.interfaceLost, 0),
+    genesLackingPathogenic: rows.filter(row => row.pathogenicLost > 0).length,
+  }
+}
+
 async function main(workers = '4', ...accessions: string[]) {
   const withIsoforms = (await diseaseEntries()).filter(
     e => editsByIsoform(e).size > 1,
@@ -441,6 +452,7 @@ async function main(workers = '4', ...accessions: string[]) {
     described: withIsoforms.length,
     genes: pages.sort((a, b) => compareText(a.page, b.page)),
   })
+  writeJson(join(SITE_DATA, 'isoformTotals.json'), isoformTotals(pages))
   console.log(
     `${genes.length} genes, ${genes.reduce((n, g) => n + g.isoforms.length, 0)} alternative isoforms; ${genes.reduce((n, g) => n + g.unmatched, 0)} left out for differing from their model's sequence`,
   )

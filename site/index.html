@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Interface atlas</title>
     <meta name="description" content="Which codons of human disease genes sit at a predicted protein–protein interface (AlphaFold DB complexes) or an experimental GPCR–G protein interface (PDB), which ClinVar variants fall there, and how alternative isoforms change them." />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Interface atlas: disease variants cluster where proteins touch" />
+    <meta property="og:description" content="ClinVar missense variants at predicted protein–protein interfaces of human disease genes, each one opened on the genome beside the 3D complex." />
+    <meta property="og:url" content="https://cmdcolin.github.io/interface-atlas/" />
+    <meta property="og:image" content="https://cmdcolin.github.io/interface-atlas/preview.jpg" />
+    <meta property="og:image:width" content="1400" />
+    <meta property="og:image:height" content="800" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="jbrowse/favicon.ico" />
     <link rel="stylesheet" href="style.css" />
   </head>
@@ -20,7 +28,15 @@
         <a href="jbrowse/">Genome browser</a>
       </nav>
     </header>
-    <main id="app" aria-live="polite"></main>
+    <main id="app">
+      <section class="hero">
+        <h1>Disease variants cluster where proteins touch</h1>
+        <p class="lede">
+          Every confident AlphaFold DB predicted complex of a human disease protein, mapped back to the
+          genome codon by codon, with the ClinVar missense variants that land on an interface.
+        </p>
+      </section>
+    </main>
     <footer class="site-footer">
       Prototype. Predicted complexes from
       <a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a> (CC-BY 4.0),

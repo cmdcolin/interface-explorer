@@ -37,6 +37,11 @@ function complexLink(gene, entity, loc, variant) {
   return `jbrowse/?session=spec-${encodeURIComponent(JSON.stringify({ views: [view] }))}`
 }
 
+function variantLink(gene, v) {
+  const partner = gene.partners.find(p => v.partners.includes(p.gene))
+  return complexLink(gene.gene, partner.entity, `chr${v.chrom}:${v.pos - 30}-${v.pos + 30}`, `chr${v.chrom}:${v.pos}${v.allele ? ` ${v.allele}` : ''}`)
+}
+
 function chip(label) {
   return `<span class="chip ${label}">${LABELS[label]}</span>`
 }
@@ -234,14 +239,21 @@ function wireScatter(genes) {
   })
 }
 
+const EXAMPLE_GENES = ['VHL', 'GNAO1', 'MLH1', 'SDHB']
+
 function geneSearch(genes) {
   return `
     <form class="search" id="gene-search">
       <input type="search" list="gene-names" placeholder="Jump to a gene, e.g. VHL" aria-label="Jump to a gene" autocomplete="off" />
       <datalist id="gene-names">${genes.map(g => `<option value="${esc(g.gene)}"></option>`).join('')}</datalist>
-      <button class="button primary">Open</button>
+      <button class="button">Open</button>
       <span class="muted" id="gene-search-miss"></span>
-    </form>`
+    </form>
+    <p class="examples muted">
+      Try ${EXAMPLE_GENES.flatMap(name => genes.filter(g => g.page === name))
+        .map(g => `<a href="#/gene/${encodeURIComponent(g.page)}">${esc(g.gene)}</a>`)
+        .join(' · ')}
+    </p>`
 }
 
 function wireGeneSearch(genes) {
@@ -285,26 +297,65 @@ function geneCase(gene, title, text) {
     </section>`
 }
 
+function fill(id, render) {
+  render()
+    .catch(error => `<p class="muted">Could not load this section: ${esc(error.message)}.</p>`)
+    .then(html => {
+      const slot = document.getElementById(id)
+      if (slot) {
+        slot.innerHTML = html
+      }
+    })
+}
+
+async function homeCases(vhl) {
+  const [gnao1, app695, isoforms] = await Promise.all([load('data/genes/GNAO1.json'), load('data/isoforms/APP.json'), load('data/isoformTotals.json')])
+  const appPair = { ...app695, isoforms: app695.isoforms.filter(i => ['APP695', 'APP751'].includes(i.name)) }
+  return `
+    ${geneCase(vhl, 'VHL and elongin C', `${vhl.counts.pathogenic} pathogenic variants of the von Hippel–Lindau tumour suppressor sit on the ${vhl.interfaceResidues} residues that hold elongin C, with ${vhl.counts.uncertain} uncertain ones among them.`)}
+    ${geneCase(gnao1, 'GNAO1, Gβ and the RGS proteins', `Gαo's ${gnao1.counts.pathogenic} pathogenic interface variants fall in two patches: the N-terminal helix that binds Gβ (L13P, I19M, L23F) and the switch regions that bind RGS proteins (T182I, Q205P, R206).`)}
+    <section class="case">
+      <h3>APP695, the neuronal isoform of APP</h3>
+      <p>
+        Splicing changes interfaces too. APP695 (P05067-4) has no Kunitz inhibitor domain, so it lacks most of APP's predicted interfaces with the
+        proteases KLK11, KLK14 and prostasin; APP751 (P05067-8) keeps the domain and lacks none.
+        Across ${isoforms.genes.toLocaleString()} disease genes and ${isoforms.alternativeIsoforms.toLocaleString()} modelled isoforms,
+        ${isoforms.lackingInterface.toLocaleString()} isoforms lack half or more of a partner interface, and ${isoforms.genesLackingPathogenic.toLocaleString()} genes have an isoform missing a residue with a pathogenic variant.
+      </p>
+      ${isoformMap(appPair)}
+      <div class="actions">
+        <a class="button primary" href="#/isoforms/APP">All ${app695.isoforms.length} APP isoforms</a>
+        <a class="button" href="#/isoforms">Isoforms of every gene</a>
+      </div>
+    </section>`
+}
+
+async function homeGpcr() {
+  const gpcr = await load('data/gpcr.json')
+  const gnas = gpcr.gAlphas.find(g => g.gene === 'GNAS')
+  const compared = gpcr.gAlphas.filter(g => g.afdb && !g.chimeraOnly)
+  return `
+    <p class="lede">
+      For G proteins we can check. ${gpcr.complexes.length} cryo-EM and X-ray complexes of amine receptors give the experimental
+      receptor-facing surface of each Gα. AlphaFold DB's predicted GPCR complexes cover ${compared.map(g => `${Math.round(g.afdb.recall * 100)}% of it for ${esc(g.gene)}`).join(' and ')}.
+      Gαs has no predicted GPCR complex at all, so its ${gnas.counts.length} receptor-facing residues, and the
+      ${gnas.variants.filter(variant => variant.label === 'pathogenic').length} pathogenic variants on them, come from experiment alone.
+    </p>
+    <h3>${esc(gnas.gene)} <span class="muted">residues contacting a receptor, by number of the ${gnas.structures} structures</span></h3>
+    ${surfaceMap(gnas)}`
+}
+
+function tile(value, label, href) {
+  return `<a class="tile" href="${href}"><div class="value">${value.toLocaleString()}</div><div class="label">${label}</div></a>`
+}
+
 async function home() {
-  const [summary, genes, isoforms, gpcr, vhl, gnao1, app695] = await Promise.all([
-    load('data/summary.json'),
-    load('data/genes.json'),
-    load('data/isoforms.json'),
-    load('data/gpcr.json'),
-    load('data/genes/VHL.json'),
-    load('data/genes/GNAO1.json'),
-    load('data/isoforms/APP.json'),
-  ])
+  const [summary, genes, vhl] = await Promise.all([load('data/summary.json'), load('data/genes.json'), load('data/genes/VHL.json')])
   const v = summary.variantsAtInterface
   const e = summary.enrichment
   const am = summary.alphaMissense.calls
-  const classified = v.pathogenic + v.uncertain + v.benign
-  const isoformCount = isoforms.genes.reduce((n, g) => n + g.modelled - 1, 0)
-  const lackingInterface = isoforms.genes.reduce((n, g) => n + g.interfaceLost, 0)
-  const lackingPathogenic = isoforms.genes.filter(g => g.pathogenicLost > 0).length
-  const appPair = { ...app695, isoforms: app695.isoforms.filter(i => ['APP695', 'APP751'].includes(i.name)) }
-  const gnas = gpcr.gAlphas.find(g => g.gene === 'GNAS')
-  const compared = gpcr.gAlphas.filter(g => g.afdb && !g.chimeraOnly)
+  const shown = vhl.variants.find(variant => variant.label === 'pathogenic')
+  const shownPartner = vhl.partners.find(p => shown.partners.includes(p.gene))
   app.innerHTML = `
     <section class="hero">
       <div class="hero-top">
@@ -313,27 +364,35 @@ async function home() {
       <p class="lede">
         We mapped every confident <a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a> predicted
         complex of a human disease protein back to the genome, codon by codon, and asked which
-        ClinVar missense variants land on an interface. Within a protein, the odds for a pathogenic
-        variant are <strong>${e.all[ODDS].toFixed(1)}×</strong> those for a benign one.
+        ClinVar missense variants land on an interface. A pathogenic variant has
+        <strong>${e.all[ODDS].toFixed(1)}×</strong> the odds of sitting at one that a benign variant in the same protein has.
       </p>
+      <div class="actions">
+        <a class="button primary" href="${variantLink(vhl, shown)}">See ${esc(vhl.gene)} ${esc(shown.change)} in 3D beside the genome</a>
+        <a class="button" href="#/leads">${summary.leads.variants.toLocaleString()} strongest leads</a>
+      </div>
       ${geneSearch(genes)}
       </div>
       ${shareFigure(e.all)}
       </div>
       <div class="tiles">
-        <div class="tile"><div class="value">${summary.proteins.toLocaleString()}</div><div class="label">human disease proteins checked</div></div>
-        <div class="tile"><div class="value">${summary.withPartner.toLocaleString()}</div><div class="label">have a confident predicted partner (${percent(summary.withPartner, summary.proteins)})</div></div>
-        <div class="tile"><div class="value">${summary.partners.toLocaleString()}</div><div class="label">predicted interfaces, mapped to hg38 codons</div></div>
-        <div class="tile"><div class="value">${classified.toLocaleString()}</div><div class="label">classified ClinVar missense variants on them</div></div>
+        ${tile(summary.proteins, 'human disease proteins checked', '#/about')}
+        ${tile(summary.withPartner, `have a confident predicted partner (${percent(summary.withPartner, summary.proteins)}), ${summary.partners.toLocaleString()} interfaces in all`, '#/genes')}
+        ${tile(v.uncertain, 'variants of uncertain significance sit on those interfaces', '#/genes')}
+        ${tile(summary.leads.variants, 'of them change a residue where another substitution is pathogenic', '#/leads')}
       </div>
+      <a class="hero-shot" href="${variantLink(vhl, shown)}">
+        <img src="preview.jpg" width="1400" height="800" loading="lazy" alt="JBrowse with the VHL codon on the genome on the left, under interface and ClinVar tracks, and the same residue highlighted in the predicted VHL–${esc(shownPartner.gene)} complex on the right" />
+        <span>Every variant opens like this: its codon on the genome beside its residue in the predicted complex. Here, a pathogenic ${esc(vhl.gene)} variant against ${esc(shownPartner.gene)}.</span>
+      </a>
     </section>
 
     <section>
-      <h2>Pathogenic variants sit at interfaces more often than benign ones</h2>
+      <h2>It is not just folded versus disordered</h2>
       <p class="lede">
-        Odds that a pathogenic missense variant is at a predicted interface, against a benign one in the same protein.
-        Restricting to folded residues, then to folded residues on the surface, shows the effect is not just
-        "folded versus disordered".
+        Interfaces lie in folded regions, where pathogenic variants concentrate anyway. Restricting the comparison to folded
+        residues, then to folded residues on the surface, leaves the effect standing: among exposed residues the odds ratio
+        is ${e.orderedSurface[ODDS].toFixed(1)}×.
       </p>
       ${forestPlot([
         { label: 'All residues', e: e.all },
@@ -393,34 +452,12 @@ async function home() {
 
     <section>
       <h2>Three places to start</h2>
-      ${geneCase(vhl, 'VHL and elongin C', `${vhl.counts.pathogenic} pathogenic variants of the von Hippel–Lindau tumour suppressor sit on the ${vhl.interfaceResidues} residues that hold elongin C, with ${vhl.counts.uncertain} uncertain ones among them.`)}
-      ${geneCase(gnao1, 'GNAO1, Gβ and the RGS proteins', `Gαo's ${gnao1.counts.pathogenic} pathogenic interface variants fall in two patches: the N-terminal helix that binds Gβ (L13P, I19M, L23F) and the switch regions that bind RGS proteins (T182I, Q205P, R206).`)}
-      <section class="case">
-        <h3>APP695, the neuronal isoform of APP</h3>
-        <p>
-          Splicing changes interfaces too. APP695 (P05067-4) has no Kunitz inhibitor domain, so it lacks most of APP's predicted interfaces with the
-          proteases KLK11, KLK14 and prostasin; APP751 (P05067-8) keeps the domain and lacks none.
-          Across ${isoforms.genes.length.toLocaleString()} disease genes and ${isoformCount.toLocaleString()} modelled isoforms,
-          ${lackingInterface} isoforms lack half or more of a partner interface, and ${lackingPathogenic.toLocaleString()} genes have an isoform missing a residue with a pathogenic variant.
-        </p>
-        ${isoformMap(appPair)}
-        <div class="actions">
-          <a class="button primary" href="#/isoforms/APP">All ${app695.isoforms.length} APP isoforms</a>
-          <a class="button" href="#/isoforms">Isoforms of every gene</a>
-        </div>
-      </section>
+      <div id="home-cases"><p class="muted">Loading…</p></div>
     </section>
 
     <section>
       <h2>Do the predictions match experiment?</h2>
-      <p class="lede">
-        For G proteins we can check. ${gpcr.complexes.length} cryo-EM and X-ray complexes of amine receptors give the experimental
-        receptor-facing surface of each Gα. AlphaFold DB's predicted GPCR complexes cover ${compared.map(g => `${Math.round(g.afdb.recall * 100)}% of it for ${esc(g.gene)}`).join(' and ')}.
-        Gαs has no predicted GPCR complex at all, so its ${gnas.counts.length} receptor-facing residues, and the
-        ${gnas.variants.filter(variant => variant.label === 'pathogenic').length} pathogenic variants on them, come from experiment alone.
-      </p>
-      <h3>${esc(gnas.gene)} <span class="muted">residues contacting a receptor, by number of the ${gnas.structures} structures</span></h3>
-      ${surfaceMap(gnas)}
+      <div id="home-gpcr"><p class="muted">Loading…</p></div>
       <div class="actions">
         <a class="button primary" href="#/gpcr">GPCRs and their G proteins</a>
         <a class="button" href="jbrowse/">Genome browser</a>
@@ -433,6 +470,8 @@ async function home() {
     </p>`
   wireGeneSearch(genes)
   wireScatter(genes)
+  fill('home-cases', () => homeCases(vhl))
+  fill('home-gpcr', homeGpcr)
 }
 
 async function genesPage() {
@@ -647,7 +686,7 @@ async function genePage(name) {
           <td class="num">${v.alphaMissense === undefined ? '<span class="muted" title="AlphaMissense has no score for this substitution">—</span>' : `<span class="count ${amClass(v.alphaMissense)}" title="AlphaMissense: ${amTitle[amClass(v.alphaMissense)]}">${v.alphaMissense.toFixed(2)}</span>`}</td>
           <td>${v.partners.map(esc).join(', ')}</td>
           <td class="nowrap"><a href="${genomeLink(v.chrom, v.pos - 30, v.pos + 30)}">chr${esc(v.chrom)}:${v.pos.toLocaleString()}</a></td>
-          <td class="nowrap"><a href="${complexLink(gene.gene, partner.entity, `chr${v.chrom}:${v.pos - 30}-${v.pos + 30}`, `chr${v.chrom}:${v.pos}${v.allele ? ` ${v.allele}` : ''}`)}">with ${esc(partner.gene)}</a></td>
+          <td class="nowrap"><a href="${variantLink(gene, v)}">with ${esc(partner.gene)}</a></td>
         </tr>`
       })
       .join('')
@@ -1043,8 +1082,21 @@ async function about() {
     </ul>`
 }
 
-async function route() {
+const NAV_PAGE = { gene: 'genes' }
+
+function markNavigation(page) {
+  document.querySelectorAll('.site-header nav a').forEach(link => {
+    if (link.getAttribute('href') === `#/${NAV_PAGE[page] ?? page}`) {
+      link.setAttribute('aria-current', 'page')
+    } else {
+      link.removeAttribute('aria-current')
+    }
+  })
+}
+
+async function route(event) {
   const [, page, arg] = (location.hash || '#/').split('/')
+  markNavigation(page)
   try {
     if (page === 'gene' && arg) {
       await genePage(decodeURIComponent(arg))
@@ -1067,6 +1119,11 @@ async function route() {
     app.innerHTML = `<p>Could not load this page: ${esc(error.message)}. <a href="#/">Back to the start</a>.</p>`
   }
   window.scrollTo(0, 0)
+  const heading = app.querySelector('h1')
+  if (event && heading) {
+    heading.tabIndex = -1
+    heading.focus({ preventScroll: true })
+  }
 }
 
 window.addEventListener('hashchange', route)

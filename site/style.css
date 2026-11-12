@@ -55,7 +55,7 @@ a {
   gap: 8px 24px;
   align-items: baseline;
   justify-content: space-between;
-  padding: 14px 16px;
+  padding: 14px max(16px, calc((100% - 1048px) / 2));
   border-bottom: 1px solid var(--border);
 }
 
@@ -68,7 +68,18 @@ a {
 
 .site-header nav {
   display: flex;
-  gap: 18px;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+}
+
+.site-header nav a[aria-current] {
+  color: var(--text);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+h1:focus {
+  outline: none;
 }
 
 main {
@@ -83,7 +94,8 @@ h1 {
 }
 
 h2 {
-  font-size: 18px;
+  font-size: 22px;
+  line-height: 1.25;
   margin: 32px 0 8px;
 }
 
@@ -100,10 +112,18 @@ h2 {
 }
 
 .tile {
+  display: block;
+  color: inherit;
+  text-decoration: none;
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px 14px;
   background: var(--surface-2);
+}
+
+a.tile:hover,
+.hero-shot:hover img {
+  border-color: var(--interface);
 }
 
 .tile .value {
@@ -624,4 +644,33 @@ h3 {
   height: 22px;
   min-width: 4px;
   border-radius: 0 4px 4px 0;
+}
+
+.hero .actions {
+  margin: 20px 0 0;
+}
+
+.hero .search {
+  margin: 16px 0 6px;
+}
+
+.examples {
+  margin: 0;
+  font-size: 14px;
+}
+
+.hero-shot {
+  display: block;
+  color: var(--text-2);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.hero-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
 }
