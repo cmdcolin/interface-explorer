@@ -112,6 +112,7 @@ function structureRow(field: (name: string) => string) {
     g_family: field('g_family'),
     g_subtype: field('g_subtype'),
     g_note: field('g_note'),
+    dataset: field('dataset'),
   }
 }
 
@@ -136,6 +137,7 @@ function complexFields(structure: Structure) {
     g_subtype: structure.g_subtype,
     g_note: structure.g_note,
     receptor: structure.receptor,
+    dataset: structure.dataset,
   }
 }
 

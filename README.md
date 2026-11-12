@@ -30,8 +30,9 @@ one.
   lacks. Each isoform opens superposed on the canonical model, linked to its own
   transcript.
 - **GPCRs:** experimental receptor–G protein interfaces from 23 cryo-EM and
-  X-ray complexes of biogenic amine receptors, the receptor-facing surface of
-  each Gα, and how AlphaFold DB's predicted interfaces compare.
+  X-ray complexes of biogenic amine receptors, plus the olfactory receptor
+  OR51E2, the receptor-facing surface of each Gα, and how AlphaFold DB's
+  predicted interfaces compare.
 - **JBrowse** at `/jbrowse/`, with the tracks below.
 
 ## Tracks
@@ -124,13 +125,18 @@ one.
   from confident (pLDDT ≥ 70) to very low (< 50), e.g. PRDM1 isoform 3 and
   MYLK isoform 4.
 
-## GPCRs and their G proteins (23 experimental complexes)
+## GPCRs and their G proteins (24 experimental complexes)
 
 - The structures are a GPCRdb selection of dopamine, serotonin, adrenergic and
   histamine receptors made by BioHackathon Europe 2026 Project 9
-  (`gpcr_structures.tsv`): 23 with a G protein bound, 22 without.
-- Gαs has no AlphaFold DB complex with a GPCR, but 8 experimental Gs complexes
-  and the Gαs scaffold of 4 engineered chimeras put 46 of its residues against
+  (`gpcr_structures.tsv`, `dataset` DataSet1): 23 with a G protein bound, 22
+  without. One more is added to test the olfactory receptor predictions:
+  OR51E2 with propionate and mini-Gs (8F76, Billesbølle et al. 2023).
+- AlphaFold DB's OR51E2–Golf complex covers 86% of the receptor residues
+  OR51E2 uses against mini-Gs, and 94% of the residues it predicts are among
+  them, though its ipSAE is only 0.63.
+- Gαs has no AlphaFold DB complex with a GPCR, but 9 experimental Gs complexes
+  and the Gαs scaffold of 4 engineered chimeras put 47 of its residues against
   a receptor. 10 ClinVar pathogenic variants sit on them, most on the
   C-terminal α5 helix: R342Q, R347T, G353R, F376V, C379Y, D381V, Q384E, R385H,
   L388R and E392K.
@@ -141,10 +147,11 @@ one.
   87% of the receptor residues DRD5 uses against Gs. Its GPCR complexes of Gαq
   cover all 11 α5 residues the three mini-Gq chimeras carry.
 - Every receptor is looked up in AlphaFold DB, disease protein or not. Only
-  DRD5 (with Golf) and HRH4 (with Gα14, covering 66% of the residues HRH4 uses
-  against Gi1) have a predicted complex with a Gα.
-- On the receptor side, 78 ClinVar variants of uncertain significance and 2
-  benign ones contact the G protein; none is classified pathogenic.
+  DRD5 and OR51E2 (with Golf) and HRH4 (with Gα14, covering 66% of the residues
+  HRH4 uses against Gi1) have a predicted complex with a Gα.
+- On the receptor side, 82 ClinVar variants of uncertain significance and 2
+  benign ones contact the G protein; none is classified pathogenic. Every
+  receptor contact carries its GPCRdb generic number.
 
 ## Caveats
 

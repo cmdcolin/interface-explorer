@@ -6,6 +6,8 @@ import { residueCount } from '../lib/html.ts'
 import { surfaceMap } from '../lib/maps.ts'
 
 const data = gpcr()
+const dataset = data.complexes.filter(c => c.dataset === 'DataSet1').length
+const added = data.complexes.filter(c => c.dataset !== 'DataSet1')
 const chimeras = data.complexes.filter(c => c.gProteins.some(g => g.chimera)).length
 const anchored = new Set<string>()
 const anchor = (gene: string) => {
@@ -22,11 +24,14 @@ const anchor = (gene: string) => {
 >
   <h1>GPCRs and their G proteins</h1>
   <p class="lede">
-    Experimental receptor–G protein interfaces from {data.complexes.length} cryo-EM and X-ray complexes of biogenic amine
-    receptors (dopamine, serotonin, adrenergic and histamine), selected from <a href="https://gpcrdb.org/">GPCRdb</a> by
-    BioHackathon Europe 2026 Project 9. Residues within 5 Å of the partner, between the receptor and Gα, are mapped to human
-    codons, shown beside AlphaFold DB's predicted interfaces, and carried into JBrowse as the "experimental GPCR–G protein
-    interface" tracks.
+    Experimental receptor–G protein interfaces from {dataset} cryo-EM and X-ray complexes of biogenic amine receptors
+    (dopamine, serotonin, adrenergic and histamine), selected from <a href="https://gpcrdb.org/">GPCRdb</a> by BioHackathon
+    Europe 2026 Project 9{
+      added.length
+        ? `, plus ${added.map(c => `${c.receptorSide.gene} (${c.pdb})`).join(', ')}, an olfactory receptor added to test AlphaFold DB's Gαolf predictions`
+        : ''
+    }. Residues within 5 Å of the partner, between the receptor and Gα, are mapped to human codons, shown beside AlphaFold
+    DB's predicted interfaces, and carried into JBrowse as the "experimental GPCR–G protein interface" tracks.
   </p>
   <h2>The receptor-facing surface of each Gα</h2>
   <p class="muted">

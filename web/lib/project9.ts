@@ -4,7 +4,9 @@ const OLFACTORY = /^OR\d/
 
 export function project9() {
   const data = gpcr()
-  const receptors = data.complexes.map(c => c.receptorSide)
+  const dataset = data.complexes.filter(c => c.dataset === 'DataSet1')
+  const receptors = dataset.map(c => c.receptorSide)
+  const or51e2 = data.complexes.find(c => c.receptorSide.gene === 'OR51E2')
   const labels = receptors.flatMap(r =>
     r.residues.map(position => r.generic?.[position] ?? ''),
   )
@@ -20,8 +22,24 @@ export function project9() {
   const gnal = gene('GNAL')
   const olfactory = gnal.partners.filter(p => OLFACTORY.test(p.gene))
   const ipsae = olfactory.map(p => p.ipsae ?? 0)
+  const or51e2Side = or51e2?.receptorSide
   return {
-    complexes: data.complexes.length,
+    complexes: dataset.length,
+    or51e2: {
+      pdb: or51e2?.pdb ?? '',
+      resolution: or51e2?.resolution ?? '',
+      residues: or51e2Side?.residues.length ?? 0,
+      partner: or51e2Side?.afdb?.partner ?? '',
+      recall: Math.round((or51e2Side?.afdb?.recall ?? 0) * 100),
+      precision: Math.round((or51e2Side?.afdb?.precision ?? 0) * 100),
+      variants: (or51e2Side?.variants ?? [])
+        .map(
+          v =>
+            `${v.change} at ${or51e2Side?.generic?.[v.position] ?? v.position}`,
+        )
+        .join(', '),
+      variantCount: or51e2Side?.variants.length ?? 0,
+    },
     contacts: labels.length,
     numbered: numbered.length,
     loops,

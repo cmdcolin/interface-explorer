@@ -2,7 +2,7 @@
 title: 'Interface atlas and Project 9: where our GPCR work meets yours'
 date: '2026-11-12'
 order: 0
-description: 'Receptor–G protein contacts from the 23 DataSet1 complexes, labelled with GPCRdb numbers, and the Gαolf surface AlphaFold DB predicts for olfactory receptors.'
+description: 'Receptor–G protein contacts from the 23 DataSet1 complexes, labelled with GPCRdb numbers, the Gαolf surface AlphaFold DB predicts for olfactory receptors, and how OR51E2’s cryo-EM structure bears it out.'
 ---
 
 import Html from '../../components/Html.astro'
@@ -80,6 +80,24 @@ to look at first. Two things keep this modest:
   contact DRD5, ADRB1 and the TAARs: this is the face Gαolf turns to every
   receptor, not one specific to olfactory receptors.
 
+## OR51E2: an olfactory receptor in experiment
+
+To test those predictions, we added one structure that is not in DataSet1:
+[OR51E2](../../gpcr/#OR51E2) bound to propionate with mini-Gs
+(<a href={`https://www.rcsb.org/structure/${p.or51e2.pdb}`}>{p.or51e2.pdb}</a>,
+cryo-EM, {p.or51e2.resolution} Å; Billesbølle et al., Nature 2023). Its{' '}
+{p.or51e2.residues} receptor residues within 5 Å of Gα all carry GPCRdb numbers,
+so they line up with the amine receptors. AlphaFold DB's
+OR51E2–{p.or51e2.partner} complex covers {p.or51e2.recall}% of them, and{' '}
+{p.or51e2.precision}% of the residues it predicts are among them: the predicted
+Gαolf face of an olfactory receptor matches the one seen with a Gs mimic,
+despite its borderline ipSAE.
+
+The mini-Gs is an engineered Gαs, not Gαolf, so this checks the receptor side of
+the prediction, not the Gαolf residues. ClinVar has {p.or51e2.variantCount}{' '}
+variants of uncertain significance on OR51E2's side of the interface:{' '}
+{p.or51e2.variants}.
+
 ## Where AlphaFold DB can be checked against experiment
 
 Its DRD5–Golf complex covers {p.drd5Recall}% of the receptor residues DRD5 uses
@@ -105,8 +123,8 @@ anyway, so we have not ranked them as leads.
 
 ## What would help
 
-- **Olfactory receptor group:** an experimental olfactory receptor–G protein
-  structure, such as OR51E2's, would let us test the Gαolf predictions above the
-  way DRD5 tests them.
+- **Olfactory receptor group:** whether your OR4 models put the same residues
+  against the G protein as OR51E2 does here; the GPCRdb numbers make that a
+  column-by-column comparison.
 - **msa2d:** your 4 Å receptor–Gα contact lists, to check against ours.
 - **iCn3D:** your interaction export for the same complexes.

@@ -194,6 +194,7 @@ export interface Complex {
   g_family: string
   g_subtype: string
   g_note: string
+  dataset: string
   receptor: string
   receptorSide: Side & { afdb: Agreement | null }
   gProteins: Side[]

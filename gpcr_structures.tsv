@@ -1,46 +1,47 @@
-entry	gene	receptor	family	species	method	pdb	resolution	chain	state	degree_active	g_family	g_subtype	g_note	reference	published
-5ht1a_human	HTR1A	5-HT1A	5-Hydroxytryptamine	Human	Cryo-EM	9HYI	2.3	R	Active	100	Gi/o	αi1	Gi1 heterotrimer complex	-	2026-01-21
-5ht1b_human	HTR1B	5-HT1B	5-Hydroxytryptamine	Human	Cryo-EM	6G79	3.8	S	Active	100	Gi/o	αo	Mini-Go heterotrimer w/ Gβ1γ2, α-core only	10.1038/S41586-018-0241-9	2018-06-20
-5ht1b_human	HTR1B	5-HT1B	5-Hydroxytryptamine	Human	X-ray	4IAQ	2.8	A	Inactive	10	-	-	-	10.1126/SCIENCE.1232807	2013-03-13
-5ht1d_human	HTR1D	5-HT1D	5-Hydroxytryptamine	Human	Cryo-EM	7E32	2.9	R	Active	100	Gi/o	αi1	DN human Gαi1: S47N/G203A/A326S/E245A	10.1038/S41586-021-03376-8	2021-04-21
-5ht1e_human	HTR1E	5-HT1E	5-Hydroxytryptamine	Human	Cryo-EM	8UGY	3.3	R	Active	100	Gi/o	αi1	DN Gαi1 (DNGαi1): S47N/G203A/E245A/A326S	10.1126/SCIADV.ADK4855	2024-05-01
-5ht1f_human	HTR1F	5-HT1F	5-Hydroxytryptamine	Human	Cryo-EM	7EXD	3.4	R	Active	100	Gi/o	αi1	Gi1 heterotrimer	10.1038/S41422-021-00527-4	2021-08-04
-5ht2a_human	HTR2A	5-HT2A	5-Hydroxytryptamine	Human	Cryo-EM	7RAN	3.5	A	Active	100	Gq/11	αq	Mini-Gq (Gi2-mini-Gq chimera)	10.1038/S41586-022-05258-Z	2022-07-06
-5ht2a_human	HTR2A	5-HT2A	5-Hydroxytryptamine	Human	X-ray	6A94	2.9	A	Inactive	0	-	-	-	10.1038/S41594-018-0180-Z	2019-02-13
-5ht2b_human	HTR2B	5-HT2B	5-Hydroxytryptamine	Human	Cryo-EM	9JGK	3.6	A	Inactive	1	-	-	-	-	2025-07-16
-5ht2b_human	HTR2B	5-HT2B	5-Hydroxytryptamine	Human	X-ray	5TVN	2.9	A	Active	58	-	-	-	10.1016/J.CELL.2016.12.033	2017-02-01
-5ht2c_human	HTR2C	5-HT2C	5-Hydroxytryptamine	Human	X-ray	6BQH	2.7	A	Inactive	1	-	-	-	10.1016/j.cell.2018.01.001	2018-02-14
-5ht2c_human	HTR2C	5-HT2C	5-Hydroxytryptamine	Human	X-ray	6BQG	3.0	A	Active	88	-	-	-	10.1016/j.cell.2018.01.001	2018-02-14
-5ht4r_human	HTR4	5-HT4	5-Hydroxytryptamine	Human	Cryo-EM	7XT8	3.1	R	Active	100	Gs	αs	DN Gs: 8 muts S54N/G226A/E268A...I285T	10.1016/J.MOLCEL.2022.05.031	2022-07-27
-5ht5a_human	HTR5A	5-HT5A	5-Hydroxytryptamine	Human	Cryo-EM	7X5H	3.1	R	Active	100	Gi/o	αi1	DN Gαi1(4DN): S47N/G203A/E345A/A326S	10.1038/S41421-022-00412-3	2022-09-14
-5ht5a_human	HTR5A	5-HT5A	5-Hydroxytryptamine	Human	X-ray	7UM4	2.8	A	Inactive	27	-	-	-	10.1038/S41594-022-00796-6	2022-07-20
-5ht6r_human	HTR6	5-HT6	5-Hydroxytryptamine	Human	Cryo-EM	7XTB	3.3	R	Active	100	Gs	αs	DN Gs-short isoform: 8 stabilizing mutations	10.1016/J.MOLCEL.2022.05.031	2022-07-27
-5ht7r_human	HTR7	5-HT7	5-Hydroxytryptamine	Human	Cryo-EM	7XTC	3.2	R	Active	100	Gs	αs	DN Gs: 8 muts S54N/G226A/E268A...I285T	10.1016/J.MOLCEL.2022.05.031	2022-07-27
-ada1a_human	ADRA1A	α1A	Adrenoceptors	Human	Cryo-EM	7YM8	2.9	A	Active	100	Gq/11	αq	miniGsq: miniGs scaffold, Gq α5 helix	10.1038/S41467-023-39310-X	2023-07-05
-ada1a_human	ADRA1A	α1A	Adrenoceptors	Human	Cryo-EM	9M4T	3.2	A	Inactive	1	-	-	-	-	2025-07-02
-ada1b_human	ADRA1B	α1B	Adrenoceptors	Human	X-ray	7B6W	2.9	A	Inactive	1	-	-	-	10.1038/s41467-021-27911-3	2022-01-12
-ada2a_human	ADRA2A	α2A	Adrenoceptors	Human	Cryo-EM	9PLN	2.8	R	Active	93	-	-	-	-	2025-08-20
-ada2a_human	ADRA2A	α2A	Adrenoceptors	Human	Cryo-EM	9IQR	3.4	B	Inactive	40	-	-	-	10.1038/S41467-025-61695-0	2025-07-23
-ada2b_human	ADRA2B	α2B	Adrenoceptors	Human	Cryo-EM	6K42	4.1	R	Active	100	Gi/o	αi1	Gαi1(bovine)/Gβ1(mouse)/Gγ2(human) heterotrimer	10.1038/S41589-020-0492-2	2020-04-15
-ada2c_human	ADRA2C	α2C	Adrenoceptors	Human	X-ray	6KUW	2.8	A	Inactive	1	-	-	-	-	2019-12-04
-adrb1_melga	ADRB1	β1	Adrenoceptors	Wild turkey	X-ray	6H7N	2.5	A	Active	99	-	-	-	10.1101/436212	2018-10-17
-adrb1_melga	ADRB1	β1	Adrenoceptors	Wild turkey	X-ray	2Y03	2.9	A	Inactive	0	-	-	-	-	2011-01-12
-adrb2_human	ADRB2	β2	Adrenoceptors	Human	X-ray	3SN6	3.2	R	Active	100	Gs	αs	Nucleotide-free Gs: bovine α/γ, rat β subunits	10.1038/NATURE10361	2011-07-20
-adrb2_human	ADRB2	β2	Adrenoceptors	Human	X-ray	4GBR	4.0	A	Inactive	0	-	-	-	10.1371/JOURNAL.PONE.0046039	2012-10-24
-adrb3_canlf	ADRB3	β3	Adrenoceptors	Dog	Cryo-EM	7XJH	3.3	R	Active	100	Gs	αs	Mini-Gs protein	10.1016/J.MOLCEL.2021.06.024	2022-05-04
-drd1_human	DRD1	D1	Dopamine	Human	Cryo-EM	7JVQ	3.0	R	Active	100	Gs	αs	Mini-Gs (mislabeled mini-Gi in metadata)	10.1016/J.CELL.2021.01.027	2021-02-24
-drd1_human	DRD1	D1	Dopamine	Human	Cryo-EM	9LLG	2.8	R	Inactive	2	-	-	-	-	2026-03-04
-drd2_human	DRD2	D2	Dopamine	Human	Cryo-EM	7JVR	2.8	R	Active	100	Gi/o	αi1	DN Gαi1: S47N/G203A/E345A/A326S	10.1016/J.CELL.2021.01.027	2021-02-24
-drd2_human	DRD2	D2	Dopamine	Human	X-ray	6LUQ	3.1	A	Inactive	1	-	-	-	10.1038/S41467-020-14884-Y	2020-03-04
-drd3_human	DRD3	D3	Dopamine	Human	Cryo-EM	7CMV	2.7	R	Active	100	Gi/o	αi1	DN Gαi1: S47N/G203A/E345A/A326S	10.1016/J.MOLCEL.2021.01.003	2021-03-10
-drd3_human	DRD3	D3	Dopamine	Human	X-ray	3PBL	2.9	A	Inactive	1	-	-	-	10.1126/SCIENCE.1197410	2010-11-03
-drd4_human	DRD4	D4	Dopamine	Human	Cryo-EM	8IRU	3.2	R	Active	100	Gi/o	αi1	DNGs: Gαi1 αN/α5 helices + Gαs Ras domain	10.1038/S41422-023-00808-0	2023-06-21
-drd4_human	DRD4	D4	Dopamine	Human	X-ray	5WIV	2.1	A	Inactive	0	-	-	-	10.1126/science.aan5468	2017-10-18
-drd5_human	DRD5	D5	Dopamine	Human	Cryo-EM	8IRV	3.1	R	Active	100	Gs	αs	Mini-Gs: AHD deleted, G226A/A366S mutations	10.1038/S41422-023-00808-0	2023-06-07
-hrh1_human	HRH1	H1	Histamine	Human	Cryo-EM	8YN2	2.7	R	Active	100	Gq/11	αq	MiniGq (miniGαq50) construct	10.1038/S41467-024-52585-Y	2024-10-09
-hrh1_human	HRH1	H1	Histamine	Human	X-ray	3RZE	3.1	A	Inactive	2	-	-	-	10.1038/NATURE10236	2011-06-15
-hrh2_human	HRH2	H2	Histamine	Human	Cryo-EM	8YUT	2.7	R	Active	100	Gs	αs	DN bovine Gs (confirmed via α5 tail seq)	-	2024-06-05
-hrh3_human	HRH3	H3	Histamine	Human	Cryo-EM	8YUV	3.0	R	Active	100	Gi/o	αi1	DN human Gi1 (DNGi1), stabilizing mutations	-	2024-06-05
-hrh3_human	HRH3	H3	Histamine	Human	X-ray	7F61	2.6	A	Inactive	4	-	-	-	10.1038/S41467-022-33880-Y	2022-10-26
-hrh4_human	HRH4	H4	Histamine	Human	Cryo-EM	9LRE	2.8	R	Active	100	Gi/o	αi1	dnGi: dominant-negative Gi for stabilization	10.1038/S42003-025-08363-7	2025-06-11
-hrh4_human	HRH4	H4	Histamine	Human	Cryo-EM	9JG1	3.6	R	Inactive	30	-	-	-	-	2025-12-03
+entry	gene	receptor	family	species	method	pdb	resolution	chain	state	degree_active	g_family	g_subtype	g_note	reference	published	dataset
+5ht1a_human	HTR1A	5-HT1A	5-Hydroxytryptamine	Human	Cryo-EM	9HYI	2.3	R	Active	100	Gi/o	αi1	Gi1 heterotrimer complex	-	2026-01-21	DataSet1
+5ht1b_human	HTR1B	5-HT1B	5-Hydroxytryptamine	Human	Cryo-EM	6G79	3.8	S	Active	100	Gi/o	αo	Mini-Go heterotrimer w/ Gβ1γ2, α-core only	10.1038/S41586-018-0241-9	2018-06-20	DataSet1
+5ht1b_human	HTR1B	5-HT1B	5-Hydroxytryptamine	Human	X-ray	4IAQ	2.8	A	Inactive	10	-	-	-	10.1126/SCIENCE.1232807	2013-03-13	DataSet1
+5ht1d_human	HTR1D	5-HT1D	5-Hydroxytryptamine	Human	Cryo-EM	7E32	2.9	R	Active	100	Gi/o	αi1	DN human Gαi1: S47N/G203A/A326S/E245A	10.1038/S41586-021-03376-8	2021-04-21	DataSet1
+5ht1e_human	HTR1E	5-HT1E	5-Hydroxytryptamine	Human	Cryo-EM	8UGY	3.3	R	Active	100	Gi/o	αi1	DN Gαi1 (DNGαi1): S47N/G203A/E245A/A326S	10.1126/SCIADV.ADK4855	2024-05-01	DataSet1
+5ht1f_human	HTR1F	5-HT1F	5-Hydroxytryptamine	Human	Cryo-EM	7EXD	3.4	R	Active	100	Gi/o	αi1	Gi1 heterotrimer	10.1038/S41422-021-00527-4	2021-08-04	DataSet1
+5ht2a_human	HTR2A	5-HT2A	5-Hydroxytryptamine	Human	Cryo-EM	7RAN	3.5	A	Active	100	Gq/11	αq	Mini-Gq (Gi2-mini-Gq chimera)	10.1038/S41586-022-05258-Z	2022-07-06	DataSet1
+5ht2a_human	HTR2A	5-HT2A	5-Hydroxytryptamine	Human	X-ray	6A94	2.9	A	Inactive	0	-	-	-	10.1038/S41594-018-0180-Z	2019-02-13	DataSet1
+5ht2b_human	HTR2B	5-HT2B	5-Hydroxytryptamine	Human	Cryo-EM	9JGK	3.6	A	Inactive	1	-	-	-	-	2025-07-16	DataSet1
+5ht2b_human	HTR2B	5-HT2B	5-Hydroxytryptamine	Human	X-ray	5TVN	2.9	A	Active	58	-	-	-	10.1016/J.CELL.2016.12.033	2017-02-01	DataSet1
+5ht2c_human	HTR2C	5-HT2C	5-Hydroxytryptamine	Human	X-ray	6BQH	2.7	A	Inactive	1	-	-	-	10.1016/j.cell.2018.01.001	2018-02-14	DataSet1
+5ht2c_human	HTR2C	5-HT2C	5-Hydroxytryptamine	Human	X-ray	6BQG	3.0	A	Active	88	-	-	-	10.1016/j.cell.2018.01.001	2018-02-14	DataSet1
+5ht4r_human	HTR4	5-HT4	5-Hydroxytryptamine	Human	Cryo-EM	7XT8	3.1	R	Active	100	Gs	αs	DN Gs: 8 muts S54N/G226A/E268A...I285T	10.1016/J.MOLCEL.2022.05.031	2022-07-27	DataSet1
+5ht5a_human	HTR5A	5-HT5A	5-Hydroxytryptamine	Human	Cryo-EM	7X5H	3.1	R	Active	100	Gi/o	αi1	DN Gαi1(4DN): S47N/G203A/E345A/A326S	10.1038/S41421-022-00412-3	2022-09-14	DataSet1
+5ht5a_human	HTR5A	5-HT5A	5-Hydroxytryptamine	Human	X-ray	7UM4	2.8	A	Inactive	27	-	-	-	10.1038/S41594-022-00796-6	2022-07-20	DataSet1
+5ht6r_human	HTR6	5-HT6	5-Hydroxytryptamine	Human	Cryo-EM	7XTB	3.3	R	Active	100	Gs	αs	DN Gs-short isoform: 8 stabilizing mutations	10.1016/J.MOLCEL.2022.05.031	2022-07-27	DataSet1
+5ht7r_human	HTR7	5-HT7	5-Hydroxytryptamine	Human	Cryo-EM	7XTC	3.2	R	Active	100	Gs	αs	DN Gs: 8 muts S54N/G226A/E268A...I285T	10.1016/J.MOLCEL.2022.05.031	2022-07-27	DataSet1
+ada1a_human	ADRA1A	α1A	Adrenoceptors	Human	Cryo-EM	7YM8	2.9	A	Active	100	Gq/11	αq	miniGsq: miniGs scaffold, Gq α5 helix	10.1038/S41467-023-39310-X	2023-07-05	DataSet1
+ada1a_human	ADRA1A	α1A	Adrenoceptors	Human	Cryo-EM	9M4T	3.2	A	Inactive	1	-	-	-	-	2025-07-02	DataSet1
+ada1b_human	ADRA1B	α1B	Adrenoceptors	Human	X-ray	7B6W	2.9	A	Inactive	1	-	-	-	10.1038/s41467-021-27911-3	2022-01-12	DataSet1
+ada2a_human	ADRA2A	α2A	Adrenoceptors	Human	Cryo-EM	9PLN	2.8	R	Active	93	-	-	-	-	2025-08-20	DataSet1
+ada2a_human	ADRA2A	α2A	Adrenoceptors	Human	Cryo-EM	9IQR	3.4	B	Inactive	40	-	-	-	10.1038/S41467-025-61695-0	2025-07-23	DataSet1
+ada2b_human	ADRA2B	α2B	Adrenoceptors	Human	Cryo-EM	6K42	4.1	R	Active	100	Gi/o	αi1	Gαi1(bovine)/Gβ1(mouse)/Gγ2(human) heterotrimer	10.1038/S41589-020-0492-2	2020-04-15	DataSet1
+ada2c_human	ADRA2C	α2C	Adrenoceptors	Human	X-ray	6KUW	2.8	A	Inactive	1	-	-	-	-	2019-12-04	DataSet1
+adrb1_melga	ADRB1	β1	Adrenoceptors	Wild turkey	X-ray	6H7N	2.5	A	Active	99	-	-	-	10.1101/436212	2018-10-17	DataSet1
+adrb1_melga	ADRB1	β1	Adrenoceptors	Wild turkey	X-ray	2Y03	2.9	A	Inactive	0	-	-	-	-	2011-01-12	DataSet1
+adrb2_human	ADRB2	β2	Adrenoceptors	Human	X-ray	3SN6	3.2	R	Active	100	Gs	αs	Nucleotide-free Gs: bovine α/γ, rat β subunits	10.1038/NATURE10361	2011-07-20	DataSet1
+adrb2_human	ADRB2	β2	Adrenoceptors	Human	X-ray	4GBR	4.0	A	Inactive	0	-	-	-	10.1371/JOURNAL.PONE.0046039	2012-10-24	DataSet1
+adrb3_canlf	ADRB3	β3	Adrenoceptors	Dog	Cryo-EM	7XJH	3.3	R	Active	100	Gs	αs	Mini-Gs protein	10.1016/J.MOLCEL.2021.06.024	2022-05-04	DataSet1
+drd1_human	DRD1	D1	Dopamine	Human	Cryo-EM	7JVQ	3.0	R	Active	100	Gs	αs	Mini-Gs (mislabeled mini-Gi in metadata)	10.1016/J.CELL.2021.01.027	2021-02-24	DataSet1
+drd1_human	DRD1	D1	Dopamine	Human	Cryo-EM	9LLG	2.8	R	Inactive	2	-	-	-	-	2026-03-04	DataSet1
+drd2_human	DRD2	D2	Dopamine	Human	Cryo-EM	7JVR	2.8	R	Active	100	Gi/o	αi1	DN Gαi1: S47N/G203A/E345A/A326S	10.1016/J.CELL.2021.01.027	2021-02-24	DataSet1
+drd2_human	DRD2	D2	Dopamine	Human	X-ray	6LUQ	3.1	A	Inactive	1	-	-	-	10.1038/S41467-020-14884-Y	2020-03-04	DataSet1
+drd3_human	DRD3	D3	Dopamine	Human	Cryo-EM	7CMV	2.7	R	Active	100	Gi/o	αi1	DN Gαi1: S47N/G203A/E345A/A326S	10.1016/J.MOLCEL.2021.01.003	2021-03-10	DataSet1
+drd3_human	DRD3	D3	Dopamine	Human	X-ray	3PBL	2.9	A	Inactive	1	-	-	-	10.1126/SCIENCE.1197410	2010-11-03	DataSet1
+drd4_human	DRD4	D4	Dopamine	Human	Cryo-EM	8IRU	3.2	R	Active	100	Gi/o	αi1	DNGs: Gαi1 αN/α5 helices + Gαs Ras domain	10.1038/S41422-023-00808-0	2023-06-21	DataSet1
+drd4_human	DRD4	D4	Dopamine	Human	X-ray	5WIV	2.1	A	Inactive	0	-	-	-	10.1126/science.aan5468	2017-10-18	DataSet1
+drd5_human	DRD5	D5	Dopamine	Human	Cryo-EM	8IRV	3.1	R	Active	100	Gs	αs	Mini-Gs: AHD deleted, G226A/A366S mutations	10.1038/S41422-023-00808-0	2023-06-07	DataSet1
+hrh1_human	HRH1	H1	Histamine	Human	Cryo-EM	8YN2	2.7	R	Active	100	Gq/11	αq	MiniGq (miniGαq50) construct	10.1038/S41467-024-52585-Y	2024-10-09	DataSet1
+hrh1_human	HRH1	H1	Histamine	Human	X-ray	3RZE	3.1	A	Inactive	2	-	-	-	10.1038/NATURE10236	2011-06-15	DataSet1
+hrh2_human	HRH2	H2	Histamine	Human	Cryo-EM	8YUT	2.7	R	Active	100	Gs	αs	DN bovine Gs (confirmed via α5 tail seq)	-	2024-06-05	DataSet1
+hrh3_human	HRH3	H3	Histamine	Human	Cryo-EM	8YUV	3.0	R	Active	100	Gi/o	αi1	DN human Gi1 (DNGi1), stabilizing mutations	-	2024-06-05	DataSet1
+hrh3_human	HRH3	H3	Histamine	Human	X-ray	7F61	2.6	A	Inactive	4	-	-	-	10.1038/S41467-022-33880-Y	2022-10-26	DataSet1
+hrh4_human	HRH4	H4	Histamine	Human	Cryo-EM	9LRE	2.8	R	Active	100	Gi/o	αi1	dnGi: dominant-negative Gi for stabilization	10.1038/S42003-025-08363-7	2025-06-11	DataSet1
+hrh4_human	HRH4	H4	Histamine	Human	Cryo-EM	9JG1	3.6	R	Inactive	30	-	-	-	-	2025-12-03	DataSet1
+o51e2_human	OR51E2	OR51E2	Olfactory	Human	Cryo-EM	8F76	3.1	A	Active	100	Gs	αs	Mini-Gs399 with propionate bound	10.1038/S41586-023-05798-Y	2023-03-15	Added
