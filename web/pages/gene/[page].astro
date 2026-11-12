@@ -22,7 +22,7 @@ import {
   phylopCell,
 } from '../../lib/html.ts'
 import { pathogenicAtSameResidue, proteinMap, variantData } from '../../lib/maps.ts'
-import { initialPartner, stories, structureData } from '../../lib/structure.ts'
+import { initialPartner, partnerPicks, stories, structureData } from '../../lib/structure.ts'
 import { JBROWSE, geneHref, href, isoformHref } from '../../lib/site.ts'
 
 export function getStaticPaths() {
@@ -49,6 +49,7 @@ const conditions = [...Map.groupBy(gene.variants.flatMap(v => v.conditions), nam
 const description = `${gene.gene}: ${gene.interfaceResidues} residues at a predicted interface with ${gene.partners.length} partner${gene.partners.length === 1 ? '' : 's'}, and the ${gene.variants.length} ClinVar missense variants on them.`
 const partnerStories = stories(gene)
 const initial = initialPartner(gene)
+const picks = partnerPicks(gene)
 const structureJson = JSON.stringify(structureData(gene)).replaceAll('<', '\\u003c')
 const SHOWN_PARTNERS = 3
 const rows = gene.variants
@@ -93,13 +94,21 @@ const rows = gene.variants
         <div class="structure-head">
           <h2>{gene.gene} with a partner, in 3D</h2>
           <p class="picks-label">
-            {partnerStories.length > 1 ? `Pick one of its ${partnerStories.length} predicted partners.` : 'Its one predicted partner.'}
+            {partnerStories.length > 1 ? `Pick one of its ${partnerStories.length} predicted partners${picks.length < partnerStories.length ? '; those touching nearly the same residues share a button' : ''}.` : 'Its one predicted partner.'}
             The red number counts the pathogenic variants at that interface.
           </p>
           <div class="partner-picks" role="group" aria-label="Partners">
-            {partnerStories.map(s => (
-              <button type="button" class="partner-pick" data-partner={s.gene} aria-pressed={s.gene === initial ? 'true' : 'false'}>
+            {picks.map(s => (
+              <button
+                type="button"
+                class="partner-pick"
+                data-partner={s.gene}
+                data-names={s.names.join(', ')}
+                title={s.names.length > 1 ? `${s.names.join(', ')}: nearly the same interface` : undefined}
+                aria-pressed={initial && s.names.includes(initial) ? 'true' : 'false'}
+              >
                 {s.gene}
+                {s.names.length > 1 && <span class="pick-more">+{s.names.length - 1}</span>}
                 {s.pathogenic > 0 && <span class="pick-count" title={`${s.pathogenic} pathogenic variants at this interface`}>{s.pathogenic}</span>}
               </button>
             ))}

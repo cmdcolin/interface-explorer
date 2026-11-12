@@ -853,6 +853,16 @@ h3 {
   color: #fff;
 }
 
+.pick-more {
+  margin-left: 4px;
+  opacity: 0.75;
+  font-size: 12px;
+}
+
+.story .caution {
+  font-weight: 600;
+}
+
 .pick-count {
   display: inline-block;
   margin-left: 6px;

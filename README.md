@@ -26,8 +26,10 @@ one.
   structure covers, and either over one a structure contradicts. The page's protein is grey, the partner green under a translucent
   surface, and its interface residues blue; the ClinVar variants on them are
   coloured by classification. A sentence above the 3D view gives each partner's
-  counts, the PDB entry that confirms it, and any UniProt region annotated as
-  binding there. Below it, a protein map shows the variants, UniProt domains
+  counts, the PDB entry that confirms it (or a warning when the experiment shows
+  a different interface, for 111 partners), and any UniProt region annotated as
+  binding there. Partners touching nearly the same residues share one button,
+  as they share a map row. Below it, a protein map shows the variants, UniProt domains
   and regions, and a row per partner. Hovering the map or a variant row marks
   the residue in 3D, hovering in 3D marks it on the map, and clicking zooms to
   it. The address then holds the view (`?partner=GNB1&residue=23`), so it can be

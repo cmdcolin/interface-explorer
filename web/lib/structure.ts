@@ -1,6 +1,6 @@
 import { gene as readGene, geneRows } from './data.ts'
 import { LABEL_KEYS, LABELS, esc, residueCount } from './html.ts'
-import { isBindingRegion, partnerResidues } from './maps.ts'
+import { isBindingRegion, partnerGroups, partnerResidues } from './maps.ts'
 import type { ScenePartner, SceneVariant } from './scene.ts'
 import { geneHref } from './site.ts'
 import type { Gene, GeneVariant } from './types.ts'
@@ -79,6 +79,15 @@ export function leadPartner(candidates: { gene: string; pathogenic: number; agre
   })[0]?.gene
 }
 
+function experimentSentence(gene: string, partner: string, e: NonNullable<Partner['experiment']>) {
+  const pdb = `PDB <a href="https://www.rcsb.org/structure/${esc(e.pdb)}">${esc(e.pdb.toUpperCase())}</a>`
+  return !e.experimental
+    ? `<span class="caution">${pdb} holds both proteins, but there ${esc(gene)} does not touch ${esc(partner)}, so treat this interface with caution.</span>`
+    : agreement(e) === AGREEMENT.contradicted
+      ? `<span class="caution">${pdb}, an experimental structure holding both, shows a different interface: of the ${residueCount(e.experimental)} of ${esc(gene)} in contact there, the prediction finds only ${e.shared}.</span>`
+      : `${pdb}, an experimental structure holding both, puts ${residueCount(e.experimental)} of ${esc(gene)} in contact with ${esc(partner)}; the prediction finds ${e.shared} of them.`
+}
+
 export function stories(gene: Gene) {
   return gene.partners.flatMap(p => {
     const residues = new Set(partnerResidues(p))
@@ -102,8 +111,8 @@ export function stories(gene: Gene) {
           ? `${esc(p.gene)} is a disease protein too, and its side of the interface carries ${countList(side.variants)} variant${side.variants.length === 1 ? '' : 's'}, shaded the same way (${sideLink}).`
           : `${esc(p.gene)} is a disease protein too, with no ClinVar missense variant on its side of the interface (${sideLink}).`
         : '',
-      experiment?.experimental
-        ? `PDB <a href="https://www.rcsb.org/structure/${esc(experiment.pdb)}">${esc(experiment.pdb.toUpperCase())}</a>, an experimental structure holding both, puts ${residueCount(experiment.experimental)} of ${esc(gene.gene)} in contact with ${esc(p.gene)}; the prediction finds ${experiment.shared} of them.`
+      experiment
+        ? experimentSentence(gene.gene, p.gene, experiment)
         : '',
       regions.length
         ? `UniProt annotates ${regions.map(f => `${range(f.start, f.end)} as “${esc(f.description)}”`).join(' and ')}.`
@@ -113,6 +122,16 @@ export function stories(gene: Gene) {
       .join(' ')
     return p.chain ? [{ gene: p.gene, pathogenic, agreement: agreement(experiment), html }] : []
   })
+}
+
+export function partnerPicks(gene: Gene) {
+  const told = stories(gene)
+  const pathogenicOf = (name: string) => told.find(s => s.gene === name)?.pathogenic ?? 0
+  return partnerGroups(gene.partners.filter(p => p.chain)).map(g => ({
+    gene: g.names[0] ?? '',
+    names: g.names,
+    pathogenic: pathogenicOf(g.names[0] ?? ''),
+  }))
 }
 
 export function initialPartner(gene: Gene) {

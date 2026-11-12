@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { lanes } from './maps.ts'
+import { lanes, partnerGroups } from './maps.ts'
 
 test('overlapping features take the next free lane', () => {
   expect(
@@ -16,4 +16,10 @@ test('overlapping features take the next free lane', () => {
     [60, 1],
     [100, 0],
   ])
+})
+
+test('partners touching nearly the same residues group under the one with most variants', () => {
+  const partner = (gene: string, runs: string, variants: number) => ({ gene, runs, variants })
+  const groups = partnerGroups([partner('RGS21', '10–19', 3), partner('RGS19', '10–19', 8), partner('GNB1', '40–49', 2)])
+  expect(groups.map(g => g.names)).toEqual([['RGS19', 'RGS21'], ['GNB1']])
 })

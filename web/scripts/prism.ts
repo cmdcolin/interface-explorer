@@ -65,9 +65,17 @@ export async function createViewer(host: HTMLElement) {
             ...module.DefaultPrismViewerSpec(),
             options: {
               canvas: { background: colors().background },
-              ui: { collapsed: true, showSequence: false, splash: false },
+              ui: {
+                collapsed: true,
+                showSequence: false,
+                splash: false,
+                buttons: { settings: false, selectionMode: false, animation: false, trajectory: false },
+              },
             },
-            ui: { theme: matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light' },
+            ui: {
+              theme: matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+              layout: { mode: 'embedded', toolbar: 'collapsed' },
+            },
           },
         })
       : fail(host, '.')

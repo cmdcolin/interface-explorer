@@ -81,17 +81,25 @@ function overlap(a: Set<number>, b: Set<number>) {
   return shared / (a.size + b.size - shared)
 }
 
-export function partnerTracks(partners: Gene['partners']) {
-  const groups: { names: string[]; residues: Set<number> }[] = []
+export function partnerGroups(partners: { gene: string; runs: string; variants: number }[]) {
+  const groups: { members: typeof partners; residues: Set<number> }[] = []
   for (const partner of partners) {
     const residues = new Set(partnerResidues(partner))
     const alike = groups.find(g => overlap(g.residues, residues) >= ALIKE)
     if (alike) {
-      alike.names.push(partner.gene)
+      alike.members.push(partner)
     } else {
-      groups.push({ names: [partner.gene], residues })
+      groups.push({ members: [partner], residues })
     }
   }
+  return groups.map(g => ({
+    names: g.members.toSorted((a, b) => b.variants - a.variants).map(p => p.gene),
+    residues: g.residues,
+  }))
+}
+
+export function partnerTracks(partners: Gene['partners']) {
+  const groups = partnerGroups(partners)
   const shown = groups.slice(0, MAP_PARTNERS)
   const rest = groups.slice(MAP_PARTNERS)
   return [
