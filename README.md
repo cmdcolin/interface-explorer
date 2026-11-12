@@ -22,3 +22,13 @@ interfaces are worth exploring, not the point.
 - [JBrowse tracks](docs/tracks.md)
 - [Running the pipeline and site](docs/running.md)
 - [Data and credits](docs/credits.md)
+
+## Future ideas
+
+- **Beyond human:** the structural core (interface calling, patch ranking,
+  isoforms, the PDB check) is species-agnostic. The variant layers are not:
+  ClinVar, AlphaMissense, hg38 phyloP and the hg38 JBrowse links. Another
+  organism needs its own variant source (OMIA, yeast or fly mutant
+  collections) and protein-alignment conservation where no genome-wide track
+  exists. Mouse or yeast is the natural second species, if AlphaFold DB models
+  enough of their complexes.
