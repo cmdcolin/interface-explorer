@@ -1,5 +1,5 @@
 ---
-title: 'SLC35A2 has no partner to map, so we mapped its moving parts'
+title: "Testing SLC35A2's molecular dynamics switch residues against ClinVar"
 date: '2026-11-12'
 order: 5
 description: 'Molecular dynamics of the Golgi UDP-galactose transporter picks out the residues that switch between its two open states. They are more conserved than residues buried as deeply, and several hold variants of uncertain significance.'
@@ -17,13 +17,14 @@ import switchShot from './heroes/slc35a2-switch.jpg'
 export const m = mdPost()
 export const plddt = summary().thresholds.plddt
 
-The explorer places ClinVar variants on the surfaces two proteins share.
-SLC35A2, the transporter that imports UDP-galactose into the Golgi for
-glycosylation, has {m.pathogenicTotal} pathogenic missense variants in ClinVar
-(SLC35A2-CDG), but AlphaFold DB predicts no complex for it, so it has no
-gene page here. A transporter works by switching between states,
-though, and the residues that move when it switches form a surface the protein
-makes with itself, present in one state and absent in the other.
+The explorer tests residues at predicted interfaces: are they conserved, does
+AlphaMissense flag them, do ClinVar's pathogenic variants land on them? The
+same tests work on any residue set, and this post runs them on one from
+molecular dynamics. SLC35A2, the transporter that imports UDP-galactose into
+the Golgi for glycosylation, has {m.pathogenicTotal} pathogenic missense
+variants in ClinVar (SLC35A2-CDG) but no predicted complex, so it has no gene
+page here. A transporter works by switching between two open states, and the
+residues that move when it switches are a natural set to test.
 
 Jindrich Lnenicka, on the BioHackathon Europe 2026 team, simulated SLC35A2 in
 GROMACS in both of its open states, lumen-open and cytosol-open, three
@@ -85,6 +86,9 @@ along the protein and in the genome.
 
 ## What this does not show
 
+- It sits beside the explorer's question rather than inside it: the switch
+  residues come from a simulation of one protein, not from a predicted
+  interface.
 - It is one protein, and the residue lists are StarMD's top-ranked rows, not
   every residue that moves.
 - We don't label which conformer is lumen-open and which cytosol-open; the
