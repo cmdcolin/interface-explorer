@@ -164,6 +164,22 @@ const rows = gene.variants
                     {p.modelledAs.accession === p.accession ? <i>{species(p.modelledAs.organism)}</i> : <>as <i>{species(p.modelledAs.organism)}</i> {p.modelledAs.accession}</>}
                   </div>
                 )}
+                {p.apart && (
+                  <div
+                    class="cell-note caution"
+                    title={`UniProt places one of ${gene.gene} and ${p.gene} only inside mitochondria and the other never in mitochondria, so the two may never meet in the cell`}
+                  >
+                    different compartments
+                  </div>
+                )}
+                {p.paralogs && !p.experiment && (
+                  <div
+                    class="cell-note"
+                    title={`${gene.gene} and ${p.gene} belong to the same UniProt family and no PDB entry holds both. Paralogs do form real complexes, but AlphaFold can also model one protein's homodimer interface across two family members.`}
+                  >
+                    paralogs, no structure of both
+                  </div>
+                )}
               </td>
               <td class="num">{p.ipsae?.toFixed(2)}</td>
               <td class="num">{p.iptm?.toFixed(2)}</td>

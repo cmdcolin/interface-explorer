@@ -52,7 +52,7 @@ const table = sortableTable({
     {
       label: 'Touches',
       cell: lead =>
-        `<span class="muted">${esc(lead.partners.slice(0, 2).join(', '))}${lead.partners.length > 2 ? ` +${lead.partners.length - 2}` : ''}</span>`,
+        `<span class="muted">${esc(lead.partners.slice(0, 2).join(', '))}${lead.partners.length > 2 ? ` +${lead.partners.length - 2}` : ''}</span>${lead.apart ? '<div class="cell-note caution" title="UniProt places one protein of every pair this residue touches only inside mitochondria and the other never in mitochondria">different compartments</div>' : ''}`,
       sort: lead => lead.partners.join(', '),
     },
     {
@@ -75,7 +75,8 @@ const table = sortableTable({
     that change a residue at a confident predicted interface where a substitution is already classified pathogenic. For
     {s.leads.sameChange.toLocaleString()} it is the same amino-acid change from a different nucleotide change (ACMG PS1,
     strong); for the other {(leads.length - s.leads.sameChange).toLocaleString()} a different change at that residue (PM5,
-    moderate).
+    moderate). {s.leads.apart.toLocaleString()} sit only on predicted pairs whose proteins UniProt never places in the same
+    compartment, marked below; treat those with caution.
   </p>
   <p class="note">
     These are leads, not classifications. PS1 and PM5 need the pathogenic variant to be well established, and PS1 also

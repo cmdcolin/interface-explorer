@@ -10,7 +10,8 @@
   shared.
 - **Leads:** variants of uncertain significance that change an interface
   residue where a substitution is already classified pathogenic (ACMG PS1 and
-  PM5), ranked by AlphaMissense score.
+  PM5), ranked by AlphaMissense score; the 14 that sit only on pairs in
+  different compartments are marked.
 - **Isoforms:** where each AlphaFold DB isoform model differs from the
   canonical protein, and which pathogenic sites and partner interfaces it lacks.
 - **Blog:** the findings as charts, the GPCR–G protein complexes from

@@ -51,6 +51,14 @@ const references = [
       named as the human protein of identical sequence; where a partner was modelled twice, the more confident complex is kept.
     </li>
     <li>
+      Doubtful pairs: {s.pairs.apart} predicted pairs join a protein UniProt places only inside mitochondria (outer membrane
+      aside) with one it never places in mitochondria, such as the cytosolic and mitochondrial aspartyl-tRNA synthetases DARS1
+      and DARS2; they are marked "different compartments". {s.pairs.paralogs.toLocaleString()} pair a protein with a member of
+      its own UniProt family. Paralogs do form real complexes, such as α- and β-tubulin, but AlphaFold can also model one
+      protein's homodimer interface across two family members, so the {s.pairs.paralogsWithoutStructure.toLocaleString()} with
+      no PDB entry holding both are marked "paralogs, no structure of both". Neither mark removes a pair from the counts.
+    </li>
+    <li>
       Interface residues: any heavy atom within {t.contact} Å of the partner, residue pLDDT ≥ {t.plddt}. Mapped to hg38
       codons with EBI Proteins API coordinates.
     </li>

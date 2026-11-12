@@ -402,6 +402,11 @@ details.more summary {
   white-space: nowrap;
 }
 
+.cell-note.caution {
+  color: var(--uncertain);
+  font-weight: 600;
+}
+
 .map .row-label {
   font-size: 12px;
   fill: var(--text-2);

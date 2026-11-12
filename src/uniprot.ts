@@ -2,6 +2,7 @@ import { join } from 'node:path'
 
 import { getJson } from './cache.ts'
 import { number, record, records, text } from './json.ts'
+import type { ProteinContext } from './pairs.ts'
 import { DATA } from './paths.ts'
 
 const ENTRY_FIELDS =
@@ -79,6 +80,33 @@ export async function diseaseFeatures() {
     FEATURE_FIELDS,
   )
   return new Map(entries.map(entry => [accessionOf(entry), featuresOf(entry)]))
+}
+
+const CONTEXT_FIELDS = 'accession,protein_families,cc_subcellular_location'
+
+export function contextOf(entry: UniProtEntry): ProteinContext {
+  const comments = records(entry.comments)
+  const similarity = comments.find(c => c.commentType === 'SIMILARITY')
+  const sentence = text(record(records(similarity?.texts)[0]).value) ?? ''
+  return {
+    family: (sentence.split('.')[0] ?? '').replace(/^Belongs to the /, ''),
+    locations: comments
+      .filter(c => c.commentType === 'SUBCELLULAR LOCATION')
+      .flatMap(c =>
+        records(c.subcellularLocations).flatMap(
+          l => text(record(l.location).value) ?? [],
+        ),
+      ),
+  }
+}
+
+export async function humanContexts() {
+  const entries = await uniprotEntries(
+    'organism_id:9606 AND reviewed:true',
+    join(DATA, 'uniprot_human_context.json'),
+    CONTEXT_FIELDS,
+  )
+  return new Map(entries.map(entry => [accessionOf(entry), contextOf(entry)]))
 }
 
 export function humanEntries() {

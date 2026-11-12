@@ -34,7 +34,9 @@ import type { CodingPositions } from './coordinates.ts'
 import { readJson, record, writeJson } from './json.ts'
 import { pythonRound } from './numeric.ts'
 import { OUT, SITE_DATA } from './paths.ts'
-import { diseaseFeatures } from './uniprot.ts'
+import { diseaseFeatures, humanContexts } from './uniprot.ts'
+import { pairCaution } from './pairs.ts'
+import type { ProteinContext } from './pairs.ts'
 import type { Feature } from './uniprot.ts'
 import { readVariants } from './variants.ts'
 import type { Variant } from './variants.ts'
@@ -103,6 +105,7 @@ export function geneRecord(
   chains = new Map<string, string | undefined>(),
   features: Feature[] = [],
   patchRanks = new Map<string, PatchRank>(),
+  contexts = new Map<string, ProteinContext>(),
 ) {
   const atResidue = new Map<number, string[]>()
   const partners = protein.interfaces
@@ -129,6 +132,10 @@ export function geneRecord(
         runs: runs(residues),
         experiment: experimentOf(experiments.get(complex.entity)),
         conserved: patchRanks.get(complex.entity),
+        ...pairCaution(
+          contexts.get(protein.accession),
+          complex.partner ? contexts.get(complex.partner) : undefined,
+        ),
       }
     })
   const atInterface = variants.flatMap(variant => {
@@ -191,7 +198,10 @@ export function leads(gene: ReturnType<typeof geneRecord>) {
     .flatMap(variant => {
       const known = pathogenic.filter(p => p.position === variant.position)
       const sameResidue = [...new Set(known.map(p => p.change))]
-      const partner = gene.partners.find(p => variant.partners.includes(p.gene))
+      const touched = gene.partners.filter(p =>
+        variant.partners.includes(p.gene),
+      )
+      const partner = touched.find(p => !p.apart) ?? touched[0]
       return sameResidue.length && partner
         ? [
             {
@@ -211,10 +221,26 @@ export function leads(gene: ReturnType<typeof geneRecord>) {
               ).size,
               partner: partner.gene,
               entity: partner.entity,
+              apart: touched.every(p => p.apart),
             },
           ]
         : []
     })
+}
+
+type Partner = ReturnType<typeof geneRecord>['partners'][number]
+
+export function distinctPairs(
+  genes: { accession: string; partners: Partner[] }[],
+  keep: (partner: Partner) => boolean,
+) {
+  return new Set(
+    genes.flatMap(g =>
+      g.partners
+        .filter(keep)
+        .map(p => [g.accession, p.accession].sort().join(' ')),
+    ),
+  ).size
 }
 
 async function main() {
@@ -225,6 +251,7 @@ async function main() {
   const variants = await readVariants(accession => accessions.has(accession))
   const scores = readScores()
   const features = await diseaseFeatures()
+  const contexts = await humanContexts()
   const comparisons = readComparisons()
   const experiments = Map.groupBy(comparisons, pair => pair.accession)
   const analysis = record(readJson(join(OUT, 'analysis.json')))
@@ -278,6 +305,7 @@ async function main() {
                   : []
               }),
             ),
+            contexts,
           ),
         ]
       : []
@@ -324,6 +352,15 @@ async function main() {
       variants: shortlist.length,
       genes: new Set(shortlist.map(lead => lead.page)).size,
       sameChange: shortlist.filter(lead => lead.evidence === 'PS1').length,
+      apart: shortlist.filter(lead => lead.apart).length,
+    },
+    pairs: {
+      apart: distinctPairs(genes, p => p.apart),
+      paralogs: distinctPairs(genes, p => p.paralogs),
+      paralogsWithoutStructure: distinctPairs(
+        genes,
+        p => p.paralogs && !p.experiment,
+      ),
     },
     alphaMissense: {
       calls: alphaMissenseCalls(genes.flatMap(g => g.variants)),

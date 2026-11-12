@@ -73,7 +73,8 @@ export interface Summary {
   unmapped: number
   partners: number
   variantsAtInterface: Record<Label, number>
-  leads: { variants: number; genes: number; sameChange: number }
+  leads: { variants: number; genes: number; sameChange: number; apart: number }
+  pairs: { apart: number; paralogs: number; paralogsWithoutStructure: number }
   alphaMissense: {
     calls: Record<Label, { scored: number; pp3: number; bp4: number }>
   }

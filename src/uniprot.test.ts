@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { featuresOf } from './uniprot.ts'
+import { contextOf, featuresOf } from './uniprot.ts'
 
 test('features keep the drawn types and their ranges', () => {
   expect(
@@ -33,4 +33,30 @@ test('features keep the drawn types and their ranges', () => {
       description: 'Interaction with Elongin BC complex',
     },
   ])
+})
+
+test('a protein context reads its family and subcellular locations', () => {
+  expect(
+    contextOf({
+      primaryAccession: 'P14868',
+      comments: [
+        {
+          commentType: 'SUBCELLULAR LOCATION',
+          subcellularLocations: [{ location: { value: 'Cytoplasm, cytosol' } }],
+        },
+        {
+          commentType: 'SIMILARITY',
+          texts: [
+            {
+              value:
+                'Belongs to the class-II aminoacyl-tRNA synthetase family. Type 2 subfamily',
+            },
+          ],
+        },
+      ],
+    }),
+  ).toEqual({
+    family: 'class-II aminoacyl-tRNA synthetase family',
+    locations: ['Cytoplasm, cytosol'],
+  })
 })

@@ -1,6 +1,12 @@
 import { expect, test } from 'vitest'
 
-import { alphaMissenseCalls, geneRecord, leads, runs } from './pages.ts'
+import {
+  alphaMissenseCalls,
+  distinctPairs,
+  geneRecord,
+  leads,
+  runs,
+} from './pages.ts'
 
 test('consecutive residues collapse into runs', () => {
   expect(runs([5, 1, 2, 3, 7, 8, 10])).toBe('1–3, 5, 7–8, 10')
@@ -271,4 +277,89 @@ test('totals count every classified variant, counts only those at an interface',
   )
   expect(record.totals).toEqual({ pathogenic: 2, uncertain: 0, benign: 1 })
   expect(record.counts).toEqual({ pathogenic: 1, uncertain: 0, benign: 0 })
+})
+
+test('a lead on a pair that never shares a compartment is marked apart', () => {
+  const variant = (change: string, label: 'pathogenic' | 'uncertain') => ({
+    position: 10,
+    label,
+    change,
+    variation: label === 'pathogenic' ? 1 : 2,
+    review: '',
+    chrom: '1',
+    pos: 30,
+    allele: 'C>T',
+    conditions: [],
+  })
+  const record = geneRecord(
+    {
+      accession: 'P00001',
+      gene: 'GENE',
+      length: 100,
+      context: {},
+      complexes: 1,
+      hetero: 1,
+      interfaces: [
+        {
+          entity: 'AF-1',
+          partner: 'P00002',
+          partner_gene: 'PARTNER',
+          modelled_as: null,
+          iptm: 0.8,
+          ipsae: 0.7,
+          pdockq: 0.5,
+          residues: { 10: 90 },
+        },
+      ],
+    },
+    [variant('A10D', 'pathogenic'), variant('A10V', 'uncertain')],
+    { chrom: 'chr1', strand: '+', start: 1, end: 300 },
+    new Map(),
+    new Map(),
+    new Map(),
+    [],
+    new Map(),
+    new Map([
+      ['P00001', { family: 'F family', locations: ['Cytoplasm'] }],
+      ['P00002', { family: 'F family', locations: ['Mitochondrion matrix'] }],
+    ]),
+  )
+  expect(record.partners.map(p => [p.gene, p.apart, p.paralogs])).toEqual([
+    ['PARTNER', true, true],
+  ])
+  expect(leads(record).map(lead => [lead.change, lead.apart])).toEqual([
+    ['A10V', true],
+  ])
+})
+
+test('a pair flagged from both of its genes counts once', () => {
+  const partner = (accession: string, apart: boolean) => ({
+    gene: accession,
+    accession,
+    modelledAs: null,
+    ipsae: 0.7,
+    iptm: 0.8,
+    pdockq: 0.5,
+    entity: 'AF-1',
+    chain: undefined,
+    residues: 1,
+    runs: '1',
+    experiment: undefined,
+    conserved: undefined,
+    apart,
+    paralogs: false,
+    variants: 0,
+  })
+  expect(
+    distinctPairs(
+      [
+        {
+          accession: 'P1',
+          partners: [partner('P2', true), partner('P3', false)],
+        },
+        { accession: 'P2', partners: [partner('P1', true)] },
+      ],
+      p => p.apart,
+    ),
+  ).toBe(1)
 })
