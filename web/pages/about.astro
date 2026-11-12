@@ -39,48 +39,81 @@ const references = [
   <p class="lede">
     An explorer for asking which partner a disease variant might disturb: predicted protein–protein interfaces and the ClinVar variants on them, in 3D and on the genome.
   </p>
+  <h2>In short</h2>
+  <ul>
+    <li>{s.proteins.toLocaleString()} human disease proteins, with their AlphaFold DB heterodimer predictions.</li>
+    <li>Interface residues are matched to ClinVar missense variants, AlphaMissense scores and conservation.</li>
+    <li>Pathogenic variants sit at predicted interfaces more often than benign ones, within the same protein.</li>
+    <li>The complexes are predictions, so an interface variant is a lead, not a mechanism.</li>
+  </ul>
   <h2>Method</h2>
   <ul>
-    <li>All {s.proteins.toLocaleString()} reviewed human proteins with a UniProt disease annotation.</li>
     <li>
-      Their heterodimers from <a href={HAN}>AlphaFold DB's 2026 complex release</a>, predicted with
-      <a href="https://doi.org/10.1101/2021.10.04.463034">AlphaFold-Multimer</a> for STRING physical-interaction pairs.
-      AlphaFold DB publishes only those it calls tentatively high-confidence: <a
-        href="https://doi.org/10.1101/2025.02.10.637595">ipSAE</a
-      > ≥ {t.ipsae} in both directions (the lower of chain A → B and B → A), mean pLDDT ≥ 70 and at most 10 backbone clashes. Where AlphaFold DB modelled the partner with another species' protein, the partner is
-      named as the human protein of identical sequence; where a partner was modelled twice, the more confident complex is kept.
+      <strong>Proteins:</strong> all {s.proteins.toLocaleString()} reviewed human proteins with a UniProt disease annotation.
     </li>
     <li>
-      Doubtful pairs: {s.pairs.apart} predicted pairs join a protein UniProt places only inside mitochondria (outer membrane
-      aside) with one it never places in mitochondria, such as the cytosolic and mitochondrial aspartyl-tRNA synthetases DARS1
-      and DARS2; they are marked "different compartments". {s.pairs.paralogs.toLocaleString()} pair a protein with a member of
-      its own UniProt family. Paralogs do form real complexes, such as α- and β-tubulin, but AlphaFold can also model one
-      protein's homodimer interface across two family members, so the {s.pairs.paralogsWithoutStructure.toLocaleString()} with
-      no PDB entry holding both are marked "paralogs, no structure of both". Neither mark removes a pair from the counts.
+      <strong>Complexes:</strong> heterodimers from <a href={HAN}>AlphaFold DB's 2026 complex release</a>, kept at ipSAE ≥ {t.ipsae} in both directions.
+      <details class="more">
+        <summary>Details</summary>
+        <p>
+          Predicted with <a href="https://doi.org/10.1101/2021.10.04.463034">AlphaFold-Multimer</a> for STRING
+          physical-interaction pairs. AlphaFold DB publishes only those it calls tentatively high-confidence:
+          <a href="https://doi.org/10.1101/2025.02.10.637595">ipSAE</a> ≥ {t.ipsae} (the lower of chain A → B and B → A), mean pLDDT ≥ 70 and at most 10 backbone clashes.
+        </p>
+        <p>
+          Where AlphaFold DB modelled the partner with another species' protein, the partner is named as the human protein of
+          identical sequence. Where a partner was modelled twice, the more confident complex is kept.
+        </p>
+      </details>
     </li>
     <li>
-      Interface residues: any heavy atom within {t.contact} Å of the partner, residue pLDDT ≥ {t.plddt}. Mapped to hg38
-      codons with EBI Proteins API coordinates.
+      <strong>Doubtful pairs</strong> are marked but still counted: {s.pairs.apart} "different compartments" and {s.pairs.paralogsWithoutStructure.toLocaleString()} "paralogs, no structure of both".
+      <details class="more">
+        <summary>Details</summary>
+        <ul>
+          <li>
+            {s.pairs.apart} pairs join a protein UniProt places only inside mitochondria (outer membrane aside) with one it
+            never places in mitochondria, such as the cytosolic and mitochondrial aspartyl-tRNA synthetases DARS1 and DARS2.
+          </li>
+          <li>
+            {s.pairs.paralogs.toLocaleString()} pair a protein with a member of its own UniProt family. Paralogs do form real
+            complexes, such as α- and β-tubulin, but AlphaFold can also model one protein's homodimer interface across two
+            family members, so the {s.pairs.paralogsWithoutStructure.toLocaleString()} with no PDB entry holding both are
+            marked.
+          </li>
+        </ul>
+      </details>
     </li>
     <li>
-      Variants: single-nucleotide missense variants classified pathogenic, likely pathogenic, uncertain, likely benign or
-      benign in NCBI's weekly ClinVar <code>variant_summary</code> (downloaded {s.provenance.clinvarDownloaded}), on a RefSeq
-      transcript UniProt maps to the canonical isoform. Conflicting classifications are left out, and so is any variant whose
-      wild-type residue does not match the canonical sequence at its position.
+      <strong>Interface residues:</strong> any heavy atom within {t.contact} Å of the partner, residue pLDDT ≥ {t.plddt}, mapped to hg38 codons with EBI Proteins API coordinates.
     </li>
     <li>
-      Each variant's <a href="https://doi.org/10.1126/science.adg7492">AlphaMissense</a> pathogenicity, from the published
-      table of every substitution in the canonical proteins. Of the {s.variantsAtInterface.uncertain.toLocaleString()}
-      variants of uncertain significance at an interface, it scores {uncertain.scored.toLocaleString()}. Read with the ClinGen
-      calibration of <a href="https://doi.org/10.1016/j.gim.2025.101402">Bergquist et al. 2025</a>, it gives
-      {uncertain.pp3.toLocaleString()} ({percent(uncertain.pp3, uncertain.scored)}) at least supporting evidence of
-      pathogenicity (ACMG PP3, score ≥ {PP3_SUPPORTING}) and {uncertain.bp4.toLocaleString()}
-      ({percent(uncertain.bp4, uncertain.scored)}) evidence of benignity (BP4, ≤ {BP4_SUPPORTING}). The developers'
-      0.564 "likely pathogenic" cut-off does not reach supporting evidence, so the site does not use it.
+      <strong>Variants:</strong> single-nucleotide missense variants from NCBI's weekly ClinVar (downloaded {s.provenance.clinvarDownloaded}).
+      <details class="more">
+        <summary>Details</summary>
+        <p>
+          Pathogenic, likely pathogenic, uncertain, likely benign or benign, from <code>variant_summary</code>, on a RefSeq
+          transcript UniProt maps to the canonical isoform. Conflicting classifications are left out, and so is any variant
+          whose wild-type residue does not match the canonical sequence at its position.
+        </p>
+      </details>
     </li>
     <li>
-      Conservation: the phyloP score of each coding base in UCSC's 100-way vertebrate alignment to hg38 (multiz100way), read
-      from UCSC's bigWig. A residue's conservation is the mean over its codon.
+      <strong>Pathogenicity:</strong> <a href="https://doi.org/10.1126/science.adg7492">AlphaMissense</a> scores {uncertain.scored.toLocaleString()} of the {s.variantsAtInterface.uncertain.toLocaleString()} interface variants of uncertain significance; {uncertain.pp3.toLocaleString()} ({percent(uncertain.pp3, uncertain.scored)}) reach supporting pathogenic evidence.
+      <details class="more">
+        <summary>Details</summary>
+        <p>
+          Scores come from the published table of every substitution in the canonical proteins. Read with the ClinGen
+          calibration of <a href="https://doi.org/10.1016/j.gim.2025.101402">Bergquist et al. 2025</a>,
+          {uncertain.pp3.toLocaleString()} ({percent(uncertain.pp3, uncertain.scored)}) have at least supporting evidence of
+          pathogenicity (ACMG PP3, score ≥ {PP3_SUPPORTING}) and {uncertain.bp4.toLocaleString()}
+          ({percent(uncertain.bp4, uncertain.scored)}) evidence of benignity (BP4, ≤ {BP4_SUPPORTING}). The developers'
+          0.564 "likely pathogenic" cut-off does not reach supporting evidence, so the site does not use it.
+        </p>
+      </details>
+    </li>
+    <li>
+      <strong>Conservation:</strong> mean phyloP over each codon, from UCSC's 100-way vertebrate alignment (multiz100way) bigWig.
     </li>
   </ul>
   <h2>Does the interface mean anything?</h2>
@@ -105,14 +138,23 @@ const references = [
     }
   </ul>
   <p>
-    Mantel–Haenszel odds ratios across proteins, with intervals from resampling proteins. The surface line rules out "folded
-    vs disordered" as the explanation, the AlphaMissense lines show the interface adds little to a predictor that never sees
-    the partner, and only among variants it already gives pathogenic evidence, and the conservation line that conservation explains only part of it. Each confidence band of
-    ipSAE, compared with residues at no interface, gives about the same odds ratio. The
-    <a href={href('blog/2026-11-12-disease-variants-cluster/')}>findings post</a> draws these as charts, and
+    Mantel–Haenszel odds ratios across proteins, with intervals from resampling proteins.
+    The <a href={href('blog/2026-11-12-disease-variants-cluster/')}>findings post</a> draws these as charts, and
     <a href={href('blog/2026-11-12-are-the-interfaces-real/')}>another</a> checks the predicted interfaces against
     experimental structures and against random patches of the same protein's surface.
   </p>
+  <details class="more">
+    <summary>How to read these lines</summary>
+    <ul>
+      <li>The surface line rules out "folded vs disordered" as the explanation.</li>
+      <li>
+        The AlphaMissense lines show the interface adds little to a predictor that never sees the partner, and only among
+        variants it already gives pathogenic evidence.
+      </li>
+      <li>The conservation line shows that conservation explains only part of it.</li>
+      <li>Each confidence band of ipSAE, compared with residues at no interface, gives about the same odds ratio.</li>
+    </ul>
+  </details>
   <h2>Leads</h2>
   <p>
     The <a href={href('leads/')}>{s.leads.variants.toLocaleString()} leads</a> are the variants of uncertain significance at
@@ -124,35 +166,42 @@ const references = [
     <li>
       {data.complexes.filter(c => c.dataset === 'DataSet1').length} experimental receptor–G protein complexes of biogenic
       amine receptors, from a GPCRdb selection made by BioHackathon Europe 2026 Project 9, plus {data.others.length} receptor
-      structures without a G protein. One olfactory receptor complex, OR51E2 with mini-Gs (8F76), is added to test AlphaFold
-      DB's predicted Gαolf interfaces; <code>gpcr_structures.tsv</code> marks it as added. The
-      <a href={href('blog/2026-11-12-project-9-gpcrs/')}>GPCR post</a> shows what they find.
-    </li>
-    <li>
-      Contacts: heavy atoms within 5 Å between receptor and Gα. PDBe's SIFTS annotation gives each residue's UniProt
-      position; a receptor chain SIFTS does not map is aligned to its UniProt sequence. Non-human proteins are aligned to the
-      human ortholog. Receptor residues are labelled with GPCRdb generic numbers from GPCRdb's residue table for the human
-      receptor, or their segment (e.g. ICL3) where it gives none.
-    </li>
-    <li>
-      {chimeras} G proteins are engineered chimeras that SIFTS maps to no gene. Each stretch of such a chain is assigned to
-      the human Gα it matches best, favouring the Gα the structure is annotated with.
+      structures without a G protein. The <a href={href('blog/2026-11-12-project-9-gpcrs/')}>GPCR post</a> shows what they find.
     </li>
     <li>Every receptor and Gα here is looked up in AlphaFold DB, whether or not it is a disease protein.</li>
   </ul>
+  <details class="more">
+    <summary>GPCR details</summary>
+    <ul>
+      <li>
+        One olfactory receptor complex, OR51E2 with mini-Gs (8F76), is added to test AlphaFold DB's predicted Gαolf
+        interfaces; <code>gpcr_structures.tsv</code> marks it as added.
+      </li>
+      <li>
+        Contacts: heavy atoms within 5 Å between receptor and Gα. PDBe's SIFTS annotation gives each residue's UniProt
+        position; a receptor chain SIFTS does not map is aligned to its UniProt sequence. Non-human proteins are aligned to
+        the human ortholog. Receptor residues are labelled with GPCRdb generic numbers from GPCRdb's residue table for the
+        human receptor, or their segment (e.g. ICL3) where it gives none.
+      </li>
+      <li>
+        {chimeras} G proteins are engineered chimeras that SIFTS maps to no gene. Each stretch of such a chain is assigned
+        to the human Gα it matches best, favouring the Gα the structure is annotated with.
+      </li>
+    </ul>
+  </details>
   <h2>Isoforms</h2>
-  <ul>
-    <li>
-      AlphaFold DB's monomer models of UniProt's alternative isoforms, for disease genes with at least one modelled besides
-      the canonical.
-    </li>
-    <li>
+  <p>
+    AlphaFold DB's monomer models of UniProt's alternative isoforms, for disease genes with at least one modelled besides
+    the canonical. RefSeq transcripts come from UniProt's cross-references, which name the isoform each one encodes.
+  </p>
+  <details class="more">
+    <summary>Isoform details</summary>
+    <p>
       Each isoform's sequence is rebuilt from UniProt's alternative-sequence edits and checked against its model's sequence,
       which gives every isoform residue its canonical position. A replacement of the same length is compared residue by
       residue, so only residues that change count as lost.
-    </li>
-    <li>RefSeq transcripts come from UniProt's cross-references, which name the isoform each one encodes.</li>
-  </ul>
+    </p>
+  </details>
   <h2>Caveats</h2>
   <ul>
     <li>
@@ -174,13 +223,16 @@ const references = [
     </li>
   </ul>
   <h2>References</h2>
-  <ul class="references">
-    {
-      references.map(([text, url]) => (
-        <li>
-          {text} <a href={url}>{url.replace('https://', '')}</a>
-        </li>
-      ))
-    }
-  </ul>
+  <details class="more">
+    <summary>{references.length} references</summary>
+    <ul class="references">
+      {
+        references.map(([text, url]) => (
+          <li>
+            {text} <a href={url}>{url.replace('https://', '')}</a>
+          </li>
+        ))
+      }
+    </ul>
+  </details>
 </Layout>
