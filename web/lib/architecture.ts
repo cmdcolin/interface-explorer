@@ -345,19 +345,25 @@ export const columns = [
   ['jbrowse', 'astro', 'prism'],
 ]
 
+const WIDTHS = [3.0, 2.6, 1.8, 2.0, 1.9, 1.9]
+
+function nodeWidth(node: Node) {
+  return WIDTHS[columns.findIndex(ids => ids.includes(node.id))] ?? 2
+}
+
 function label(node: Node) {
   const face = node.kind === 'step' || node.kind === 'file' ? MONO : SANS
   const chips = (node.chips ?? [])
     .map(
       chip =>
-        `<TD BGCOLOR="${color('interface')}" STYLE="rounded" CELLPADDING="2"><FONT FACE="${MONO}" POINT-SIZE="10" COLOR="${color('chipText')}">${escape(chip)}</FONT></TD>`,
+        `<TD BGCOLOR="${color('interface')}" STYLE="rounded" CELLPADDING="2" FIXEDSIZE="TRUE" WIDTH="${chip.length * 6 + 14}" HEIGHT="16"><FONT FACE="${MONO}" POINT-SIZE="10" COLOR="${color('chipText')}">${escape(chip)}</FONT></TD>`,
     )
     .join('')
   const rows = [
-    `<TR><TD ALIGN="LEFT" COLSPAN="2"><FONT FACE="${face}" POINT-SIZE="13" COLOR="${color('text')}"><B>${escape(node.title)}</B></FONT></TD></TR>`,
+    `<TR><TD ALIGN="LEFT" COLSPAN="2" WIDTH="${Math.round(nodeWidth(node) * 72 - 22)}"><FONT FACE="${face}" POINT-SIZE="13" COLOR="${color('text')}"><B>${escape(node.title)}</B></FONT></TD></TR>`,
     ...(chips
       ? [
-          `<TR><TD ALIGN="LEFT" COLSPAN="2"><TABLE BORDER="0" CELLBORDER="0" CELLSPACING="3" CELLPADDING="0"><TR>${chips}</TR></TABLE></TD></TR>`,
+          `<TR><TD ALIGN="LEFT" COLSPAN="2"><TABLE ALIGN="LEFT" BORDER="0" CELLBORDER="0" CELLSPACING="3" CELLPADDING="0"><TR>${chips}</TR></TABLE></TD></TR>`,
         ]
       : []),
     ...(node.lines ?? []).map(
@@ -366,6 +372,10 @@ function label(node: Node) {
     ),
   ]
   return `<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1">${rows.join('')}</TABLE>>`
+}
+
+function nodeSize(node: Node) {
+  return `width=${nodeWidth(node)} height=0.8`
 }
 
 function nodeStyle(node: Node) {
@@ -405,10 +415,10 @@ export function architectureDot(numbers: Numbers) {
   nodesep=0.14
   ranksep=0.4
   bgcolor=transparent
-  node [shape=box margin="0.12,0.07" width=1.6 fontname="${SANS}"]
+  node [shape=box margin="0.12,0.07" fontname="${SANS}"]
   edge [color="${color('text2')}" arrowsize=0.6 penwidth=1.25]
   ${headings().join('\n  ')}
-  ${all.map(n => `${n.id} [label=${label(n)} ${nodeStyle(n)}];`).join('\n  ')}
+  ${all.map(n => `${n.id} [label=${label(n)} ${nodeSize(n)} ${nodeStyle(n)}];`).join('\n  ')}
   ${edges.map(e => `${e.from} -> ${e.to} [${edgeStyle(e)}];`).join('\n  ')}
   ${ranked.join('\n  ')}
   ${order.join('\n  ')}
