@@ -45,6 +45,7 @@ test('an interface variant carries its AlphaMissense score', () => {
         chrom: '1',
         pos: 100,
         allele: 'C>T',
+        conditions: [],
       },
       {
         position: 11,
@@ -55,6 +56,7 @@ test('an interface variant carries its AlphaMissense score', () => {
         chrom: '1',
         pos: 103,
         allele: 'T>C',
+        conditions: [],
       },
     ],
     { chrom: 'chr1', strand: '+', start: 1, end: 300 },
@@ -95,6 +97,7 @@ test('a lead is an uncertain variant where another substitution is pathogenic', 
     chrom: '1',
     pos: position * 3,
     allele: 'C>T',
+    conditions: label === 'pathogenic' ? ['Disease'] : [],
   })
   const record = geneRecord(
     {
@@ -129,8 +132,9 @@ test('a lead is an uncertain variant where another substitution is pathogenic', 
     leads(record).map(lead => [
       lead.change,
       lead.sameResidue,
+      lead.knownConditions,
       lead.pathogenicResidues,
       lead.entity,
     ]),
-  ).toEqual([['A10V', ['A10D'], 1, 'AF-1']])
+  ).toEqual([['A10V', ['A10D'], ['Disease'], 1, 'AF-1']])
 })

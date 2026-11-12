@@ -135,7 +135,7 @@ function forestPlot(rows) {
               <span class="forest-ci" style="left:${forestPosition(low)}%;width:${forestPosition(high) - forestPosition(low)}%"></span>
               <span class="forest-dot" style="left:${forestPosition(e[ODDS])}%"></span>
             </div>
-            <div class="forest-value">${e[ODDS].toFixed(1)}× <span class="muted">${low}–${high}</span></div>
+            <div class="forest-value">${e[ODDS].toFixed(1)}× <span class="muted">${low.toFixed(2)}–${high.toFixed(2)}</span></div>
           </div>`
         })
         .join('')}
@@ -371,7 +371,7 @@ async function home() {
         Share of scored variants at an interface with AlphaMissense above ${summary.alphaMissense.likelyPathogenic}. The uncertain ones fall between
         the known pathogenic and benign: ${am.uncertain.likelyPathogenic.toLocaleString()} of them score likely pathogenic.
       </p>
-      <h3>Where to start</h3>
+      <h3>The strongest leads</h3>
       <p>
         ${summary.leads.variants.toLocaleString()} of the uncertain variants, in ${summary.leads.genes.toLocaleString()} genes, change an interface residue
         where a different substitution is already classified pathogenic.
@@ -485,63 +485,85 @@ async function leadsPage() {
       adds a hypothesis for why the residue matters. These are leads, not classifications: a milder substitution at the same residue can be harmless.
       AlphaMissense above ${am.likelyPathogenic} is likely pathogenic. See <a href="#/about">About</a>.
     </p>
-    ${tableShell('leads', 'Filter genes, changes or partners')}`
+    ${tableShell('leads', 'Filter genes, conditions or partners')}`
   sortableTable({
     id: 'leads',
-    rows: leads.map(lead => ({ ...lead, score: lead.alphaMissense ?? -1, known: lead.sameResidue.length, touches: lead.partners.join(', ') })),
+    rows: leads.map(lead => ({ ...lead, score: lead.alphaMissense ?? -1, known: lead.sameResidue.length, touches: lead.partners.join(', '), condition: lead.knownConditions[0] ?? '' })),
     sortKey: 'score',
     noun: 'variants',
-    matches: lead => [lead.gene, lead.change, ...lead.partners],
+    matches: lead => [lead.gene, lead.change, ...lead.partners, ...lead.knownConditions],
     columns: [
       { key: 'gene', label: 'Gene', cell: lead => `<a href="#/gene/${encodeURIComponent(lead.page)}">${esc(lead.gene)}</a>` },
       { key: 'position', label: 'Change', cell: lead => `<a href="https://www.ncbi.nlm.nih.gov/clinvar/variation/${lead.variation}/" title="${esc(lead.review)}">${esc(lead.change)}</a>` },
+      { key: 'condition', label: 'Condition of the pathogenic variant', cell: lead => conditionCell(lead.knownConditions) },
       { key: 'score', label: 'AlphaMissense', num: true, cell: lead => (lead.alphaMissense === undefined ? '<span class="muted">—</span>' : `<span class="count ${amClass(lead.alphaMissense)}">${lead.alphaMissense.toFixed(2)}</span>`) },
       { key: 'known', label: 'Pathogenic at this residue', cell: lead => lead.sameResidue.map(esc).join(', ') },
       { key: 'pathogenicResidues', label: 'Other pathogenic residues on the interface', num: true, cell: lead => lead.pathogenicResidues },
-      { key: 'touches', label: 'Touches', cell: lead => `<span class="muted">${esc(lead.partners.slice(0, 3).join(', '))}${lead.partners.length > 3 ? ` +${lead.partners.length - 3}` : ''}</span>` },
+      { key: 'touches', label: 'Touches', cell: lead => `<span class="muted">${esc(lead.partners.slice(0, 2).join(', '))}${lead.partners.length > 2 ? ` +${lead.partners.length - 2}` : ''}</span>` },
       { key: 'pos', label: 'Open', cell: lead => `<span class="nowrap"><a href="${genomeLink(lead.chrom, lead.pos - 30, lead.pos + 30)}">Genome</a> · <a href="${complexLink(lead.gene, lead.entity, `chr${lead.chrom}:${lead.pos - 30}-${lead.pos + 30}`, `chr${lead.chrom}:${lead.pos}${lead.allele ? ` ${lead.allele}` : ''}`)}">3D</a></span>` },
     ],
   })
 }
 
-function proteinMap(gene) {
+const MAP_PARTNERS = 12
+
+function partnerResidues(partner) {
+  return partner.runs.split(', ').flatMap(run => {
+    const [a, b = a] = run.split('–').map(Number)
+    return Array.from({ length: b - a + 1 }, (_, k) => a + k)
+  })
+}
+
+function proteinMap(gene, variants = gene.variants) {
   const width = 1000
-  const scale = x => 20 + ((x - 1) / Math.max(gene.length - 1, 1)) * (width - 40)
-  const interfaceTicks = new Set()
-  gene.partners.forEach(p =>
-    p.runs.split(', ').forEach(run => {
-      const [a, b = a] = run.split('–').map(Number)
-      for (let r = a; r <= b; r++) {
-        interfaceTicks.add(r)
-      }
-    }),
-  )
+  const left = 90
+  const scale = x => left + ((x - 1) / Math.max(gene.length - 1, 1)) * (width - left - 20)
+  const rest = gene.partners.slice(MAP_PARTNERS)
+  const tracks = [
+    ...gene.partners.slice(0, MAP_PARTNERS).map(p => ({ label: p.gene, residues: partnerResidues(p) })),
+    ...(rest.length ? [{ label: `+${rest.length} more`, residues: [...new Set(rest.flatMap(partnerResidues))] }] : []),
+  ]
   const step = Math.pow(10, Math.floor(Math.log10(gene.length / 4)))
   const labels = []
   for (let x = step; x < gene.length * 0.94; x += step * (gene.length / step > 8 ? 2 : 1)) {
     labels.push(x)
   }
-  const rows = { pathogenic: 8, uncertain: 22, benign: 36 }
+  const rows = { pathogenic: 0, uncertain: 14, benign: 28 }
+  const top = 48
+  const rowHeight = 13
+  const axisY = top + tracks.length * rowHeight + 4
   return `
-    <svg class="map" viewBox="0 0 ${width} 110" role="img" aria-label="Protein map of ${esc(gene.gene)}: interface residues and variants along ${gene.length} residues">
+    <svg class="map" viewBox="0 0 ${width} ${axisY + 22}" role="img" aria-label="Protein map of ${esc(gene.gene)}: variants and each partner's interface residues along ${gene.length} residues">
       ${Object.entries(rows)
-        .map(([label, y]) =>
-          gene.variants
-            .filter(v => v.label === label)
-            .map(v => `<rect x="${scale(v.position) - 1.5}" y="${y}" width="3" height="10" fill="var(--${label})"><title>${esc(v.change)} ${LABELS[label]}</title></rect>`)
-            .join(''),
+        .map(
+          ([label, y]) =>
+            `<text class="row-label" x="0" y="${y + 9}">${LABELS[label]}</text>${variants
+              .filter(v => v.label === label)
+              .map(v => `<rect x="${scale(v.position) - 1.5}" y="${y}" width="3" height="10" fill="var(--${label})"><title>${esc(v.change)} ${LABELS[label]}</title></rect>`)
+              .join('')}`,
         )
         .join('')}
-      ${[...interfaceTicks].map(r => `<rect x="${scale(r) - 1}" y="56" width="2.5" height="16" fill="var(--interface)"><title>residue ${r}: interface</title></rect>`).join('')}
-      <line class="axis" x1="20" x2="${width - 20}" y1="80" y2="80" />
-      ${[1, ...labels, gene.length].map(x => `<text class="tick" x="${scale(x)}" y="98" text-anchor="middle">${x}</text>`).join('')}
+      ${tracks
+        .map((track, index) => {
+          const y = top + index * rowHeight
+          return `<text class="row-label" x="0" y="${y + 9}">${esc(track.label)}</text>
+            <line class="baseline" x1="${scale(1)}" x2="${scale(gene.length)}" y1="${y + 5}" y2="${y + 5}" />
+            ${track.residues.map(r => `<rect x="${scale(r) - 1}" y="${y}" width="2.5" height="10" fill="var(--interface)"><title>residue ${r}: interface with ${esc(track.label)}</title></rect>`).join('')}`
+        })
+        .join('')}
+      <line class="axis" x1="${scale(1)}" x2="${scale(gene.length)}" y1="${axisY}" y2="${axisY}" />
+      ${[1, ...labels, gene.length].map(x => `<text class="tick" x="${scale(x)}" y="${axisY + 16}" text-anchor="middle">${x}</text>`).join('')}
     </svg>
     <div class="legend">
-      <span><span class="swatch" style="background:var(--interface)"></span>interface residue</span>
-      <span><span class="swatch" style="background:var(--pathogenic)"></span>pathogenic (top row)</span>
-      <span><span class="swatch" style="background:var(--uncertain)"></span>uncertain (middle)</span>
-      <span><span class="swatch" style="background:var(--benign)"></span>benign (bottom)</span>
+      <span><span class="swatch" style="background:var(--interface)"></span>interface residue, one row per partner</span>
+      ${Object.keys(LABELS).map(label => `<span><span class="swatch" style="background:var(--${label})"></span>${LABELS[label].toLowerCase()} variant</span>`).join('')}
     </div>`
+}
+
+function conditionCell(conditions) {
+  return conditions.length
+    ? `<span title="${esc(conditions.join('; '))}">${esc(conditions[0])}${conditions.length > 1 ? ` <span class="muted">+${conditions.length - 1}</span>` : ''}</span>`
+    : '<span class="muted">—</span>'
 }
 
 async function genePage(name) {
@@ -551,6 +573,9 @@ async function genePage(name) {
   const amTitle = { pathogenic: 'likely pathogenic', uncertain: 'ambiguous', benign: 'likely benign' }
   const isoformRow = isoforms.genes.find(r => r.accession === gene.accession)
   const pad = Math.round((gene.end - gene.start) * 0.05) + 200
+  const conditions = [...Map.groupBy(gene.variants.flatMap(v => v.conditions), name => name)]
+    .map(([name, uses]) => [name, uses.length])
+    .sort((a, b) => b[1] - a[1])
   app.innerHTML = `
     <p><a href="#/genes">← All genes</a></p>
     <h1>${esc(gene.gene)}</h1>
@@ -567,7 +592,7 @@ async function genePage(name) {
       ${isoformRow ? `<a class="button" href="#/isoforms/${encodeURIComponent(isoformRow.page)}">Isoforms (${isoformRow.modelled})</a>` : ''}
     </div>
     <h2>Protein map</h2>
-    ${proteinMap(gene)}
+    <div id="protein-map"></div>
     <h2>Predicted partners</h2>
     <div class="table-wrap"><table>
       <thead><tr>
@@ -594,6 +619,7 @@ async function genePage(name) {
         .map(label => `<label><input type="checkbox" value="${label}" checked /> ${chip(label)} ${gene.counts[label]}</label>`)
         .join('')}
       <label>Sort by <select id="variant-sort"><option value="position">position</option><option value="alphaMissense">AlphaMissense</option></select></label>
+      <label>Condition <select id="variant-condition"><option value="">all</option>${conditions.map(([name, n]) => `<option value="${esc(name)}">${esc(name)} (${n})</option>`).join('')}</select></label>
     </div>
     <p class="muted">
       <a href="https://doi.org/10.1126/science.adg7492">AlphaMissense</a> predicts how likely a substitution is to be pathogenic, from 0 to 1:
@@ -601,20 +627,23 @@ async function genePage(name) {
       single-protein structure, and does not see the partner.
     </p>
     <div class="table-wrap"><table id="variants">
-      <thead><tr><th>Change</th><th>ClinVar</th><th class="num">AlphaMissense</th><th>Touches</th><th>Genome</th><th>Structure</th></tr></thead>
+      <thead><tr><th>Change</th><th>ClinVar</th><th>Condition</th><th class="num">AlphaMissense</th><th>Touches</th><th>Genome</th><th>Structure</th></tr></thead>
       <tbody></tbody>
     </table></div>`
   const render = () => {
     const shown = new Set([...document.querySelectorAll('.filters input:checked')].map(i => i.value))
     const byScore = document.getElementById('variant-sort').value === 'alphaMissense'
-    document.querySelector('#variants tbody').innerHTML = gene.variants
-      .filter(v => shown.has(v.label))
+    const condition = document.getElementById('variant-condition').value
+    const variants = gene.variants.filter(v => shown.has(v.label) && (!condition || v.conditions.includes(condition)))
+    document.getElementById('protein-map').innerHTML = proteinMap(gene, variants)
+    document.querySelector('#variants tbody').innerHTML = variants
       .toSorted((a, b) => (byScore ? (b.alphaMissense ?? -1) - (a.alphaMissense ?? -1) : 0))
       .map(v => {
         const partner = gene.partners.find(p => v.partners.includes(p.gene))
         return `<tr>
           <td>${esc(v.change)}</td>
           <td class="nowrap">${chip(v.label)} <a href="https://www.ncbi.nlm.nih.gov/clinvar/variation/${v.variation}/" title="${esc(v.review)}">VCV${String(v.variation).padStart(9, '0')}</a></td>
+          <td>${conditionCell(v.conditions)}</td>
           <td class="num">${v.alphaMissense === undefined ? '<span class="muted" title="AlphaMissense has no score for this substitution">—</span>' : `<span class="count ${amClass(v.alphaMissense)}" title="AlphaMissense: ${amTitle[amClass(v.alphaMissense)]}">${v.alphaMissense.toFixed(2)}</span>`}</td>
           <td>${v.partners.map(esc).join(', ')}</td>
           <td class="nowrap"><a href="${genomeLink(v.chrom, v.pos - 30, v.pos + 30)}">chr${esc(v.chrom)}:${v.pos.toLocaleString()}</a></td>
@@ -978,9 +1007,20 @@ async function about() {
     <p>Within each protein, pathogenic missense variants sit at a predicted interface more often than benign ones:</p>
     <ul>
       <li>All residues: ${oddsText(summary.enrichment.all)}</li>
-      <li>Only folded (pLDDT ≥ 70), surface-exposed residues: ${oddsText(summary.enrichment.orderedSurface)}</li>
+      <li>Only folded residues (pLDDT ≥ 70): ${oddsText(summary.enrichment.ordered)}. The buried core is rich in pathogenic variants and is not an interface.</li>
+      <li>Only folded, surface-exposed residues: ${oddsText(summary.enrichment.orderedSurface)}</li>
+      ${Object.entries(summary.enrichment.byAlphaMissenseClass).map(([name, e]) => `<li>Only variants in the class "${esc(name)}": ${oddsText(e)}</li>`).join('')}
     </ul>
-    <p>Mantel–Haenszel odds ratios across proteins, with intervals from resampling proteins. The second line rules out "folded vs disordered" as the explanation.</p>
+    <p>
+      Mantel–Haenszel odds ratios across proteins, with intervals from resampling proteins. The surface line rules out "folded vs disordered" as the
+      explanation, and the AlphaMissense lines show the interface adds a little to a predictor that never sees the partner. Each confidence band of
+      ipSAE, compared with residues at no interface, gives about the same odds ratio.
+    </p>
+    <h2>Leads</h2>
+    <p>
+      The <a href="#/leads">${summary.leads.variants.toLocaleString()} leads</a> are the variants of uncertain significance at a confident interface residue where ClinVar
+      classifies another missense variant pathogenic. Conditions are the names ClinVar's submitters gave, so one disease can appear under several names.
+    </p>
     <h2>GPCRs</h2>
     <ul>
       <li>${gpcr.complexes.length} experimental receptor–G protein complexes of biogenic amine receptors, from a GPCRdb selection made by BioHackathon Europe 2026 Project 9, plus ${gpcr.others.length} receptor structures without a G protein.</li>

@@ -45,6 +45,7 @@ function variant(position: number, label: Variant['label']): Variant {
     chrom: '1',
     pos: position,
     allele: 'A',
+    conditions: [],
   }
 }
 

@@ -4,7 +4,7 @@ import { createInterface } from 'node:readline'
 
 import { LABELS } from './constants.ts'
 import type { Label } from './constants.ts'
-import { isRecord, number, parseJson, records, text } from './json.ts'
+import { isRecord, list, number, parseJson, records, text } from './json.ts'
 import { OUT } from './paths.ts'
 
 export interface Variant {
@@ -16,6 +16,7 @@ export interface Variant {
   chrom: string
   pos: number
   allele: string
+  conditions: string[]
 }
 
 export const VARIANTS = join(OUT, 'clinvar.ndjson')
@@ -47,6 +48,7 @@ export function parseVariant(value: Record<string, unknown>) {
           chrom,
           pos,
           allele: text(value.allele) ?? '',
+          conditions: list(value.conditions).flatMap(c => text(c) ?? []),
         } satisfies Variant,
       ]
     : []

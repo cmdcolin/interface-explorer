@@ -1,6 +1,29 @@
 import { describe, expect, it } from 'vitest'
 
-import { AMINO_ACIDS, MISSENSE, onSequence, toCanonical } from './clinvar.ts'
+import {
+  AMINO_ACIDS,
+  conditions,
+  MISSENSE,
+  onSequence,
+  toCanonical,
+} from './clinvar.ts'
+
+describe('conditions', () => {
+  it('keeps each named condition once', () => {
+    expect(
+      conditions(
+        'Von Hippel-Lindau syndrome|not provided|Hereditary cancer-predisposing syndrome;Von Hippel-Lindau syndrome',
+      ),
+    ).toEqual([
+      'Von Hippel-Lindau syndrome',
+      'Hereditary cancer-predisposing syndrome',
+    ])
+  })
+
+  it('drops placeholders', () => {
+    expect(conditions('not provided|not specified|See cases')).toEqual([])
+  })
+})
 
 describe('MISSENSE', () => {
   it('parses transcript and protein change', () => {

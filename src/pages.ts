@@ -106,6 +106,7 @@ export function geneRecord(
             chrom: variant.chrom,
             pos: variant.pos,
             allele: variant.allele,
+            conditions: variant.conditions,
           },
         ]
       : []
@@ -143,13 +144,8 @@ export function leads(gene: ReturnType<typeof geneRecord>) {
   return gene.variants
     .filter(v => v.label === 'uncertain')
     .flatMap(variant => {
-      const sameResidue = [
-        ...new Set(
-          pathogenic
-            .filter(p => p.position === variant.position)
-            .map(p => p.change),
-        ),
-      ]
+      const known = pathogenic.filter(p => p.position === variant.position)
+      const sameResidue = [...new Set(known.map(p => p.change))]
       const partner = gene.partners.find(p => variant.partners.includes(p.gene))
       return sameResidue.length && partner
         ? [
@@ -157,6 +153,7 @@ export function leads(gene: ReturnType<typeof geneRecord>) {
               ...variant,
               gene: gene.gene,
               sameResidue,
+              knownConditions: [...new Set(known.flatMap(p => p.conditions))],
               pathogenicResidues: new Set(
                 pathogenic
                   .filter(

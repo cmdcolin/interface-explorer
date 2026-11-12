@@ -15,7 +15,8 @@ one.
   predicted partner. Each gene page lists its partners, a protein map and the
   ClinVar variants at an interface, each with its AlphaMissense score. It
   launches JBrowse on the genome, or a variant inside its complex beside the
-  genome with the variant marked.
+  genome with the variant marked. The protein map has a row per partner, and
+  the variants can be narrowed to one ClinVar condition.
 - **Leads:** the 675 variants of uncertain significance that change an
   interface residue where a different substitution is already classified
   pathogenic, ranked by AlphaMissense score.
@@ -74,6 +75,9 @@ one.
   where a different substitution is already classified pathogenic; AlphaMissense
   calls 523 of them likely pathogenic. Examples: GNB1 W99R and D118V at the Gα
   interface, HRAS G60R, and BAP1 C91W and C91Y at the ubiquitin interface.
+- Conditions can separate by interface. All 14 pathogenic KRAS variants ClinVar
+  lists for non-small cell lung carcinoma sit at a RasGAP interface (G12, G13,
+  G60, Q61), against 5 of the 9 listed for Noonan syndrome 3.
 - 98.8% of those variants' genomic positions fall inside their gene's
   interface codons, an independent check of the residue → codon mapping. The
   rest belong to proteins encoded by several identical genes (histones H3.3
@@ -139,7 +143,8 @@ one.
   chromosomes.
 - **Variants:** NCBI ClinVar `variant_summary` single-nucleotide missense
   variants classified pathogenic, likely pathogenic, uncertain, likely benign
-  or benign; conflicting classifications are left out. Each is named on a
+  or benign; conflicting classifications are left out. Each keeps the condition
+  names its submitters gave, apart from "not provided". Each is named on a
   RefSeq transcript. UniProt says which isoform that transcript encodes, and the
   variant is mapped through that isoform to the canonical residue. Transcripts
   UniProt assigns to no isoform are used only when 95% of their variants match

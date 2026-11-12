@@ -55,6 +55,7 @@ export const AMINO_ACIDS = new Map([
   ['Tyr', 'Y'],
   ['Val', 'V'],
 ])
+const UNNAMED = new Set(['not provided', 'not specified', 'See cases'])
 const AGREEMENT = 0.95
 const LABELS = new Map<string, Label>([
   ['Pathogenic', 'pathogenic'],
@@ -74,6 +75,28 @@ interface Mapping {
 interface Mutation {
   position: number
   change: string
+}
+
+const shared = new Map<string, string>()
+
+function interned(value: string) {
+  const known = shared.get(value)
+  if (known === undefined) {
+    shared.set(value, value)
+  }
+  return known ?? value
+}
+
+export function conditions(phenotypes: string) {
+  return [
+    ...new Set(
+      phenotypes
+        .split(/[|;]/)
+        .map(name => name.trim())
+        .filter(name => name && !UNNAMED.has(name))
+        .map(interned),
+    ),
+  ]
 }
 
 export function downloaded() {
@@ -102,10 +125,11 @@ function missenseVariant(field: (name: string) => string) {
           label,
           change: `${from}${position}${to}`,
           variation: Number(field('VariationID')),
-          review: field('ReviewStatus'),
+          review: interned(field('ReviewStatus')),
           chrom: field('Chromosome'),
           pos: Number(field('PositionVCF')),
           allele: `${field('ReferenceAlleleVCF')}>${field('AlternateAlleleVCF')}`,
+          conditions: conditions(field('PhenotypeList')),
         } satisfies Variant,
       }
     : undefined
