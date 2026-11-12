@@ -1,5 +1,8 @@
 # Data and credits
 
+Created by Colin Diesh on Team 9 of BioHackathon Europe 2026, with Claude AI
+assistance.
+
 - [AlphaFold DB](https://alphafold.ebi.ac.uk/) predicted complexes and isoform
   models (EMBL-EBI, Google DeepMind, NVIDIA, Seoul National University),
   CC-BY 4.0.
