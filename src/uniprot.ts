@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 
 import { getJson } from './cache.ts'
-import { record, records, text } from './json.ts'
+import { number, record, records, text } from './json.ts'
 import { DATA } from './paths.ts'
 
 const ENTRY_FIELDS =
@@ -9,20 +9,76 @@ const ENTRY_FIELDS =
 
 export type UniProtEntry = Record<string, unknown>
 
-async function uniprotEntries(query: string, path: string) {
+const DISEASE_QUERY = 'organism_id:9606 AND reviewed:true AND cc_disease:*'
+
+const FEATURE_FIELDS =
+  'accession,ft_domain,ft_repeat,ft_zn_fing,ft_motif,ft_region,ft_coiled'
+
+export const FEATURE_TYPES = [
+  'Domain',
+  'Repeat',
+  'Zinc finger',
+  'Motif',
+  'Region',
+  'Coiled coil',
+] as const
+
+export type FeatureType = (typeof FEATURE_TYPES)[number]
+
+export interface Feature {
+  type: FeatureType
+  start: number
+  end: number
+  description: string
+}
+
+async function uniprotEntries(
+  query: string,
+  path: string,
+  fields = ENTRY_FIELDS,
+) {
   const stream = await getJson(
     'https://rest.uniprot.org/uniprotkb/stream',
     path,
-    { query, fields: ENTRY_FIELDS, format: 'json' },
+    { query, fields, format: 'json' },
   )
   return records(record(stream).results)
 }
 
 export function diseaseEntries() {
-  return uniprotEntries(
-    'organism_id:9606 AND reviewed:true AND cc_disease:*',
-    join(DATA, 'uniprot_disease.json'),
+  return uniprotEntries(DISEASE_QUERY, join(DATA, 'uniprot_disease.json'))
+}
+
+function featureType(value: unknown) {
+  return FEATURE_TYPES.find(type => type === value)
+}
+
+export function featuresOf(entry: UniProtEntry) {
+  return records(entry.features).flatMap(feature => {
+    const type = featureType(feature.type)
+    const location = record(feature.location)
+    const start = number(record(location.start).value)
+    const end = number(record(location.end).value)
+    return type && start !== undefined && end !== undefined
+      ? [
+          {
+            type,
+            start,
+            end,
+            description: text(feature.description) ?? '',
+          } satisfies Feature,
+        ]
+      : []
+  })
+}
+
+export async function diseaseFeatures() {
+  const entries = await uniprotEntries(
+    DISEASE_QUERY,
+    join(DATA, 'uniprot_disease_features.json'),
+    FEATURE_FIELDS,
   )
+  return new Map(entries.map(entry => [accessionOf(entry), featuresOf(entry)]))
 }
 
 export function humanEntries() {

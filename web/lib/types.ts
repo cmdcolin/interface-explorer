@@ -4,6 +4,7 @@ export type Label = 'pathogenic' | 'uncertain' | 'benign'
 
 export type Gene = GenePage
 export type GeneVariant = Gene['variants'][number]
+export type Feature = Gene['features'][number]
 export type Lead = ReturnType<typeof leads>[number] & { page: string }
 
 export interface GeneRow {

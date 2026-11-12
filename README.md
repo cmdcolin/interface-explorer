@@ -16,11 +16,19 @@ one.
   APP695); and how the atlas connects to BioHackathon Europe 2026 Project 9's
   GPCR work.
 - **Genes:** a searchable table of the 1,331 disease genes with a confident
-  predicted partner. Each gene page lists its partners, a protein map and the
-  ClinVar variants at an interface, each with its AlphaMissense score. It
-  launches JBrowse on the genome, or a variant inside its complex beside the
-  genome with the variant marked. The protein map has a row per partner, and
-  the variants can be narrowed to one ClinVar condition.
+  predicted partner. Each gene page opens on its predicted complex in 3D,
+  starting with the partner whose interface carries the most pathogenic
+  variants. The page's protein is grey, the partner green under a translucent
+  surface, and its interface residues blue; the ClinVar variants on them are
+  coloured by classification. A sentence above the 3D view gives each partner's
+  counts, the PDB entry that confirms it, and any UniProt region annotated as
+  binding there. Below it, a protein map shows the variants, UniProt domains
+  and regions, and a row per partner. Hovering the map or a variant row marks
+  the residue in 3D, hovering in 3D marks it on the map, and clicking zooms to
+  it. The page lists the ClinVar variants at an interface, each with its
+  AlphaMissense score, and they can be narrowed to one ClinVar condition. It
+  also launches JBrowse on the genome, or a variant inside its complex beside
+  the genome with the variant marked.
 - **Leads:** the 675 variants of uncertain significance that change an
   interface residue where a different substitution is already classified
   pathogenic, ranked by AlphaMissense score.
@@ -247,7 +255,9 @@ one.
 - `pnpm tracks`: `site/jbrowse/config.json`, `interfaces.bb` and
   `interface_variants.bb`.
 - `pnpm pages`: `site/data/summary.json`, `genes.json`, `leads.json` and
-  `genes/<GENE>.json`.
+  `genes/<GENE>.json`, with each disease protein's UniProt domains and regions
+  (one UniProt download, cached in `data/uniprot_disease_features.json`) and
+  which chain of each AlphaFold DB complex is the gene's.
 - `pnpm isoforms [workers]`: `site/data/isoforms.json` and
   `isoforms/<GENE>.json`.
 - The pipeline is TypeScript in `src/`, run directly by Node with no build
@@ -265,6 +275,12 @@ one.
   `site/jbrowse/` beside our config and tracks, builds, and deploys `dist/` to
   Pages. Links from the old single-page site (`#/gene/VHL`) redirect to the
   new pages.
+- The 3D view is the [Mol\*](https://molstar.org/) v6 Prism viewer, not yet on
+  npm: `site/prism/prism-viewer.js` is its single-file build
+  (`apps/prism-viewer/build/prism-viewer.js` after `pnpm build:apps`) from
+  molstar `master` at dabbf29f9. Each gene page loads it on demand, writes a
+  MolViewSpec for the chosen complex in `web/lib/scene.ts`, and reads the
+  complex from AlphaFold DB.
 - A summary deck is in `slides/`: `make` there builds
   `interface-atlas-summary.pdf` with LuaLaTeX, and `make screenshots` retakes
   its screenshots with headless Chrome.
@@ -282,7 +298,8 @@ Requires Node 24 or later, pnpm, and UCSC's `bedToBigBed`.
 - [UCSC Genome Browser](https://genome.ucsc.edu/) phyloP scores from the
   100-way vertebrate alignment (multiz100way).
 - [UniProt](https://www.uniprot.org/) (CC-BY 4.0): the disease proteins, their
-  isoforms and RefSeq cross-references.
+  isoforms, domains and regions, and RefSeq cross-references.
+- [Mol\*](https://molstar.org/) (MIT): the 3D view.
 - [EBI Proteins API](https://www.ebi.ac.uk/proteins/api/doc/) protein → genome
   coordinates.
 - [RCSB PDB](https://www.rcsb.org/) structures with

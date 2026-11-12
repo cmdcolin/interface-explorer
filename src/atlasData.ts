@@ -2,7 +2,7 @@ import { join } from 'node:path'
 
 import { CONFIDENT, MIN_PLDDT } from './constants.ts'
 import { isRecord, number, readJson, record, records, text } from './json.ts'
-import { OUT } from './paths.ts'
+import { DATA, OUT } from './paths.ts'
 
 export interface Interface {
   entity: string
@@ -93,4 +93,12 @@ export function confidentResidues(complex: Interface, length = Infinity) {
       ([residue, plddt]) => plddt >= MIN_PLDDT && Number(residue) <= length,
     )
     .map(([residue]) => Number(residue))
+}
+
+export function modelChain(entity: string, accession: string) {
+  return text(
+    records(readJson(join(DATA, 'models', `${entity}.json`))).find(
+      chain => chain.uniprotAccession === accession,
+    )?.chainId,
+  )
 }

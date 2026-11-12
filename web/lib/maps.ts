@@ -1,9 +1,48 @@
 import { LABEL_KEYS, LABELS, axisLabels, esc } from './html.ts'
-import type { Edit, GAlpha, Gene, IsoformRecord } from './types.ts'
+import type { Edit, Feature, GAlpha, Gene, IsoformRecord } from './types.ts'
 
 const MAP_PARTNERS = 12
+const LANE = 13
+const CHARACTER_WIDTH = 6
 
-function partnerResidues(partner: { runs: string }) {
+const FEATURE_ROWS = [
+  { label: 'Domains', types: ['Domain', 'Repeat', 'Zinc finger', 'Motif'] },
+  { label: 'Regions', types: ['Region', 'Coiled coil'] },
+]
+
+export function isBindingRegion(feature: Feature) {
+  return /interact|bind/i.test(feature.description)
+}
+
+function featureKind(feature: Feature) {
+  return feature.description === 'Disordered'
+    ? 'disordered'
+    : isBindingRegion(feature)
+      ? 'binding'
+      : feature.type === 'Region' || feature.type === 'Coiled coil'
+        ? 'region'
+        : 'domain'
+}
+
+function featureName(feature: Feature) {
+  return feature.type === 'Repeat' && /^\d+$/.test(feature.description)
+    ? `Repeat ${feature.description}`
+    : feature.description || feature.type
+}
+
+export function lanes<T extends { start: number; end: number }>(items: T[]) {
+  const ends: number[] = []
+  return items
+    .toSorted((a, b) => a.start - b.start || b.end - a.end)
+    .map(item => {
+      const free = ends.findIndex(end => end < item.start)
+      const lane = free === -1 ? ends.length : free
+      ends[lane] = item.end
+      return { item, lane }
+    })
+}
+
+export function partnerResidues(partner: { runs: string }) {
   return partner.runs.split(', ').flatMap(run => {
     const [a = 0, b = a] = run.split('–').map(Number)
     return Array.from({ length: b - a + 1 }, (_, k) => a + k)
@@ -23,41 +62,72 @@ export function proteinMap(gene: Gene) {
   const tracks = [
     ...gene.partners
       .slice(0, MAP_PARTNERS)
-      .map(p => ({ label: p.gene, residues: partnerResidues(p) })),
+      .map(p => ({ label: p.gene, partner: p.gene, residues: partnerResidues(p) })),
     ...(rest.length
       ? [
           {
             label: `+${rest.length} more`,
+            partner: undefined,
             residues: [...new Set(rest.flatMap(partnerResidues))],
           },
         ]
       : []),
   ]
   const rows = { pathogenic: 0, uncertain: 14, benign: 28 }
-  const top = 48
+  const featureRows = FEATURE_ROWS.map(row => ({
+    label: row.label,
+    placed: lanes(gene.features.filter(f => row.types.includes(f.type))),
+  }))
+    .filter(row => row.placed.length)
+    .reduce<{ label: string; y: number; height: number; placed: ReturnType<typeof lanes<Feature>> }[]>((out, row) => {
+      const last = out.at(-1)
+      const y = last ? last.y + last.height + 4 : 48
+      return [...out, { ...row, y, height: (Math.max(...row.placed.map(p => p.lane)) + 1) * LANE }]
+    }, [])
+  const lastFeatureRow = featureRows.at(-1)
+  const top = lastFeatureRow ? lastFeatureRow.y + lastFeatureRow.height + 8 : 48
   const rowHeight = 13
   const axisY = top + tracks.length * rowHeight + 4
   return `
-    <div class="map-wrap"><svg class="map" viewBox="0 0 ${width} ${axisY + 22}" role="img" aria-label="Protein map of ${esc(gene.gene)}: variants and each partner's interface residues along ${gene.length} residues">
+    <div class="map-wrap"><svg class="map protein-map" viewBox="0 0 ${width} ${axisY + 22}" data-first="${scale(1)}" data-last="${scale(gene.length)}" data-length="${gene.length}" role="img" aria-label="Protein map of ${esc(gene.gene)}: variants and each partner's interface residues along ${gene.length} residues">
       ${LABEL_KEYS.map(
         label =>
           `<text class="row-label" x="0" y="${rows[label] + 9}">${LABELS[label]}</text>${gene.variants
             .filter(v => v.label === label)
             .map(
               v =>
-                `<rect class="variant-mark" ${variantData(v)} x="${scale(v.position) - 1.5}" y="${rows[label]}" width="3" height="10" fill="var(--${label})"><title>${esc(v.change)} ${LABELS[label]}</title></rect>`,
+                `<rect class="variant-mark" ${variantData(v)} data-position="${v.position}" x="${scale(v.position) - 1.5}" y="${rows[label]}" width="3" height="10" fill="var(--${label})"><title>${esc(v.change)} ${LABELS[label]}</title></rect>`,
             )
             .join('')}`,
       ).join('')}
+      ${featureRows
+        .map(
+          row =>
+            `<text class="row-label" x="0" y="${row.y + 9}">${row.label}</text>${row.placed
+              .map(({ item, lane }) => {
+                const x = scale(item.start) - 1
+                const w = Math.max(scale(item.end) - scale(item.start) + 2, 2)
+                const name = featureName(item)
+                const range = item.start === item.end ? `${item.start}` : `${item.start}–${item.end}`
+                return `<g class="feature ${featureKind(item)}" data-start="${item.start}" data-end="${item.end}"><rect x="${x}" y="${row.y + lane * LANE}" width="${w}" height="11" rx="2" /><title>${esc(name)} (${item.type.toLowerCase()}, ${range})</title>${
+                  name.length * CHARACTER_WIDTH < w - 6
+                    ? `<text x="${x + 4}" y="${row.y + lane * LANE + 8.5}">${esc(name)}</text>`
+                    : ''
+                }</g>`
+              })
+              .join('')}`,
+        )
+        .join('')}
       ${tracks
         .map((track, index) => {
           const y = top + index * rowHeight
-          return `<text class="row-label" x="0" y="${y + 9}">${esc(track.label)}</text>
+          return `<g class="partner-row"${track.partner ? ` data-partner="${esc(track.partner)}"` : ''}><rect class="row-hit" x="0" y="${y - 1.5}" width="${width}" height="${rowHeight}" /><text class="row-label" x="0" y="${y + 9}">${esc(track.label)}</text>
             <line class="baseline" x1="${scale(1)}" x2="${scale(gene.length)}" y1="${y + 5}" y2="${y + 5}" />
-            ${track.residues.map(r => `<rect x="${scale(r) - 1}" y="${y}" width="2.5" height="10" fill="var(--interface)"><title>residue ${r}: interface with ${esc(track.label)}</title></rect>`).join('')}`
+            ${track.residues.map(r => `<rect x="${scale(r) - 1}" y="${y}" width="2.5" height="10" fill="var(--interface)"><title>residue ${r}: interface with ${esc(track.label)}</title></rect>`).join('')}</g>`
         })
         .join('')}
       <line class="axis" x1="${scale(1)}" x2="${scale(gene.length)}" y1="${axisY}" y2="${axisY}" />
+      <g class="map-cursor" visibility="hidden"><line y1="0" y2="${axisY}" /><text y="${axisY + 16}" text-anchor="middle"></text></g>
       ${axisLabels(gene.length)
         .map(
           x =>
@@ -67,6 +137,7 @@ export function proteinMap(gene: Gene) {
     </svg></div>
     <div class="legend">
       <span><span class="swatch" style="background:var(--interface)"></span>interface residue, one row per partner</span>
+      ${gene.features.length ? `<span><span class="swatch feature-swatch binding"></span>UniProt interaction or binding region</span>` : ''}
       ${LABEL_KEYS.map(label => `<span><span class="swatch" style="background:var(--${label})"></span>${LABELS[label].toLowerCase()} variant</span>`).join('')}
     </div>`
 }

@@ -11,6 +11,7 @@ import {
 import {
   confidentResidues,
   isConfident,
+  modelChain,
   partnerName,
   readAtlas,
 } from './atlasData.ts'
@@ -24,6 +25,8 @@ import { codingPositions } from './coordinates.ts'
 import type { CodingPositions } from './coordinates.ts'
 import { readJson, record, writeJson } from './json.ts'
 import { OUT, SITE_DATA } from './paths.ts'
+import { diseaseFeatures } from './uniprot.ts'
+import type { Feature } from './uniprot.ts'
 import { readVariants } from './variants.ts'
 import type { Variant } from './variants.ts'
 
@@ -82,6 +85,8 @@ export function geneRecord(
   coding: Pick<CodingPositions, 'chrom' | 'strand' | 'start' | 'end'>,
   scores = new Map<string, number>(),
   experiments = new Map<string, Comparison>(),
+  chains = new Map<string, string | undefined>(),
+  features: Feature[] = [],
 ) {
   const atResidue = new Map<number, string[]>()
   const partners = protein.interfaces
@@ -102,6 +107,7 @@ export function geneRecord(
         iptm: complex.iptm,
         pdockq: complex.pdockq,
         entity: complex.entity,
+        chain: chains.get(complex.entity),
         residues: residues.length,
         runs: runs(residues),
         experiment: experimentOf(experiments.get(complex.entity)),
@@ -135,6 +141,7 @@ export function geneRecord(
     start: coding.start,
     end: coding.end,
     strand: coding.strand,
+    features,
     partners: partners.map(partner => ({
       ...partner,
       variants: atInterface.filter(v => v.partners.includes(partner.gene))
@@ -195,6 +202,7 @@ async function main() {
   const accessions = new Set(proteins.map(p => p.accession))
   const variants = await readVariants(accession => accessions.has(accession))
   const scores = readScores()
+  const features = await diseaseFeatures()
   const comparisons = readComparisons()
   const experiments = Map.groupBy(comparisons, pair => pair.accession)
   const analysis = record(readJson(join(OUT, 'analysis.json')))
@@ -218,6 +226,13 @@ async function main() {
                 .get(protein.accession)
                 ?.map(pair => [pair.entity, pair]),
             ),
+            new Map(
+              protein.interfaces.map(complex => [
+                complex.entity,
+                modelChain(complex.entity, protein.accession),
+              ]),
+            ),
+            features.get(protein.accession),
           ),
         ]
       : [],

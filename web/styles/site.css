@@ -10,6 +10,8 @@
   --pathogenic: #c42c2c;
   --uncertain: #d97a14;
   --benign: #7a7975;
+  --chain: #bdb8ab;
+  --partner: #3f9b78;
   --chip-text: #ffffff;
   --plddt-very-high: #0053d6;
   --plddt-confident: #65cbf3;
@@ -30,6 +32,8 @@
     --pathogenic: #e66767;
     --uncertain: #e8a046;
     --benign: #a19f98;
+    --chain: #77746c;
+    --partner: #4fb38c;
     --chip-text: #111110;
   }
 }
@@ -795,4 +799,162 @@ h3 {
 
 .post .share-figure {
   max-width: 520px;
+}
+
+.structure-section {
+  margin: 8px 0 32px;
+}
+
+.structure-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 16px;
+}
+
+.structure-head h2 {
+  margin-bottom: 0;
+}
+
+.partner-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.partner-pick {
+  font: inherit;
+  font-size: 13px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.partner-pick[aria-pressed="true"] {
+  background: var(--partner);
+  border-color: var(--partner);
+  color: #fff;
+}
+
+.pick-count {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--pathogenic);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.story {
+  max-width: 760px;
+  margin: 12px 0;
+}
+
+.structure {
+  position: relative;
+  height: min(520px, 70vh);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.structure-status {
+  margin: 0;
+  padding: 16px;
+  color: var(--text-2);
+}
+
+.protein-map {
+  cursor: crosshair;
+}
+
+.map .row-hit {
+  fill: transparent;
+}
+
+.map .partner-row[data-partner] {
+  cursor: pointer;
+}
+
+.map .partner-row.active .row-label {
+  fill: var(--partner);
+  font-weight: 600;
+}
+
+.map .partner-row.active .row-hit {
+  fill: var(--partner);
+  fill-opacity: 0.1;
+}
+
+.map-cursor line {
+  stroke: var(--text);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+
+.map-cursor text {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--text);
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 4px;
+}
+
+.map.scrubbing .tick {
+  opacity: 0.25;
+}
+
+.map .variant-mark.linked {
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+
+#variants tr.linked td {
+  background: var(--surface-2);
+}
+
+.map .feature rect {
+  fill: var(--surface-2);
+  stroke: var(--text-2);
+  stroke-width: 0.75;
+}
+
+.map .feature.region rect {
+  stroke-dasharray: 2 1.5;
+}
+
+.map .feature.disordered rect {
+  fill: none;
+  stroke: var(--border);
+}
+
+.map .feature.binding rect,
+.feature-swatch.binding {
+  fill: var(--partner);
+  fill-opacity: 0.25;
+  stroke: var(--partner);
+}
+
+.feature-swatch.binding {
+  background: color-mix(in srgb, var(--partner) 25%, transparent);
+  border: 1px solid var(--partner);
+}
+
+.map .feature text {
+  font-size: 9.5px;
+  fill: var(--text);
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .structure {
+    height: 360px;
+  }
 }

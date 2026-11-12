@@ -11,6 +11,7 @@ import Layout from '../../layouts/Layout.astro'
 import { gene as readGene, geneRows, isoformIndex, summary } from '../../lib/data.ts'
 import { LABEL_KEYS, amCell, chip, clinvarHref, conditionCell, esc, percent } from '../../lib/html.ts'
 import { proteinMap, variantData } from '../../lib/maps.ts'
+import { initialPartner, stories, structureData } from '../../lib/structure.ts'
 import { JBROWSE, href, isoformHref } from '../../lib/site.ts'
 
 export function getStaticPaths() {
@@ -26,6 +27,9 @@ const conditions = [...Map.groupBy(gene.variants.flatMap(v => v.conditions), nam
   .map(([name, uses]) => [name, uses.length] as const)
   .sort((a, b) => b[1] - a[1])
 const description = `${gene.gene}: ${gene.interfaceResidues} residues at a predicted interface with ${gene.partners.length} partner${gene.partners.length === 1 ? '' : 's'}, and the ${gene.variants.length} ClinVar missense variants on them.`
+const partnerStories = stories(gene)
+const initial = initialPartner(gene)
+const structureJson = JSON.stringify(structureData(gene)).replaceAll('<', '\\u003c')
 const rows = gene.variants
   .map(v => {
     const partner = variantPartner(gene, v)
@@ -57,6 +61,37 @@ const rows = gene.variants
     <a class="button" href={`https://alphafold.ebi.ac.uk/entry/${gene.accession}`}>AlphaFold DB entry</a>
     {isoformRow && <a class="button" href={isoformHref(isoformRow.page)}>Isoforms ({isoformRow.modelled})</a>}
   </div>
+  {
+    partnerStories.length > 0 && (
+      <section class="structure-section">
+        <div class="structure-head">
+          <h2>In 3D</h2>
+          <div class="partner-picks">
+            {partnerStories.map(s => (
+              <button type="button" class="partner-pick" data-partner={s.gene} aria-pressed={s.gene === initial ? 'true' : 'false'}>
+                {s.gene}
+                {s.pathogenic > 0 && <span class="pick-count" title={`${s.pathogenic} pathogenic variants at this interface`}>{s.pathogenic}</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+        {partnerStories.map(s => (
+          <p class="story" data-partner={s.gene} hidden={s.gene !== initial} set:html={s.html} />
+        ))}
+        <div id="structure" class="structure" data-src={href('prism/prism-viewer.js')} data-initial={initial}>
+          <p class="structure-status">Loading the 3D view…</p>
+        </div>
+        <div class="legend">
+          <span><span class="swatch" style="background:var(--chain)"></span>{gene.gene}</span>
+          <span><span class="swatch" style="background:var(--partner)"></span>partner</span>
+          <span><span class="swatch" style="background:var(--interface)"></span>{gene.gene} residue at the interface</span>
+          {LABEL_KEYS.map(label => <span><span class="swatch" style={`background:var(--${label})`}></span>{label} variant</span>)}
+          <span class="muted">Hover the protein map or a variant to find it in 3D; click to zoom.</span>
+        </div>
+        <script is:inline type="application/json" id="structure-data" set:html={structureJson} />
+      </section>
+    )
+  }
   <h2>Protein map</h2>
   <div id="protein-map"><Fragment set:html={proteinMap(gene)} /></div>
   <h2>Predicted partners</h2>
@@ -144,4 +179,5 @@ const rows = gene.variants
 
 <script>
   import '../../scripts/variants.ts'
+  import '../../scripts/structure.ts'
 </script>

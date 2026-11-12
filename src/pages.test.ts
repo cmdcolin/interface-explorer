@@ -138,3 +138,37 @@ test('a lead is an uncertain variant where another substitution is pathogenic', 
     ]),
   ).toEqual([['A10V', ['A10D'], ['Disease'], 1, 'AF-1']])
 })
+
+test('a gene record carries its complex chain and UniProt features', () => {
+  const record = geneRecord(
+    {
+      accession: 'P00001',
+      gene: 'GENE',
+      length: 100,
+      context: {},
+      complexes: 1,
+      hetero: 1,
+      interfaces: [
+        {
+          entity: 'AF-1',
+          partner: 'P00002',
+          partner_gene: 'PARTNER',
+          iptm: 0.8,
+          ipsae: 0.7,
+          pdockq: 0.5,
+          residues: { 10: 90 },
+        },
+      ],
+    },
+    [],
+    { chrom: 'chr1', strand: '+', start: 1, end: 300 },
+    new Map(),
+    new Map(),
+    new Map([['AF-1', 'B']]),
+    [{ type: 'Domain', start: 5, end: 40, description: 'SH2' }],
+  )
+  expect(record.partners.map(p => p.chain)).toEqual(['B'])
+  expect(record.features).toEqual([
+    { type: 'Domain', start: 5, end: 40, description: 'SH2' },
+  ])
+})
