@@ -1150,10 +1150,6 @@ h3 {
   font-family: inherit;
 }
 
-.architecture svg text[font-family^='Courier'] {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-
 .architecture figcaption {
   display: flex;
   flex-wrap: wrap;
@@ -1161,23 +1157,6 @@ h3 {
   margin-top: 10px;
   font-size: 13px;
   color: var(--text-2);
-}
-
-.arch-key {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.arch-swatch {
-  display: inline-block;
-  width: 26px;
-  height: 12px;
-  border-radius: 6px;
-}
-
-.arch-swatch.chip {
-  background: var(--interface);
 }
 
 .comparison {

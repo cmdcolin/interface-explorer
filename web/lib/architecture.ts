@@ -27,33 +27,18 @@ const COLORS = {
   text: ['#000001', 'var(--text)'],
   text2: ['#000002', 'var(--text-2)'],
   border: ['#000003', 'var(--border)'],
-  surface: ['#000004', 'var(--surface)'],
-  surface2: ['#000005', 'var(--surface-2)'],
-  partner: ['#000006', 'var(--partner)'],
-  interface: ['#000007', 'var(--interface)'],
-  chipText: ['#000008', 'var(--chip-text)'],
+  partner: ['#000004', 'var(--partner)'],
 } as const
 
 const color = (name: keyof typeof COLORS) => COLORS[name][0]
 
-const SANS = 'Helvetica'
-const MONO = 'Courier'
-
 export const COLUMNS = [
   'Sources',
   'Fetch and compute',
-  'Cache',
   'Combine',
   'Published files',
   'In the browser',
 ]
-
-function escapeHtml(text: string) {
-  return text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-}
 
 export function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
   return [
@@ -332,91 +317,53 @@ export const columns = [
     'gpcr',
     'iso',
   ],
-  ['out'],
-  ['tracks', 'analyze', 'pages'],
+  ['out', 'tracks', 'analyze', 'pages'],
   ['jbFiles', 'data'],
   ['jbrowse', 'astro', 'prism'],
 ]
 
-const WIDTHS = [3.0, 2.6, 1.8, 2.0, 1.9, 1.9]
-
-function nodeWidth(node: Node) {
-  return WIDTHS[columns.findIndex(ids => ids.includes(node.id))] ?? 2
+function quote(text: string) {
+  return text.replaceAll('\\', '\\\\').replaceAll('"', '\\"')
 }
 
 function label(node: Node) {
-  const face = node.kind === 'file' ? MONO : SANS
-  const chips = (node.chips ?? [])
-    .map(
-      chip =>
-        `<TD BGCOLOR="${color('interface')}" STYLE="rounded" CELLPADDING="2" FIXEDSIZE="TRUE" WIDTH="${chip.length * 6 + 14}" HEIGHT="16"><FONT FACE="${MONO}" POINT-SIZE="10" COLOR="${color('chipText')}">${escapeHtml(chip)}</FONT></TD>`,
-    )
-    .join('')
-  const rows = [
-    `<TR><TD ALIGN="LEFT" COLSPAN="2" WIDTH="${Math.round(nodeWidth(node) * 72 - 22)}"><FONT FACE="${face}" POINT-SIZE="13" COLOR="${color('text')}"><B>${escapeHtml(node.title)}</B></FONT></TD></TR>`,
-    ...(chips
-      ? [
-          `<TR><TD ALIGN="LEFT" COLSPAN="2"><TABLE ALIGN="LEFT" BORDER="0" CELLBORDER="0" CELLSPACING="3" CELLPADDING="0"><TR>${chips}</TR></TABLE></TD></TR>`,
-        ]
-      : []),
-    ...(node.lines ?? []).map(
-      line =>
-        `<TR><TD ALIGN="LEFT" COLSPAN="2"><FONT FACE="${SANS}" POINT-SIZE="11" COLOR="${color('text2')}">${escapeHtml(line)}</FONT></TD></TR>`,
-    ),
+  return [
+    node.title,
+    ...(node.chips ?? []).map(chip => `(${chip})`),
+    ...(node.lines ?? []),
   ]
-  return `<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1">${rows.join('')}</TABLE>>`
+    .map(quote)
+    .join('\\n')
 }
 
-function nodeSize(node: Node) {
-  return `width=${nodeWidth(node)} height=0.8`
+function nodeAttributes(node: Node) {
+  return node.kind === 'file'
+    ? 'shape=folder'
+    : node.kind === 'viewer'
+      ? `color="${color('partner')}" penwidth=1.5`
+      : ''
 }
 
-function nodeStyle(node: Node) {
-  return node.kind === 'viewer'
-    ? `style="rounded,filled" fillcolor="${color('surface2')}" color="${color('partner')}" penwidth=1.5`
-    : node.kind === 'file'
-      ? `style="rounded,filled" fillcolor="${color('surface2')}" color="${color('border')}" penwidth=1.5`
-      : node.kind === 'source'
-        ? `style="rounded,filled" fillcolor="${color('surface')}" color="${color('border')}"`
-        : `style="rounded,filled" fillcolor="${color('surface2')}" color="${color('border')}"`
-}
-
-function edgeStyle(edge: Edge) {
-  return `${edge.label ? `xlabel=<<FONT FACE="${SANS}" POINT-SIZE="10" COLOR="${color('text2')}">${escapeHtml(edge.label)}</FONT>> ` : ''}`
-}
-
-function headings() {
-  return COLUMNS.map(
-    (text, i) =>
-      `h${i} [shape=plaintext style="" label=<<FONT FACE="${SANS}" POINT-SIZE="11" COLOR="${color('text2')}"><B>${escapeHtml(text.toUpperCase())}</B></FONT>>];`,
-  )
-}
-
-function nodeSource(node: Node) {
-  return `${node.id} [label=${label(node)} ${nodeSize(node)} ${nodeStyle(node)}];`
+function cluster(ids: string[], index: number, all: Node[]) {
+  const members = all.filter(node => ids.includes(node.id)).toReversed()
+  return `subgraph cluster_${index} {
+    label="${quote(COLUMNS[index] ?? '')}"
+    ${members.map(node => `${node.id} [label="${label(node)}" ${nodeAttributes(node)}];`).join('\n    ')}
+  }`
 }
 
 export function architectureDot(numbers: Numbers) {
   const all = nodes(numbers)
-  const order = columns.map(
-    (ids, i) => `${[`h${i}`, ...ids].join(' -> ')} [style=invis];`,
-  )
-  const ranked = columns.map(
-    (ids, i) => `{ rank=same; h${i}; ${ids.join('; ')}; }`,
-  )
   return `digraph architecture {
   rankdir=LR
-  splines=ortho
-  nodesep=0.14
-  ranksep=0.4
   bgcolor=transparent
-  node [shape=box margin="0.12,0.07" fontname="${SANS}"]
-  edge [color="${color('text2')}" arrowsize=0.6 penwidth=1.25]
-  ${headings().join('\n  ')}
-  ${all.map(nodeSource).join('\n  ')}
-  ${edges.map(e => `${e.from} -> ${e.to} [${edgeStyle(e)}];`).join('\n  ')}
-  ${ranked.join('\n  ')}
-  ${order.join('\n  ')}
+  nodesep=0.25
+  ranksep=0.6
+  graph [fontname="Helvetica" fontsize=15 fontcolor="${color('text2')}" color="${color('border')}" style=rounded]
+  node [shape=box fontname="Helvetica" fontsize=14 color="${color('text2')}" fontcolor="${color('text')}"]
+  edge [fontname="Helvetica" fontsize=12 color="${color('text2')}" fontcolor="${color('text2')}" arrowsize=0.7]
+  ${columns.map((ids, index) => cluster(ids, index, all)).join('\n  ')}
+  ${edges.map(edge => `${edge.from} -> ${edge.to}${edge.label ? ` [label="${quote(edge.label)}"]` : ''};`).join('\n  ')}
 }`
 }
 
@@ -428,25 +375,6 @@ function theme(svg: string) {
         .replaceAll(`: ${sentinel}`, `: ${variable}`),
     svg,
   )
-}
-
-const HEADING = /<title>h\d+<\/title>[\s\S]*?<\/g>/g
-const Y = /\by="(-?[\d.]+)"/g
-
-function alignHeadings(svg: string) {
-  const blocks = svg.match(HEADING) ?? []
-  const top = Math.min(
-    ...blocks.flatMap(block =>
-      [...block.matchAll(Y)].map(match => Number(match[1])),
-    ),
-  )
-  return blocks.length === 0
-    ? fail('no column headings found in the rendered diagram')
-    : blocks.reduce(
-        (out, block) =>
-          out.replace(block, () => block.replace(Y, () => `y="${top}"`)),
-        svg,
-      )
 }
 
 function bareSvg(svg: string) {
@@ -476,5 +404,5 @@ function renderDot(source: string) {
 }
 
 export function architectureSvg(numbers: Numbers) {
-  return bareSvg(alignHeadings(theme(renderDot(architectureDot(numbers)))))
+  return bareSvg(theme(renderDot(architectureDot(numbers))))
 }

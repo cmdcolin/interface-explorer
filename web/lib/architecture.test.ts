@@ -38,22 +38,15 @@ describe('architecture graph', () => {
 
   it('renders a themed SVG with no leftover placeholder colours', () => {
     const svg = architectureSvg(numbers)
-    expect(svg).toContain('var(--surface-2)')
+    expect(svg).toContain('var(--text-2)')
     expect(svg).not.toMatch(/#00000\d/)
   })
 
-  it('puts every column heading at the same height', () => {
+  it('labels every stage', () => {
     const svg = architectureSvg(numbers)
-    const ys = COLUMNS.map(
-      heading =>
-        svg.match(
-          new RegExp(
-            `<text[^>]* y="(-?[\\d.]+)"[^>]*>${heading.toUpperCase()}</text>`,
-          ),
-        )?.[1],
-    )
-    expect(ys.filter(y => y === undefined)).toEqual([])
-    expect(new Set(ys).size).toBe(1)
+    expect(
+      COLUMNS.filter(heading => !svg.includes(`>${heading}</text>`)),
+    ).toEqual([])
   })
 
   it('returns a bare svg element with no prolog or node titles', () => {
