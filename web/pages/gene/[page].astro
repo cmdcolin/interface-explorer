@@ -4,22 +4,29 @@ import {
   geneLocus,
   genomeUrl,
   sessionUrl,
-  variantPartner,
   variantSpec,
 } from '../../../src/links.ts'
 import Layout from '../../layouts/Layout.astro'
 import { gene as readGene, geneRows, isoformIndex, summary } from '../../lib/data.ts'
 import { LABEL_KEYS, amCell, chip, clinvarHref, conditionCell, esc, percent } from '../../lib/html.ts'
-import { proteinMap, variantData } from '../../lib/maps.ts'
+import { pathogenicAtSameResidue, proteinMap, variantData } from '../../lib/maps.ts'
 import { initialPartner, stories, structureData } from '../../lib/structure.ts'
-import { JBROWSE, href, isoformHref } from '../../lib/site.ts'
+import { JBROWSE, geneHref, href, isoformHref } from '../../lib/site.ts'
 
 export function getStaticPaths() {
   return geneRows().map(row => ({ params: { page: row.page } }))
 }
 
 const gene = readGene(Astro.params.page ?? '')
-const am = summary().alphaMissense
+const { alphaMissense: am, thresholds } = summary()
+const pages = new Map(geneRows().map(row => [row.accession, row.page]))
+const sameResidue = pathogenicAtSameResidue(gene)
+const partnerHref = (accession: string | null) => {
+  const page = accession ? pages.get(accession) : undefined
+  return page ? geneHref(page) : `https://www.uniprot.org/uniprotkb/${accession}`
+}
+const species = (organism: string) => organism.replace(/^(\w)\w* /, '$1. ')
+const share = (n: number, d: number) => (d ? ` (${percent(n, d)})` : '')
 const isoformRow = isoformIndex().genes.find(r => r.accession === gene.accession)
 const locus = geneLocus(gene)
 const pad = Math.round((gene.end - gene.start) * 0.05) + 200
@@ -30,17 +37,20 @@ const description = `${gene.gene}: ${gene.interfaceResidues} residues at a predi
 const partnerStories = stories(gene)
 const initial = initialPartner(gene)
 const structureJson = JSON.stringify(structureData(gene)).replaceAll('<', '\\u003c')
+const SHOWN_PARTNERS = 3
 const rows = gene.variants
   .map(v => {
-    const partner = variantPartner(gene, v)
-    return `<tr ${variantData(v)} data-position="${v.position}" data-am="${v.alphaMissense ?? -1}">
-      <td>${esc(v.change)}</td>
+    const same = sameResidue.get(v) ?? []
+    const partners = gene.partners.filter(p => v.partners.includes(p.gene))
+    const partnerLinks = (shown: typeof partners) =>
+      shown.map(p => `<a href="${sessionUrl(variantSpec(gene, v, p), JBROWSE)}">${esc(p.gene)}</a>`).join(', ')
+    return `<tr ${variantData(v, same)} data-position="${v.position}" data-am="${v.alphaMissense ?? -1}">
+      <td>${esc(v.change)}${same.length ? `<div class="cell-note" title="A pathogenic substitution at the same residue">pathogenic ${same.map(esc).join(', ')} here</div>` : ''}</td>
       <td class="nowrap">${chip(v.label)} <a href="${clinvarHref(v.variation)}" title="${esc(v.review)}">VCV${String(v.variation).padStart(9, '0')}</a></td>
       <td>${conditionCell(v.conditions)}</td>
       <td class="num">${amCell(v.alphaMissense, am)}</td>
-      <td>${v.partners.map(esc).join(', ')}</td>
+      <td class="nowrap">${partnerLinks(partners.slice(0, SHOWN_PARTNERS))}${partners.length > SHOWN_PARTNERS ? `<details class="more"><summary>+${partners.length - SHOWN_PARTNERS} more</summary>${partnerLinks(partners.slice(SHOWN_PARTNERS))}</details>` : ''}</td>
       <td class="nowrap"><a href="${genomeUrl(v.chrom, v.pos - 30, v.pos + 30, JBROWSE)}">chr${esc(v.chrom)}:${v.pos.toLocaleString()}</a></td>
-      <td class="nowrap"><a href="${sessionUrl(variantSpec(gene, v), JBROWSE)}">with ${esc(partner?.gene)}</a></td>
     </tr>`
   })
   .join('')
@@ -52,8 +62,10 @@ const rows = gene.variants
   <p class="lede">
     UniProt <a href={`https://www.uniprot.org/uniprotkb/${gene.accession}`}>{gene.accession}</a>,
     {gene.length} residues, chr{gene.chrom}:{gene.start.toLocaleString()}–{gene.end.toLocaleString()} ({gene.strand}).
-    {gene.interfaceResidues} residues sit at a confident predicted interface;
-    {gene.variants.length} of its {gene.classified} ClinVar-classified missense variants fall on them.
+    {gene.interfaceResidues} of its residues{share(gene.interfaceResidues, gene.length)} sit at a predicted interface
+    (ipSAE ≥ {thresholds.ipsae}, residue pLDDT ≥ {thresholds.plddt}, within {thresholds.contact} Å of the partner).
+    They hold {gene.counts.pathogenic} of its {gene.totals.pathogenic} pathogenic missense variants{share(gene.counts.pathogenic, gene.totals.pathogenic)}
+    and {gene.counts.benign} of its {gene.totals.benign} benign ones{share(gene.counts.benign, gene.totals.benign)}.
   </p>
   <div class="actions">
     <a class="button primary" href={genomeUrl(gene.chrom, gene.start - pad, gene.end + pad, JBROWSE)}>View on the genome</a>
@@ -99,19 +111,40 @@ const rows = gene.variants
     <table>
       <thead>
         <tr>
-          <th>Partner</th><th class="num">ipSAE</th><th class="num">ipTM</th>
-          <th class="num">Residues</th><th>Interface residues</th><th class="num">Variants</th><th>Experiment</th><th>Complex</th>
+          <th>Partner</th>
+          <th class="num" title={`AlphaFold DB's confidence in this interface, 0 to 1. Pairs below ${thresholds.ipsae} are left out.`}>ipSAE</th>
+          <th class="num" title="AlphaFold-Multimer's confidence in the whole complex, 0 to 1. Long disordered stretches pull it down even when the interface is confident.">ipTM</th>
+          <th>Interface residues</th>
+          <th class="num" title="ClinVar missense variants at this partner's interface">Variants</th>
+          <th title="The PDB entry holding both proteins, and the share of its contact residues the prediction also found">Experiment</th>
+          <th>Complex</th>
         </tr>
       </thead>
       <tbody>
         {
           gene.partners.map(p => (
             <tr>
-              <td><a href={`https://www.uniprot.org/uniprotkb/${p.accession}`}>{p.gene}</a></td>
+              <td>
+                <a href={partnerHref(p.accession)}>{p.gene}</a>
+                {p.modelledAs && (
+                  <div
+                    class="cell-note"
+                    title={p.modelledAs.accession === p.accession
+                      ? `AlphaFold DB modelled this partner with the ${p.modelledAs.organism} protein, which no human protein matches exactly`
+                      : `AlphaFold DB modelled this partner with the ${p.modelledAs.organism} protein ${p.modelledAs.accession}, identical in sequence to human ${p.gene}`}
+                  >
+                    {p.modelledAs.accession === p.accession ? <i>{species(p.modelledAs.organism)}</i> : <>as <i>{species(p.modelledAs.organism)}</i> {p.modelledAs.accession}</>}
+                  </div>
+                )}
+              </td>
               <td class="num">{p.ipsae?.toFixed(2)}</td>
               <td class="num">{p.iptm?.toFixed(2)}</td>
-              <td class="num">{p.residues}</td>
-              <td class="muted">{p.runs}</td>
+              <td>
+                <details>
+                  <summary>{p.residues}</summary>
+                  <span class="muted">{p.runs}</span>
+                </details>
+              </td>
               <td class="num">{p.variants}</td>
               <td class="nowrap">
                 {p.experiment ? (
@@ -125,7 +158,7 @@ const rows = gene.variants
                     </span>
                   </>
                 ) : (
-                  <span class="muted">—</span>
+                  <span class="muted" title="No PDB entry holding both proteins could be compared">—</span>
                 )}
               </td>
               <td class="nowrap">
@@ -146,6 +179,13 @@ const rows = gene.variants
           <input type="checkbox" value={label} checked /> <Fragment set:html={chip(label)} /> {gene.counts[label]}
         </label>
       ))
+    }
+    {
+      sameResidue.size > 0 && (
+        <label title="Uncertain variants at a residue where another substitution is pathogenic">
+          <input type="checkbox" id="variant-leads" /> Only uncertain at a pathogenic residue ({sameResidue.size})
+        </label>
+      )
     }
     <label>
       Sort by
@@ -170,7 +210,7 @@ const rows = gene.variants
   <div class="table-wrap">
     <table id="variants">
       <thead>
-        <tr><th>Change</th><th>ClinVar</th><th>Condition</th><th class="num">AlphaMissense</th><th>Touches</th><th>Genome</th><th>Structure</th></tr>
+        <tr><th>Change</th><th>ClinVar</th><th>Condition</th><th class="num">AlphaMissense</th><th title="Partners whose interface holds this residue; each opens the variant in 3D with that partner">3D</th><th>Genome</th></tr>
       </thead>
       <tbody set:html={rows} />
     </table>

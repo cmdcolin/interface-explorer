@@ -4,6 +4,7 @@ const marks = [...document.querySelectorAll<SVGElement>('.variant-mark')]
 const sort = document.querySelector<HTMLSelectElement>('#variant-sort')
 const condition =
   document.querySelector<HTMLSelectElement>('#variant-condition')
+const leadsOnly = document.querySelector<HTMLInputElement>('#variant-leads')
 
 function conditionsOf(element: HTMLElement | SVGElement) {
   const parsed: unknown = JSON.parse(element.dataset.conditions ?? '[]')
@@ -13,13 +14,16 @@ function conditionsOf(element: HTMLElement | SVGElement) {
 function render() {
   const labels = new Set(
     [
-      ...document.querySelectorAll<HTMLInputElement>('.filters input:checked'),
+      ...document.querySelectorAll<HTMLInputElement>(
+        '.filters input[value]:checked',
+      ),
     ].map(i => i.value),
   )
   const wanted = condition?.value ?? ''
   const visible = (element: HTMLElement | SVGElement) =>
     labels.has(element.dataset.label ?? '') &&
-    (!wanted || conditionsOf(element).includes(wanted))
+    (!wanted || conditionsOf(element).includes(wanted)) &&
+    (!leadsOnly?.checked || element.dataset.lead !== undefined)
   for (const row of rows) {
     row.hidden = !visible(row)
   }

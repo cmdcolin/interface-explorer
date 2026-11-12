@@ -175,3 +175,47 @@ test('a gene record carries its complex chain and UniProt features', () => {
     { type: 'Domain', start: 5, end: 40, description: 'SH2' },
   ])
 })
+
+test('totals count every classified variant, counts only those at an interface', () => {
+  const variant = (position: number, label: 'pathogenic' | 'benign') => ({
+    position,
+    label,
+    change: `A${position}V`,
+    variation: position,
+    review: '',
+    chrom: '1',
+    pos: position * 3,
+    allele: 'C>T',
+    conditions: [],
+  })
+  const record = geneRecord(
+    {
+      accession: 'P00001',
+      gene: 'GENE',
+      length: 100,
+      context: {},
+      complexes: 1,
+      hetero: 1,
+      interfaces: [
+        {
+          entity: 'AF-1',
+          partner: 'P00002',
+          partner_gene: 'PARTNER',
+          modelled_as: null,
+          iptm: 0.8,
+          ipsae: 0.9,
+          pdockq: 0.5,
+          residues: { 10: 90 },
+        },
+      ],
+    },
+    [
+      variant(10, 'pathogenic'),
+      variant(20, 'pathogenic'),
+      variant(30, 'benign'),
+    ],
+    { chrom: 'chr1', strand: '+', start: 1, end: 300 },
+  )
+  expect(record.totals).toEqual({ pathogenic: 2, uncertain: 0, benign: 1 })
+  expect(record.counts).toEqual({ pathogenic: 1, uncertain: 0, benign: 0 })
+})

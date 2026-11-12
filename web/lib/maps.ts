@@ -1,9 +1,17 @@
 import { LABEL_KEYS, LABELS, axisLabels, esc } from './html.ts'
-import type { Edit, Feature, GAlpha, Gene, IsoformRecord } from './types.ts'
+import type {
+  Edit,
+  Feature,
+  GAlpha,
+  Gene,
+  GeneVariant,
+  IsoformRecord,
+} from './types.ts'
 
 const MAP_PARTNERS = 12
 const LANE = 13
 const CHARACTER_WIDTH = 6
+const ALIKE = 0.8
 
 const FEATURE_ROWS = [
   { label: 'Domains', types: ['Domain', 'Repeat', 'Zinc finger', 'Motif'] },
@@ -49,40 +57,109 @@ export function partnerResidues(partner: { runs: string }) {
   })
 }
 
-export function variantData(v: { label: string; conditions: string[] }) {
-  return `data-label="${v.label}" data-conditions="${esc(JSON.stringify(v.conditions))}"`
+export function pathogenicAtSameResidue(gene: Gene) {
+  const pathogenic = Map.groupBy(
+    gene.variants.filter(v => v.label === 'pathogenic'),
+    v => v.position,
+  )
+  return new Map(
+    gene.variants.flatMap(v => {
+      const changes = [
+        ...new Set(pathogenic.get(v.position)?.map(p => p.change)),
+      ]
+      return v.label === 'uncertain' && changes.length ? [[v, changes]] : []
+    }),
+  )
 }
 
-export function proteinMap(gene: Gene) {
-  const width = 1000
-  const left = 90
-  const scale = (x: number) =>
-    left + ((x - 1) / Math.max(gene.length - 1, 1)) * (width - left - 20)
-  const rest = gene.partners.slice(MAP_PARTNERS)
-  const tracks = [
-    ...gene.partners
-      .slice(0, MAP_PARTNERS)
-      .map(p => ({ label: p.gene, partner: p.gene, residues: partnerResidues(p) })),
+export function variantData(v: GeneVariant, sameResidue: string[] = []) {
+  return `data-label="${v.label}" data-conditions="${esc(JSON.stringify(v.conditions))}"${sameResidue.length ? ' data-lead' : ''}`
+}
+
+function overlap(a: Set<number>, b: Set<number>) {
+  const shared = [...a].filter(r => b.has(r)).length
+  return shared / (a.size + b.size - shared)
+}
+
+export function partnerTracks(partners: Gene['partners']) {
+  const groups: { names: string[]; residues: Set<number> }[] = []
+  for (const partner of partners) {
+    const residues = new Set(partnerResidues(partner))
+    const alike = groups.find(g => overlap(g.residues, residues) >= ALIKE)
+    if (alike) {
+      alike.names.push(partner.gene)
+    } else {
+      groups.push({ names: [partner.gene], residues })
+    }
+  }
+  const shown = groups.slice(0, MAP_PARTNERS)
+  const rest = groups.slice(MAP_PARTNERS)
+  return [
+    ...shown.map(g => ({
+      label:
+        g.names.length > 1
+          ? `${g.names[0]} +${g.names.length - 1}`
+          : (g.names[0] ?? ''),
+      partner: g.names[0],
+      names: g.names,
+      residues: [
+        ...new Set(
+          partners
+            .filter(p => g.names.includes(p.gene))
+            .flatMap(partnerResidues),
+        ),
+      ],
+    })),
     ...(rest.length
       ? [
           {
-            label: `+${rest.length} more`,
+            label: `+${rest.flatMap(g => g.names).length} more`,
             partner: undefined,
-            residues: [...new Set(rest.flatMap(partnerResidues))],
+            names: rest.flatMap(g => g.names),
+            residues: [
+              ...new Set(
+                partners
+                  .filter(p => rest.some(g => g.names.includes(p.gene)))
+                  .flatMap(partnerResidues),
+              ),
+            ],
           },
         ]
       : []),
   ]
+}
+
+export function proteinMap(gene: Gene) {
+  const sameResidue = pathogenicAtSameResidue(gene)
+  const width = 1000
+  const left = 90
+  const scale = (x: number) =>
+    left + ((x - 1) / Math.max(gene.length - 1, 1)) * (width - left - 20)
+  const tracks = partnerTracks(gene.partners)
   const rows = { pathogenic: 0, uncertain: 14, benign: 28 }
   const featureRows = FEATURE_ROWS.map(row => ({
     label: row.label,
     placed: lanes(gene.features.filter(f => row.types.includes(f.type))),
   }))
     .filter(row => row.placed.length)
-    .reduce<{ label: string; y: number; height: number; placed: ReturnType<typeof lanes<Feature>> }[]>((out, row) => {
+    .reduce<
+      {
+        label: string
+        y: number
+        height: number
+        placed: ReturnType<typeof lanes<Feature>>
+      }[]
+    >((out, row) => {
       const last = out.at(-1)
       const y = last ? last.y + last.height + 4 : 48
-      return [...out, { ...row, y, height: (Math.max(...row.placed.map(p => p.lane)) + 1) * LANE }]
+      return [
+        ...out,
+        {
+          ...row,
+          y,
+          height: (Math.max(...row.placed.map(p => p.lane)) + 1) * LANE,
+        },
+      ]
     }, [])
   const lastFeatureRow = featureRows.at(-1)
   const top = lastFeatureRow ? lastFeatureRow.y + lastFeatureRow.height + 8 : 48
@@ -96,7 +173,7 @@ export function proteinMap(gene: Gene) {
             .filter(v => v.label === label)
             .map(
               v =>
-                `<rect class="variant-mark" ${variantData(v)} data-position="${v.position}" x="${scale(v.position) - 1.5}" y="${rows[label]}" width="3" height="10" fill="var(--${label})"><title>${esc(v.change)} ${LABELS[label]}</title></rect>`,
+                `<rect class="variant-mark" ${variantData(v, sameResidue.get(v))} data-position="${v.position}" x="${scale(v.position) - 1.5}" y="${rows[label]}" width="3" height="10" fill="var(--${label})"><title>${esc(v.change)} ${LABELS[label]}</title></rect>`,
             )
             .join('')}`,
       ).join('')}
@@ -108,7 +185,10 @@ export function proteinMap(gene: Gene) {
                 const x = scale(item.start) - 1
                 const w = Math.max(scale(item.end) - scale(item.start) + 2, 2)
                 const name = featureName(item)
-                const range = item.start === item.end ? `${item.start}` : `${item.start}–${item.end}`
+                const range =
+                  item.start === item.end
+                    ? `${item.start}`
+                    : `${item.start}–${item.end}`
                 return `<g class="feature ${featureKind(item)}" data-start="${item.start}" data-end="${item.end}"><rect x="${x}" y="${row.y + lane * LANE}" width="${w}" height="11" rx="2" /><title>${esc(name)} (${item.type.toLowerCase()}, ${range})</title>${
                   name.length * CHARACTER_WIDTH < w - 6
                     ? `<text x="${x + 4}" y="${row.y + lane * LANE + 8.5}">${esc(name)}</text>`
@@ -121,9 +201,10 @@ export function proteinMap(gene: Gene) {
       ${tracks
         .map((track, index) => {
           const y = top + index * rowHeight
-          return `<g class="partner-row"${track.partner ? ` data-partner="${esc(track.partner)}"` : ''}><rect class="row-hit" x="0" y="${y - 1.5}" width="${width}" height="${rowHeight}" /><text class="row-label" x="0" y="${y + 9}">${esc(track.label)}</text>
+          const names = track.names.join(', ')
+          return `<g class="partner-row"${track.partner ? ` data-partner="${esc(track.partner)}"` : ''}><rect class="row-hit" x="0" y="${y - 1.5}" width="${width}" height="${rowHeight}" /><text class="row-label" x="0" y="${y + 9}">${esc(track.label)}<title>${esc(names)}</title></text>
             <line class="baseline" x1="${scale(1)}" x2="${scale(gene.length)}" y1="${y + 5}" y2="${y + 5}" />
-            ${track.residues.map(r => `<rect x="${scale(r) - 1}" y="${y}" width="2.5" height="10" fill="var(--interface)"><title>residue ${r}: interface with ${esc(track.label)}</title></rect>`).join('')}</g>`
+            ${track.residues.map(r => `<rect x="${scale(r) - 1}" y="${y}" width="2.5" height="10" fill="var(--interface)"><title>residue ${r}: interface with ${esc(names)}</title></rect>`).join('')}</g>`
         })
         .join('')}
       <line class="axis" x1="${scale(1)}" x2="${scale(gene.length)}" y1="${axisY}" y2="${axisY}" />
@@ -136,7 +217,7 @@ export function proteinMap(gene: Gene) {
         .join('')}
     </svg></div>
     <div class="legend">
-      <span><span class="swatch" style="background:var(--interface)"></span>interface residue, one row per partner</span>
+      <span><span class="swatch" style="background:var(--interface)"></span>interface residue, one row per partner, or per group of partners touching nearly the same residues</span>
       ${gene.features.length ? `<span><span class="swatch feature-swatch binding"></span>UniProt interaction or binding region</span>` : ''}
       ${LABEL_KEYS.map(label => `<span><span class="swatch" style="background:var(--${label})"></span>${LABELS[label].toLowerCase()} variant</span>`).join('')}
     </div>`

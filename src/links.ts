@@ -63,8 +63,8 @@ export function variantPartner(
 export function variantSpec(
   gene: { gene: string; partners: Partner[] },
   variant: VariantSite,
+  partner = variantPartner(gene, variant),
 ) {
-  const partner = variantPartner(gene, variant)
   if (partner) {
     return complexSpec(
       gene.gene,

@@ -39,12 +39,13 @@ export function runs(residues: number[]) {
 }
 
 function labelCounts(variants: { label: Variant['label'] }[]) {
-  return Object.fromEntries(
-    LABELS.map(label => [
-      label,
-      variants.filter(v => v.label === label).length,
-    ]),
-  )
+  const count = (label: Variant['label']) =>
+    variants.filter(v => v.label === label).length
+  return {
+    pathogenic: count('pathogenic'),
+    uncertain: count('uncertain'),
+    benign: count('benign'),
+  }
 }
 
 export function alphaMissenseCalls(
@@ -103,6 +104,7 @@ export function geneRecord(
       return {
         gene: name,
         accession: complex.partner,
+        modelledAs: complex.modelled_as,
         ipsae: complex.ipsae,
         iptm: complex.iptm,
         pdockq: complex.pdockq,
@@ -157,6 +159,7 @@ export function geneRecord(
             : 0,
     ),
     classified: variants.length,
+    totals: labelCounts(variants),
     interfaceResidues: atResidue.size,
     counts: labelCounts(atInterface),
   }

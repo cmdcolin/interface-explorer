@@ -51,7 +51,7 @@ export function amCell(
 
 export function conditionCell(conditions: string[]) {
   return conditions.length
-    ? `<span title="${esc(conditions.join('; '))}">${esc(conditions[0])}${conditions.length > 1 ? ` <span class="muted">+${conditions.length - 1}</span>` : ''}</span>`
+    ? `<span title="${esc(conditions.join('; '))}">${esc(conditions[0])}${conditions.length > 1 ? ` <span class="muted">+${conditions.length - 1} more</span>` : ''}</span>`
     : '<span class="muted">—</span>'
 }
 
@@ -60,14 +60,16 @@ export function clinvarHref(variation: number) {
 }
 
 export function axisLabels(length: number) {
-  const step = Math.pow(10, Math.floor(Math.log10(length / 4)))
-  const labels: number[] = []
-  for (
-    let x = step;
-    x < length * 0.94;
-    x += step * (length / step > 8 ? 2 : 1)
-  ) {
-    labels.push(x)
-  }
-  return [1, ...labels, length]
+  const magnitude = 10 ** Math.floor(Math.log10(Math.max(length, 4) / 4))
+  const step =
+    [1, 2, 5].map(m => m * magnitude).find(s => length / s <= 8) ??
+    10 * magnitude
+  return [
+    1,
+    ...Array.from(
+      { length: Math.floor((length * 0.94) / step) },
+      (_, k) => (k + 1) * step,
+    ),
+    length,
+  ]
 }

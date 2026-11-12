@@ -385,6 +385,24 @@ a.button[href^="http"]::after {
   text-align: center;
 }
 
+.map .variant-mark {
+  cursor: pointer;
+}
+
+details.more {
+  white-space: normal;
+}
+
+details.more summary {
+  font-size: 12px;
+}
+
+.cell-note {
+  color: var(--text-2);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .map .row-label {
   font-size: 12px;
   fill: var(--text-2);
