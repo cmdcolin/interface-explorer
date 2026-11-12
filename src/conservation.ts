@@ -1,6 +1,7 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { setTimeout as sleep } from 'node:timers/promises'
+import { gunzipSync } from 'node:zlib'
 
 import { BigWig } from '@gmod/bbi'
 import type { Feature } from '@gmod/bbi'
@@ -16,14 +17,17 @@ import {
   tables,
 } from './analyze.ts'
 import type { Band, Keep, ProteinVariants, ScoredVariant } from './analyze.ts'
-import { boundedMap } from './atlas.ts'
+import { atomsByChain, boundedMap } from './atlas.ts'
+import type { ChainAtom } from './atlas.ts'
 import { confidentResidues, isConfident, readAtlas } from './atlasData.ts'
 import type { AtlasProtein } from './atlasData.ts'
 import { CONFIDENT, MIN_PLDDT } from './constants.ts'
+import { squaredDistance } from './contacts.ts'
+import type { Point } from './contacts.ts'
 import { codingPositions, mergeBlocks } from './coordinates.ts'
 import type { CodingPositions } from './coordinates.ts'
 import { list, number, readJson, writeAtomically, writeJson } from './json.ts'
-import { nanPercentile, pythonRound } from './numeric.ts'
+import { nanPercentile, pythonRound, seededRandom } from './numeric.ts'
 import { DATA, OUT } from './paths.ts'
 import { readVariants } from './variants.ts'
 import type { Variant } from './variants.ts'
@@ -37,12 +41,22 @@ const MIN_RESIDUES = 5
 const VERY_CONFIDENT = 90
 const IPSAE_BANDS = bands([CONFIDENT, 0.7, 0.8, 0.9, Infinity])
 const QUARTERS = [0, 1, 2, 3]
+const NEIGHBOURHOOD = 25
 
 type CodonScores = (number | null)[][]
 
 export interface Residue {
   stratum: string
   score: number
+}
+
+export interface SurfaceResidue extends Residue {
+  residue: number
+  centre?: Point
+}
+
+export interface Located extends SurfaceResidue {
+  centre: Point
 }
 
 async function patientFetch(
@@ -180,7 +194,30 @@ function codonMean(scores: CodonScores, residue: number) {
     : undefined
 }
 
-function surfaceResidues(protein: AtlasProtein, scores: CodonScores) {
+export function residueCentres(atoms: ChainAtom[]) {
+  return new Map(
+    [...Map.groupBy(atoms, atom => atom.position)].flatMap(
+      ([position, group]) => {
+        const centre = centroid(group.map(atom => atom.coord))
+        return centre ? [[position, centre] satisfies [number, Point]] : []
+      },
+    ),
+  )
+}
+
+function monomerCentres(accession: string) {
+  const path = join(DATA, 'monomer_cif', `${accession}.cif.gz`)
+  const [atoms] = existsSync(path)
+    ? atomsByChain(gunzipSync(readFileSync(path)).toString('utf8')).values()
+    : []
+  return residueCentres(atoms ?? [])
+}
+
+function surfaceResidues(
+  protein: AtlasProtein,
+  scores: CodonScores,
+  centres: Map<number, Point>,
+) {
   return Object.entries(protein.context).flatMap(([key, [plddt, rsa]]) => {
     const residue = Number(key)
     const score = codonMean(scores, residue)
@@ -190,27 +227,187 @@ function surfaceResidues(protein: AtlasProtein, scores: CodonScores) {
             residue,
             stratum: `${Math.min(Math.floor(rsa * 5), 4)} ${plddt >= VERY_CONFIDENT}`,
             score,
+            centre: centres.get(residue),
+          } satisfies SurfaceResidue,
+        ]
+      : []
+  })
+}
+
+function isLocated(residue: SurfaceResidue): residue is Located {
+  return residue.centre !== undefined
+}
+
+export function centroid(points: Point[]) {
+  const mean = (axis: 0 | 1 | 2) =>
+    points.reduce((sum, point) => sum + point[axis], 0) / points.length
+  return points.length
+    ? ([mean(0), mean(1), mean(2)] satisfies Point)
+    : undefined
+}
+
+export function neighbourOrders(candidates: Located[]) {
+  return new Map(
+    candidates.map(centre => [
+      centre,
+      candidates.toSorted(
+        (a, b) =>
+          squaredDistance(centre.centre, a.centre) -
+          squaredDistance(centre.centre, b.centre),
+      ),
+    ]),
+  )
+}
+
+function patchAround(
+  centre: Located,
+  orders: Map<Located, Located[]>,
+  allowed: Set<SurfaceResidue>,
+  size: number,
+) {
+  return (orders.get(centre) ?? []).filter(r => allowed.has(r)).slice(0, size)
+}
+
+export function leftOutDifference(patch: Residue[], outside: Residue[]) {
+  const taken = new Set(patch)
+  return matchedDifference(
+    patch,
+    outside.filter(r => !taken.has(r)),
+  ).difference
+}
+
+export function patchScores(
+  size: number,
+  outside: SurfaceResidue[],
+  centres: Located[],
+  orders: Map<Located, Located[]>,
+) {
+  const allowed = new Set<SurfaceResidue>(outside)
+  return outside.filter(isLocated).length >= 2 * size
+    ? centres
+        .filter(centre => allowed.has(centre))
+        .map(centre =>
+          leftOutDifference(
+            patchAround(centre, orders, allowed, size),
+            outside,
+          ),
+        )
+        .filter(d => !Number.isNaN(d))
+    : []
+}
+
+export function percentile(score: number, patches: number[]) {
+  return patches.length
+    ? (patches.filter(p => p < score).length +
+        patches.filter(p => p === score).length / 2) /
+        patches.length
+    : undefined
+}
+
+function within(candidates: Located[], patch: SurfaceResidue[]) {
+  const middle = centroid(patch.filter(isLocated).map(r => r.centre))
+  return middle
+    ? candidates.filter(
+        r => squaredDistance(r.centre, middle) <= NEIGHBOURHOOD ** 2,
+      )
+    : []
+}
+
+export function patchTests(
+  inside: SurfaceResidue[],
+  outside: SurfaceResidue[],
+  orders: Map<Located, Located[]>,
+  fakeCentre: Located | undefined,
+) {
+  const size = inside.length
+  const candidates = outside.filter(isLocated)
+  const score = matchedDifference(inside, outside).difference
+  const fake = fakeCentre
+    ? patchAround(fakeCentre, orders, new Set(outside), size)
+    : []
+  const taken = new Set<SurfaceResidue>(fake)
+  const outsideFake = outside.filter(r => !taken.has(r))
+  const fakeScore = matchedDifference(fake, outsideFake).difference
+  const rank = (centres: (patch: SurfaceResidue[]) => Located[]) => ({
+    interface: percentile(
+      score,
+      patchScores(size, outside, centres(inside), orders),
+    ),
+    fake:
+      fake.length === size
+        ? percentile(
+            fakeScore,
+            patchScores(size, outsideFake, centres(fake), orders),
+          )
+        : undefined,
+  })
+  return {
+    anywhere: rank(() => candidates),
+    nearby: rank(patch => within(candidates, patch)),
+  }
+}
+
+export function complexDifferences(
+  protein: AtlasProtein,
+  scores: CodonScores,
+  centres: Map<number, Point>,
+  random: () => number,
+) {
+  const surface = surfaceResidues(protein, scores, centres)
+  const confident = protein.interfaces.filter(isConfident)
+  const anywhere = new Set(
+    confident.flatMap(c => confidentResidues(c, protein.length)),
+  )
+  const outside = surface.filter(r => !anywhere.has(r.residue))
+  const strata = new Set(outside.map(r => r.stratum))
+  const candidates = outside.filter(isLocated)
+  const orders = neighbourOrders(candidates)
+  return confident.flatMap(complex => {
+    const residues = new Set(confidentResidues(complex, protein.length))
+    const inside = surface.filter(
+      r => residues.has(r.residue) && strata.has(r.stratum),
+    )
+    const fakeCentre = candidates[Math.floor(random() * candidates.length)]
+    return inside.length >= MIN_RESIDUES && outside.length >= MIN_RESIDUES
+      ? [
+          {
+            entity: complex.entity,
+            ipsae: complex.ipsae ?? 0,
+            difference: matchedDifference(inside, outside).difference,
+            ...patchTests(inside, outside, orders, fakeCentre),
           },
         ]
       : []
   })
 }
 
-export function complexDifferences(protein: AtlasProtein, scores: CodonScores) {
-  const surface = surfaceResidues(protein, scores)
-  const confident = protein.interfaces.filter(isConfident)
-  const anywhere = new Set(
-    confident.flatMap(c => confidentResidues(c, protein.length)),
+interface Ranks {
+  interface?: number
+  fake?: number
+}
+
+function patchSummary(ranks: Ranks[]) {
+  const ranked = ranks.flatMap(r =>
+    r.interface === undefined || r.fake === undefined
+      ? []
+      : [{ interface: r.interface, fake: r.fake }],
   )
-  const outside = surface.filter(r => !anywhere.has(r.residue))
-  return confident.flatMap(complex => {
-    const residues = new Set(confidentResidues(complex, protein.length))
-    const inside = surface.filter(r => residues.has(r.residue))
-    const { residues: matched, difference } = matchedDifference(inside, outside)
-    return matched >= MIN_RESIDUES && outside.length >= MIN_RESIDUES
-      ? [{ entity: complex.entity, ipsae: complex.ipsae ?? 0, difference }]
-      : []
+  const count = (test: (percentile: number) => boolean) => ({
+    interface: ranked.filter(r => test(r.interface)).length,
+    fake: ranked.filter(r => test(r.fake)).length,
   })
+  return {
+    complexes: ranked.length,
+    'above the median patch': count(p => p > 0.5),
+    'above 95% of patches': count(p => p > 0.95),
+    'median percentile': pythonRound(
+      nanPercentile(
+        ranked.map(r => r.interface),
+        50,
+      ),
+      2,
+    ),
+  }
 }
 
 function differenceSummary(differences: number[]) {
@@ -218,6 +415,20 @@ function differenceSummary(differences: number[]) {
     complexes: differences.length,
     'interface more conserved': differences.filter(d => d > 0).length,
     'median difference': pythonRound(nanPercentile(differences, 50), 2),
+  }
+}
+
+function patchSummaries(complexes: { ipsae: number; ranks: Ranks }[]) {
+  return {
+    all: patchSummary(complexes.map(c => c.ranks)),
+    byConfidenceBand: Object.fromEntries(
+      IPSAE_BANDS.map(band => [
+        bandName(band),
+        patchSummary(
+          complexes.filter(c => inBand(c.ipsae, band)).map(c => c.ranks),
+        ),
+      ]),
+    ),
   }
 }
 
@@ -271,8 +482,14 @@ export async function main(workers = 4) {
   const scoredVariants = proteins.flatMap(p => p.variants)
   const edges = quartileEdges(scoredVariants.flatMap(v => v.phylop ?? []))
   const withContext = proteins.filter(p => Object.keys(p.context).length)
+  const random = seededRandom(0)
   const differences = scored.flatMap(({ protein, scores }) =>
-    complexDifferences(protein, scores),
+    complexDifferences(
+      protein,
+      scores,
+      monomerCentres(protein.accession),
+      random,
+    ),
   )
   const result = {
     source: PHYLOP,
@@ -314,6 +531,12 @@ export async function main(workers = 4) {
               .map(d => d.difference),
           ),
         ]),
+      ),
+      patches: patchSummaries(
+        differences.map(d => ({ ipsae: d.ipsae, ranks: d.anywhere })),
+      ),
+      nearbyPatches: patchSummaries(
+        differences.map(d => ({ ipsae: d.ipsae, ranks: d.nearby })),
       ),
     },
   }

@@ -233,22 +233,23 @@ export function recallHistogram(
 }
 
 export function shareBars(
-  rows: { label: string; n: number; d: number; title: string }[],
+  rows: {
+    label: string
+    n: number
+    d: number
+    title: string
+    colour?: string
+  }[],
   colour: string,
 ) {
   return `
     <div class="bars">
       ${rows
         .map(
-          ({
-            label,
-            n,
-            d,
-            title,
-          }) => `<div class="bar-row" title="${esc(title)}">
-            <div>${esc(label)}</div>
-            <div class="bar-track"><span style="width:${(100 * n) / d}%;background:${colour}"></span></div>
-            <div class="bar-value">${percent(n, d)}</div>
+          row => `<div class="bar-row" title="${esc(row.title)}">
+            <div>${esc(row.label)}</div>
+            <div class="bar-track"><span style="width:${(100 * row.n) / row.d}%;background:${row.colour ?? colour}"></span></div>
+            <div class="bar-value">${percent(row.n, row.d)}</div>
           </div>`,
         )
         .join('')}
@@ -300,6 +301,26 @@ function conservedRow(label: string, r: ResidueConservation) {
     d: r.complexes,
     title: `${r['interface more conserved'].toLocaleString()} of ${r.complexes.toLocaleString()} complexes; median difference ${r['median difference']} phyloP`,
   }
+}
+
+export function patchRows(summary: Summary) {
+  const { all, byConfidenceBand } = summary.conservation.residues.patches
+  const median = 'above the median patch'
+  return [
+    ...Object.entries(byConfidenceBand).map(([label, p]) => ({
+      label,
+      n: p[median].interface,
+      d: p.complexes,
+      title: `${p[median].interface.toLocaleString()} of ${p.complexes.toLocaleString()} interfaces`,
+    })),
+    {
+      label: 'A random patch instead',
+      n: all[median].fake,
+      d: all.complexes,
+      title: `${all[median].fake.toLocaleString()} of ${all.complexes.toLocaleString()} random patches ranked in place of the interface`,
+      colour: 'var(--benign)',
+    },
+  ]
 }
 
 export function conservedInterfaceRows(summary: Summary) {

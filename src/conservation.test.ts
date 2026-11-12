@@ -4,13 +4,21 @@ import { bootstrap, enrichment, stratifiedEnrichment } from './analyze.ts'
 import type { ProteinVariants, Table } from './analyze.ts'
 import {
   baseScores,
+  centroid,
   complexDifferences,
   matchedDifference,
   matchedTables,
+  leftOutDifference,
+  neighbourOrders,
+  patchScores,
+  percentile,
   quarter,
   quartileEdges,
+  residueCentres,
   variantScore,
 } from './conservation.ts'
+import { seededRandom } from './numeric.ts'
+import type { Point } from './contacts.ts'
 import type { CodingPositions } from './coordinates.ts'
 import type { Variant } from './variants.ts'
 
@@ -103,7 +111,7 @@ test('matched difference compares each residue with its own stratum', () => {
 const SURFACE_PROTEIN: ProteinVariants = {
   accession: 'P1',
   gene: 'GENE',
-  length: 14,
+  length: 20,
   complexes: 2,
   hetero: 2,
   interfaces: [
@@ -129,7 +137,7 @@ const SURFACE_PROTEIN: ProteinVariants = {
     },
   ],
   context: Object.fromEntries(
-    Array.from({ length: 14 }, (_, i) => [
+    Array.from({ length: 20 }, (_, i) => [
       String(i + 1),
       [i + 1 === 13 ? 50 : 95, i + 1 === 14 ? 0.1 : 0.5],
     ]),
@@ -137,13 +145,71 @@ const SURFACE_PROTEIN: ProteinVariants = {
   variants: [],
 }
 
-test('a complex is compared with surface residues at no confident interface', () => {
-  const scores = Array.from({ length: 14 }, (_, i) =>
-    i < 5 ? [3, 3, 3] : i === 6 ? [9, 9, 9] : i >= 12 ? [8, 8, 8] : [1, 1, 1],
+test('a complex is compared with surface residues at no confident interface, and with patches of them', () => {
+  const scores = Array.from({ length: 20 }, (_, i) =>
+    i < 5
+      ? [3, 3, 3]
+      : i === 6
+        ? [9, 9, 9]
+        : i === 12 || i === 13
+          ? [8, 8, 8]
+          : [1, 1, 1],
   )
-  expect(complexDifferences(SURFACE_PROTEIN, scores)).toEqual([
-    { entity: 'AF-1', ipsae: 0.75, difference: 2 },
-  ])
+  const centres = new Map(
+    Array.from({ length: 20 }, (_, i) => [
+      i + 1,
+      [4 * i, 0, 0] satisfies Point,
+    ]),
+  )
+  const [complex, ...others] = complexDifferences(
+    SURFACE_PROTEIN,
+    scores,
+    centres,
+    seededRandom(0),
+  )
+  expect(others).toEqual([])
+  expect(complex).toMatchObject({ entity: 'AF-1', ipsae: 0.75, difference: 2 })
+  expect(complex?.anywhere).toEqual({ interface: 1, fake: undefined })
+  expect(complex?.nearby).toEqual({ interface: 1, fake: undefined })
+})
+
+test('residue centres average their atoms', () => {
+  expect(
+    residueCentres([
+      { position: 1, coord: [0, 0, 0], plddt: 90 },
+      { position: 1, coord: [2, 4, 6], plddt: 90 },
+      { position: 2, coord: [1, 1, 1], plddt: 90 },
+    ]),
+  ).toEqual(
+    new Map([
+      [1, [1, 2, 3]],
+      [2, [1, 1, 1]],
+    ]),
+  )
+  expect(centroid([])).toBeUndefined()
+})
+
+const LINE = [0, 1, 2, 3, 4, 5].map(i => ({
+  stratum: 's',
+  score: i,
+  residue: i + 1,
+  centre: [i, 0, 0] satisfies Point,
+}))
+
+test('a patch is scored against the surface without it', () => {
+  expect(leftOutDifference(LINE.slice(5), LINE)).toBe(3)
+})
+
+test('each surface residue centres one patch of its nearest neighbours', () => {
+  const orders = neighbourOrders(LINE)
+  expect(patchScores(3, LINE, LINE, orders)).toEqual([-3, -3, -1, 1, 3, 3])
+  expect(patchScores(4, LINE, LINE, orders)).toEqual([])
+  expect(patchScores(3, LINE, [], orders)).toEqual([])
+})
+
+test('an interface is ranked among its patches, ties counting half', () => {
+  expect(percentile(1, [-1, 0, 2, 1])).toBe(0.625)
+  expect(percentile(1, [])).toBeUndefined()
 })
 
 test('matched tables keep one group of strata per protein', () => {

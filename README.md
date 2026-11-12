@@ -87,9 +87,15 @@ one.
 - The predicted interfaces are more conserved than the rest of the surface.
   Against the same protein's other folded surface residues at no confident
   interface, matched for exposure and pLDDT, the interface is more conserved in
-  85% of 3,609 confident complexes, and in 76–88% within each ipSAE band. That
-  is what real interfaces would show, but without a null of random surface
-  patches of the same size it is not a test of the predictions.
+  85% of 3,595 confident complexes, and in 76–88% within each ipSAE band.
+- That is not what any patch of surface would show. Ranked among patches of
+  its size from the same protein's other folded surface, the interface beats
+  the median one in 82% of 2,339 complexes, against 47% for a random patch
+  ranked the same way in its place, and 95% of them in 25%, against 8%. Ranked
+  only among patches centred within 25 Å of it, it beats the median one in 76%,
+  against 45%, so it is not just sitting in a conserved domain. Conservation
+  marks most predicted interfaces as functional surface; it cannot vouch for
+  the partner, since AlphaFold reads the same alignments.
 - 26,588 classified missense variants sit at a confident interface: 2,533
   pathogenic, 23,233 of uncertain significance and 822 benign. Examples:
   VHL's 48 pathogenic variants at the elongin C interface, and GNAO1's at the
@@ -198,7 +204,14 @@ one.
   exposed interface residues against the protein's folded, exposed residues at
   no confident interface, each residue against those in the same RSA fifth and
   pLDDT band (70–90 or ≥ 90), and needs at least 5 matched interface residues
-  and 5 others.
+  and 5 others. Each interface is then ranked among patches of its size: one
+  centred on each folded, exposed residue at no confident interface, made of
+  the such residues nearest it by residue centre (mean heavy-atom position) in
+  the AlphaFold DB monomer model, and scored against the rest of the surface
+  without it, as the interface is. The nearby test keeps only patches centred
+  within 25 Å of the interface's centre. Chance is measured by ranking a
+  random patch the same way, taken out of the surface in the interface's
+  place, which needs room for both, so the tests cover fewer complexes.
 - **Experimental check:** SIFTS lists the PDB entries holding both proteins of
   a predicted pair. One is compared per pair: among those covering nearly the
   most of both proteins, the one with the fewest chains, leaving out entries of

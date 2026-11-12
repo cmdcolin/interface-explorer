@@ -40,6 +40,23 @@ export interface ResidueConservation {
   'median difference': number
 }
 
+export interface PatchCount {
+  interface: number
+  fake: number
+}
+
+export interface PatchConservation {
+  complexes: number
+  'above the median patch': PatchCount
+  'above 95% of patches': PatchCount
+  'median percentile': number
+}
+
+export interface PatchTest {
+  all: PatchConservation
+  byConfidenceBand: Record<string, PatchConservation>
+}
+
 export interface Validation {
   pairs: number
   touching: number
@@ -79,6 +96,8 @@ export interface Summary {
     residues: {
       all: ResidueConservation
       byConfidenceBand: Record<string, ResidueConservation>
+      patches: PatchTest
+      nearbyPatches: PatchTest
     }
   }
   validation: { cutoff: string; all: Validation; unseen: Validation }

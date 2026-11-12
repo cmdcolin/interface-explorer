@@ -2,7 +2,7 @@
 title: 'Conservation explains only part of the interface signal'
 date: '2026-11-12'
 order: 4
-description: 'Pathogenic variants favour bases conserved across 100 vertebrates, but at matched conservation they still favour predicted interfaces, which are themselves more conserved than the rest of the surface.'
+description: 'Pathogenic variants favour bases conserved across 100 vertebrates, but at matched conservation they still favour predicted interfaces, which are more conserved than random patches of the same protein surface.'
 ---
 
 import Html from '../../components/Html.astro'
@@ -12,6 +12,7 @@ import {
   conservedInterfaceRows,
   forestPlot,
   odds,
+  patchRows,
   shareBars,
 } from '../../lib/charts.ts'
 import { summary } from '../../lib/data.ts'
@@ -22,6 +23,8 @@ export const c = s.conservation
 export const all = c.enrichment.all
 export const surface = c.enrichment.orderedSurface
 export const r = c.residues
+export const pa = r.patches.all
+export const near = r.nearbyPatches.all
 export const counted = e =>
   ['pathogenic at interface', 'benign at interface']
     .map(key => Number(e[key].split('/')[1]))
@@ -82,10 +85,46 @@ exposure and pLDDT. The interface is more conserved in
 Share of complexes whose interface is more conserved, by ipSAE. Hover a row for
 the counts.
 
-That is what real interfaces would show, but it does not prove these ones are
-real: a compact patch of any folded surface might beat the surface average, and
-the share does not rise with confidence. A fair test would set each interface
-against random surface patches of its size.
+## Not just any patch
+
+Any compact patch of folded surface might stand out like that. So we ranked
+each interface among patches of its size from the same protein's folded surface
+at no confident interface: one patch centred on each such residue, made of the
+residues nearest it in the AlphaFold DB model of the protein alone, and each
+scored against the rest of the surface as the interface is. To learn what
+chance gives, we ranked a random one of those patches the same way, standing in
+for the interface.
+
+The interface beats the median patch in
+**{percent(pa['above the median patch'].interface, pa.complexes)}** of
+{pa.complexes.toLocaleString()} complexes, against
+{percent(pa['above the median patch'].fake, pa.complexes)} for the stand-in, and
+beats 95% of its patches in
+{percent(pa['above 95% of patches'].interface, pa.complexes)}, against
+{percent(pa['above 95% of patches'].fake, pa.complexes)}.
+
+<Html html={shareBars(patchRows(s), 'var(--interface)')} />
+
+Share of interfaces more conserved than the median patch of their protein's
+surface, by ipSAE, and the same for a random patch ranked in an interface's
+place. Hover a row for the counts.
+
+The share rises with confidence, as it would if the more confident predictions
+are more often right.
+
+Interfaces could still just sit in conserved domains. Ranked only among patches
+centred within 25 Å of its middle, the interface beats the median one in
+{percent(near['above the median patch'].interface, near.complexes)} of
+{near.complexes.toLocaleString()} complexes, against
+{percent(near['above the median patch'].fake, near.complexes)} for a stand-in
+ranked among the patches around it.
+
+So conservation marks most predicted interfaces as functional surface, which a
+misplaced interface would not be. It cannot vouch for the partner: AlphaFold
+reads the same alignments, and could dock a wrong partner on a real conserved
+site, such as a paralog's. The test needs room for the patches and a stand-in,
+so it covers {pa.complexes.toLocaleString()} of the
+{r.all.complexes.toLocaleString()} complexes.
 
 ## Caveats
 
@@ -93,7 +132,9 @@ against random surface patches of its size.
   overlapping element, and a third position free to change lowers a codon's
   mean.
 - Surface residues at no confident interface may touch partners AlphaFold DB
-  did not model, which makes the comparison conservative.
+  did not model, which makes the comparisons conservative.
+- Patches are the residues nearest a point, so they are rounder than many real
+  interfaces.
 - Quarters of conservation are coarse: within one, interface variants may still
   sit on somewhat more conserved bases.
 - phyloP summarises the whole alignment column, so reading the alignment species
