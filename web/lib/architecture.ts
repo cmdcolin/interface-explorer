@@ -142,14 +142,14 @@ export function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
     {
       id: 'jbFiles',
       kind: 'file',
-      title: 'site/jbrowse/',
-      lines: ['bigBed, config.json'],
+      title: 'Genome browser files',
+      lines: ['bigBed tracks, config'],
     },
     {
       id: 'data',
       kind: 'file',
-      title: 'site/data/',
-      lines: ['genes/, isoforms/', 'summary, leads, gpcr'],
+      title: 'Site data',
+      lines: ['genes, isoforms', 'summary, leads, GPCRs'],
     },
 
     {
