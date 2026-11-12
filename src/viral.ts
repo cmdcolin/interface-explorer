@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { gunzipSync } from 'node:zlib'
 
@@ -7,7 +7,7 @@ import { boundedMap } from './atlas.ts'
 import { readAtlas } from './atlasData.ts'
 import { download, getJson } from './cache.ts'
 import { CONTACT } from './constants.ts'
-import { withinDistance } from './contacts.ts'
+import { neighbourGrid, squaredDistance, withinDistance } from './contacts.ts'
 import {
   ENTRIES,
   ENTRIES_URL,
@@ -152,6 +152,25 @@ export function touching(own: Atom[], other: Atom[]) {
   ].sort((a, b) => a - b)
 }
 
+export function touchingPair(own: Atom[], other: Atom[]) {
+  const near = neighbourGrid(other, atom => atom.xyz, CONTACT)
+  const limit = CONTACT * CONTACT
+  const counts = new Map<string, number>()
+  for (const atom of own) {
+    for (const neighbour of near(atom.xyz)) {
+      if (squaredDistance(atom.xyz, neighbour.xyz) < limit) {
+        const key = `${atom.chain}\t${neighbour.chain}`
+        counts.set(key, (counts.get(key) ?? 0) + 1)
+      }
+    }
+  }
+  const [chain = '', viralChain = ''] = (
+    [...counts].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))[0]?.[0] ??
+    ''
+  ).split('\t')
+  return { chain, viralChain }
+}
+
 interface Candidate {
   accession: string
   gene: string
@@ -172,6 +191,8 @@ interface Contact {
   tried: string[]
   fusions: string[]
   reagent: string | null
+  chain: string
+  viralChain: string
   residues: number[]
   viralResidues: number[]
   viralNumbers: number[]
@@ -207,6 +228,8 @@ interface Found {
   key: string
   pdb: string
   fused: boolean
+  chain: string
+  viralChain: string
   residues: number[]
   viralResidues: number[]
   resolved: number[]
@@ -242,22 +265,54 @@ async function entryContacts(pdb: string, candidates: Candidate[]) {
   return candidates.map(({ accession, sequence, viral }): Found => {
     const separate = separateChains(rows, accession, viral.accession)
     const human = trustworthy(separate.own, sequence)
-    const residues =
+    const pair =
       human.length && separate.other.length
-        ? touching(human, separate.other)
-        : []
+        ? touchingPair(human, separate.other)
+        : { chain: '', viralChain: '' }
+    const ownChain = human.filter(atom => atom.chain === pair.chain)
+    const otherChain = separate.other.filter(
+      atom => atom.chain === pair.viralChain,
+    )
+    const residues = ownChain.length ? touching(ownChain, otherChain) : []
     return {
       key: `${accession}\t${viral.accession}`,
       pdb,
       fused: separate.fused,
+      chain: pair.chain,
+      viralChain: pair.viralChain,
       residues,
-      viralResidues: residues.length ? touching(separate.other, human) : [],
+      viralResidues: residues.length ? touching(otherChain, ownChain) : [],
       resolved: [
         ...new Set(separate.other.flatMap(atom => atom.source?.number ?? [])),
       ],
       neighbours: neighbours.get(viral.accession) ?? [],
     }
   })
+}
+
+const TSV_COLUMNS = [
+  'viral_protein',
+  'viral_uniprot',
+  'uniprot_position',
+  'mature_position',
+  'human_gene',
+  'human_uniprot',
+  'pdb',
+]
+
+export function contactTsv(contacts: Contact[]) {
+  const rows = contacts.flatMap(contact =>
+    contact.viralResidues.map((residue, index) => [
+      contact.protein,
+      contact.viral,
+      String(residue),
+      contact.viralNumbers.length ? String(contact.viralNumbers[index]) : '',
+      contact.gene,
+      contact.accession,
+      contact.pdb.toUpperCase(),
+    ]),
+  )
+  return [TSV_COLUMNS, ...rows].map(row => row.join('\t')).join('\n') + '\n'
 }
 
 function bestEntry(found: Found[]) {
@@ -361,6 +416,8 @@ export async function main(workers = 4) {
               tried: found.map(entry => entry.pdb),
               fusions: found.flatMap(entry => (entry.fused ? [entry.pdb] : [])),
               reagent: REAGENTS.get(genes.get(accession) ?? '') ?? null,
+              chain: best.chain,
+              viralChain: best.viralChain,
               residues: best.residues,
               viralResidues: best.viralResidues,
               viralNumbers: localNumbers(protein.mature, best.viralResidues),
@@ -421,6 +478,7 @@ export async function main(workers = 4) {
     reagents,
     apart,
   })
+  writeFileSync(join(SITE_DATA, 'viral-contacts.tsv'), contactTsv(contacts))
   console.log(JSON.stringify(summary, undefined, 2))
 }
 

@@ -7,6 +7,7 @@ import {
   matureProteins,
   separateChains,
   touching,
+  touchingPair,
   trustworthy,
 } from './viral.ts'
 
@@ -115,4 +116,22 @@ test('touching residues are within the contact distance', () => {
   const other = [atom('P2', 9, 'A', 7)]
   expect(touching(own, other)).toEqual([2])
   expect(touching(own, [])).toEqual([])
+})
+
+test('the chain pair is the one that touches, not the busiest of each side', () => {
+  const own = [
+    atom('P1', 1, 'A', 0, 'E'),
+    atom('P1', 2, 'A', 1, 'E'),
+    atom('P1', 3, 'A', 40, 'F'),
+  ]
+  const other = [
+    atom('P2', 1, 'A', 3, 'B'),
+    atom('P2', 2, 'A', 4, 'B'),
+    atom('P2', 3, 'A', 42, 'C'),
+  ]
+  expect(touchingPair(own, other)).toEqual({ chain: 'E', viralChain: 'B' })
+  expect(touchingPair([own[2]!], other)).toEqual({
+    chain: 'F',
+    viralChain: 'C',
+  })
 })

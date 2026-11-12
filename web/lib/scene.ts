@@ -49,8 +49,12 @@ export function otherChain(chain: string) {
   return chain === 'A' ? 'B' : 'A'
 }
 
-export function pdbModel(pdb: string, partnerChain: string, up: number[]) {
-  return { url: `https://www.ebi.ac.uk/pdbe/entry-files/download/${pdb.toLowerCase()}.bcif`, partnerChain, up }
+export function pdbModel(pdb: string, partnerChain: string, up?: number[]) {
+  return {
+    url: `https://www.ebi.ac.uk/pdbe/entry-files/download/${pdb.toLowerCase()}.bcif`,
+    partnerChain,
+    ...(up ? { up } : {}),
+  }
 }
 
 export function sideways([x = 0, y = 0, z = 1]: number[]) {

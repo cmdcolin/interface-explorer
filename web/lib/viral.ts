@@ -1,3 +1,4 @@
+import { pdbModel } from './scene.ts'
 import { geneRows, viral } from './data.ts'
 import type { ViralContact } from './types.ts'
 
@@ -39,6 +40,27 @@ export function viralContacts() {
         ...(data.contacts.find(c => c.gene === gene)?.residues ?? [0]),
       ),
   }
+}
+
+export function contactView(contact: ViralContact | undefined) {
+  return contact?.chain && contact.viralChain
+    ? {
+        partner: {
+          gene: contact.protein,
+          entity: contact.pdb,
+          chain: contact.chain,
+          residues: contact.residues,
+          side: { residues: contact.viralResidues, variants: [] },
+        },
+        variants: contact.variants.map(variant => ({
+          change: variant.change,
+          label: variant.label,
+          position: variant.position,
+          partners: [contact.protein],
+        })),
+        model: pdbModel(contact.pdb, contact.viralChain),
+      }
+    : undefined
 }
 
 export function contactSurface(contact: ViralContact) {

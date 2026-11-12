@@ -7,16 +7,18 @@ hero: './heroes/sars-cov-2.jpg'
 heroAlt: "ISG15's residues held by the SARS-CoV-2 papain-like protease, with the ClinVar variants on them marked above"
 ---
 
+import ComplexView from '../../components/ComplexView.astro'
 import Html from '../../components/Html.astro'
 import { clinvarHref } from '../../lib/html.ts'
 import { surfaceMap } from '../../lib/maps.ts'
 import {
   contactSurface,
+  contactView,
   listed,
   runs,
   viralContacts,
 } from '../../lib/viral.ts'
-import { geneHref } from '../../lib/site.ts'
+import { geneHref, href } from '../../lib/site.ts'
 
 export const v = viralContacts()
 export const pdb = id => `https://www.rcsb.org/structure/${id.toUpperCase()}`
@@ -44,6 +46,7 @@ pathogenic, {v.uncertain} uncertain and {v.benign} benign.
       <th>Viral protein</th>
       <th>Entry</th>
       <th class="num">Residues</th>
+      <th>Viral side</th>
       <th>ClinVar on them</th>
     </tr>
   </thead>
@@ -56,6 +59,9 @@ pathogenic, {v.uncertain} uncertain and {v.benign} benign.
         <td>{c.protein}</td>
         <td><a href={pdb(c.pdb)}>{c.pdb}</a></td>
         <td class="num" title={runs(c.residues)}>{c.residues.length}</td>
+        <td class="nowrap" title={`In ${c.viralName} numbering: ${runs(c.viralResidues)}`}>
+          {runs(c.viralNumbers.length ? c.viralNumbers : c.viralResidues)}
+        </td>
         <td>
           {c.variants.length
             ? c.variants.map(variant => (
@@ -74,6 +80,17 @@ pathogenic, {v.uncertain} uncertain and {v.benign} benign.
 Hover a residue count for the positions. A gene with no page of its own has no
 confident AlphaFold DB partner; it is here on experiment alone.
 
+The viral side is numbered within the mature protein, so the protease residues
+are the H41 and C145 ones a paper would name; hover the column for the same
+residues in the precursor numbering, which for spike is the S numbering
+lineage-defining substitutions are quoted in. Both are in{' '}
+<a href={href('data/viral-contacts.tsv')}>viral-contacts.tsv</a>, one row per
+viral residue, for intersecting against a variant call set: these are the
+positions where a SARS-CoV-2 protein grips a human protein in an experimental
+structure. A substitution landing on one is a hypothesis about that grip, not
+evidence — nothing here was selected for by the virus, and the human side is
+what this atlas actually measures.
+
 ## Three worth a second look
 
 **ISG15 and the papain-like protease.** PLpro strips ISG15 from host proteins,
@@ -84,6 +101,13 @@ susceptibility to mycobacterial disease, and{' '}
 {v.byGene('ISG15')?.variants.length} of them sit on that surface. They are
 variants in the protein the virus removes, not in anything the virus is known to
 select; what the structure adds is that the residues are the ones PLpro contacts.
+
+<ComplexView view={contactView(v.byGene('ISG15'))}>
+  ISG15 (blue) held by the papain-like protease (grey surface) in{' '}
+  {v.byGene('ISG15')?.pdb}. Blue: the ISG15 residues within 5 Å of the
+  protease; grey: the protease residues within 5 Å of ISG15. Orange: an
+  uncertain ClinVar variant on them. Hover a residue for its variants.
+</ComplexView>
 
 <Html html={surfaceMap(contactSurface(v.byGene('ISG15')))} />
 

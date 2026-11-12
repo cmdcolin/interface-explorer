@@ -274,6 +274,8 @@ export interface ViralContact {
   tried: string[]
   fusions: string[]
   reagent: string | null
+  chain: string
+  viralChain: string
   residues: number[]
   viralResidues: number[]
   viralNumbers: number[]
