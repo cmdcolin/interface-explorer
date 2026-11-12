@@ -12,8 +12,6 @@ const base = process.env.TOUR_BASE ?? LIVE
 const dir = join(OUT, 'tour')
 const clipDir = join(dir, 'clips')
 const video = join(SITE, 'tour.mp4')
-const poster = join(SITE, 'tour.jpg')
-const posterAt = 24
 const width = 1280
 const height = 720
 const fade = 0.5
@@ -418,25 +416,7 @@ async function assemble() {
     ],
     { stdio: ['ignore', 'inherit', 'inherit'] },
   )
-  execFileSync(
-    'ffmpeg',
-    [
-      '-y',
-      '-v',
-      'error',
-      '-i',
-      video,
-      '-ss',
-      String(posterAt),
-      '-frames:v',
-      '1',
-      '-q:v',
-      '3',
-      poster,
-    ],
-    { stdio: ['ignore', 'inherit', 'inherit'] },
-  )
-  console.log(video, poster)
+  console.log(video)
 }
 
 const args = process.argv.slice(2)
