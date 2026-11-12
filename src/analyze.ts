@@ -1,5 +1,10 @@
 import { join } from 'node:path'
 
+import {
+  LIKELY_BENIGN,
+  LIKELY_PATHOGENIC,
+  readScores,
+} from './alphamissense.ts'
 import { readAtlas } from './atlasData.ts'
 import type { AtlasProtein } from './atlasData.ts'
 import { CONFIDENT, MIN_PLDDT } from './constants.ts'
@@ -15,11 +20,12 @@ import { OUT } from './paths.ts'
 import { readVariants } from './variants.ts'
 import type { Variant } from './variants.ts'
 
-const THRESHOLDS = {
-  ipTM: [0.5, 0.6, 0.7, 0.8, 0.9],
-  ipSAE: [0.6, 0.7, 0.8, 0.9],
+const BAND_EDGES = {
+  ipTM: [0.5, 0.6, 0.7, 0.8, 0.9, Infinity],
+  ipSAE: [0.6, 0.7, 0.8, 0.9, Infinity],
 }
 const METRIC = { ipTM: 'iptm', ipSAE: 'ipsae' } as const
+const CONFIDENT_BAND: Band = [CONFIDENT, Infinity]
 const BOOTSTRAPS = 2000
 const SURFACE = 0.2
 const EXAMPLES = 25
@@ -27,10 +33,16 @@ const SUMMARY_LABELS: Label[] = ['pathogenic', 'benign', 'uncertain']
 
 type Metric = (typeof METRIC)[keyof typeof METRIC]
 type Context = [number, number] | undefined
+type Keep = (context: Context, variant: ScoredVariant) => boolean
+export type Band = [number, number]
 export type Table = [number, number, number, number]
 
+export interface ScoredVariant extends Variant {
+  alphaMissense?: number
+}
+
 export interface ProteinVariants extends AtlasProtein {
-  variants: Variant[]
+  variants: ScoredVariant[]
 }
 
 export function interfaceScore(protein: AtlasProtein, metric: Metric) {
@@ -48,7 +60,7 @@ export function interfaceScore(protein: AtlasProtein, metric: Metric) {
   return best
 }
 
-export const CONTROLS: Record<string, (context: Context) => boolean> = {
+export const CONTROLS: Record<string, Keep> = {
   'all residues': () => true,
   'ordered (pLDDT ≥ 70)': context =>
     context !== undefined && context[0] >= MIN_PLDDT,
@@ -56,21 +68,48 @@ export const CONTROLS: Record<string, (context: Context) => boolean> = {
     context !== undefined && context[0] >= MIN_PLDDT && context[1] >= SURFACE,
 }
 
+export const ALPHAMISSENSE_CLASSES: Record<string, Keep> = {
+  'AlphaMissense likely benign': (_, v) =>
+    v.alphaMissense !== undefined && v.alphaMissense < LIKELY_BENIGN,
+  'AlphaMissense ambiguous': (_, v) =>
+    v.alphaMissense !== undefined &&
+    v.alphaMissense >= LIKELY_BENIGN &&
+    v.alphaMissense <= LIKELY_PATHOGENIC,
+  'AlphaMissense likely pathogenic': (_, v) =>
+    v.alphaMissense !== undefined && v.alphaMissense > LIKELY_PATHOGENIC,
+}
+
+export function bands(edges: number[]) {
+  return edges.flatMap((low, i) => {
+    const high = edges[i + 1]
+    return high === undefined ? [] : [[low, high] satisfies Band]
+  })
+}
+
+function bandName(name: string, [low, high]: Band) {
+  return high === Infinity ? `${name} ≥ ${low}` : `${name} ${low}–${high}`
+}
+
 export function tables(
   proteins: ProteinVariants[],
   metric: Metric,
-  threshold: number,
-  keep: (context: Context) => boolean = () => true,
+  [low, high]: Band,
+  keep: Keep = () => true,
 ) {
   return proteins.flatMap(protein => {
     const best = interfaceScore(protein, metric)
-    const kept = protein.variants.filter(v =>
-      keep(protein.context[String(v.position)]),
+    const inBand = (v: Variant) => {
+      const score = best.get(v.position)
+      return score !== undefined && score >= low && score < high
+    }
+    const kept = protein.variants.filter(
+      v =>
+        (inBand(v) || !best.has(v.position)) &&
+        keep(protein.context[String(v.position)], v),
     )
     const pathogenic = kept.filter(v => v.label === 'pathogenic')
     const benign = kept.filter(v => v.label === 'benign')
-    const at = (variants: Variant[]) =>
-      variants.filter(v => (best.get(v.position) ?? 0) >= threshold).length
+    const at = (variants: Variant[]) => variants.filter(inBand).length
     return pathogenic.length && benign.length
       ? [
           [
@@ -168,9 +207,13 @@ export async function main() {
   const atlas = readAtlas()
   const accessions = new Set(atlas.map(p => p.accession))
   const variants = await readVariants(accession => accessions.has(accession))
-  const proteins = atlas.map(protein => ({
+  const scores = readScores()
+  const proteins: ProteinVariants[] = atlas.map(protein => ({
     ...protein,
-    variants: variants.get(protein.accession) ?? [],
+    variants: (variants.get(protein.accession) ?? []).map(v => ({
+      ...v,
+      alphaMissense: scores.get(protein.accession)?.get(v.change),
+    })),
   }))
   const withComplex = proteins.filter(p => p.hetero)
   const confident = proteins.filter(p =>
@@ -199,21 +242,27 @@ export async function main() {
           tables(
             withComplex.filter(p => Object.keys(p.context).length),
             'ipsae',
-            CONFIDENT,
+            CONFIDENT_BAND,
             keep,
           ),
         ),
       ]),
     ),
-    enrichment: Object.fromEntries(
-      Object.entries(THRESHOLDS).flatMap(([name, thresholds]) =>
-        thresholds.map(threshold => [
-          `${name} ≥ ${threshold}`,
+    by_alphamissense_class: Object.fromEntries(
+      Object.entries(ALPHAMISSENSE_CLASSES).map(([name, keep]) => [
+        name,
+        enrichment(tables(withComplex, 'ipsae', CONFIDENT_BAND, keep)),
+      ]),
+    ),
+    by_confidence_band: Object.fromEntries(
+      Object.entries(BAND_EDGES).flatMap(([name, edges]) =>
+        bands(edges).map(band => [
+          bandName(name, band),
           enrichment(
             tables(
               withComplex,
               name === 'ipTM' ? METRIC.ipTM : METRIC.ipSAE,
-              threshold,
+              band,
             ),
           ),
         ]),

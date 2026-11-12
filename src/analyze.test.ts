@@ -1,6 +1,12 @@
 import { describe, expect, test } from 'vitest'
 
-import { interfaceScore, mantelHaenszel, tables } from './analyze.ts'
+import {
+  ALPHAMISSENSE_CLASSES,
+  bands,
+  interfaceScore,
+  mantelHaenszel,
+  tables,
+} from './analyze.ts'
 import type { ProteinVariants } from './analyze.ts'
 import type { Variant } from './variants.ts'
 
@@ -92,11 +98,42 @@ test('interface score keeps the best score among confident residues', () => {
   )
 })
 
-test('tables count variants at and away from the interface', () => {
-  expect(tables([PROTEIN], 'iptm', 0.6)).toEqual([[1, 1, 1, 1]])
-  expect(tables([PROTEIN], 'iptm', 0.7)).toEqual([[1, 1, 0, 2]])
+test('bands pair consecutive edges', () => {
+  expect(bands([0.6, 0.7, Infinity])).toEqual([
+    [0.6, 0.7],
+    [0.7, Infinity],
+  ])
+})
+
+test('tables compare a confidence band with residues at no interface', () => {
+  expect(tables([PROTEIN], 'iptm', [0.6, Infinity])).toEqual([[1, 1, 1, 1]])
+  expect(tables([PROTEIN], 'iptm', [0.6, 0.7])).toEqual([[0, 1, 1, 1]])
+  expect(tables([PROTEIN], 'iptm', [0.7, Infinity])).toEqual([[1, 1, 0, 1]])
   expect(
-    tables([PROTEIN], 'iptm', 0.6, context => context !== undefined),
+    tables(
+      [PROTEIN],
+      'iptm',
+      [0.6, Infinity],
+      context => context !== undefined,
+    ),
   ).toEqual([[1, 0, 1, 0]])
-  expect(tables([PROTEIN], 'iptm', 0.6, () => false)).toEqual([])
+  expect(tables([PROTEIN], 'iptm', [0.6, Infinity], () => false)).toEqual([])
+})
+
+test('tables can be restricted to an AlphaMissense class', () => {
+  const scored = {
+    ...PROTEIN,
+    variants: PROTEIN.variants.map((v, i) => ({
+      ...v,
+      alphaMissense: [0.9, 0.2, 0.8, 0.7][i],
+    })),
+  }
+  expect(
+    tables(
+      [scored],
+      'iptm',
+      [0.6, Infinity],
+      ALPHAMISSENSE_CLASSES['AlphaMissense likely pathogenic'],
+    ),
+  ).toEqual([[1, 0, 1, 1]])
 })

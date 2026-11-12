@@ -45,8 +45,17 @@ one.
   2.0–2.8, 906 proteins with both). Counting only folded, surface-exposed
   residues, it is 3.2× (2.7–4.0), so the effect is not just "folded vs
   disordered".
-- The signal does not strengthen with confidence: the odds ratio is flat at
-  about 2.4 up to ipSAE 0.7 and falls to 2.0 at 0.8 and 1.8 (0.9–4.0) at 0.9.
+- Folded residues alone give 1.7× (1.4–2.0): the buried core is rich in
+  pathogenic variants and is not an interface, which is why the surface
+  comparison is the fair one.
+- The signal does not depend on confidence. Against residues at no interface,
+  the odds ratio is 2.5 for ipSAE 0.6–0.7, 2.7 for 0.7–0.8, 2.1 for 0.8–0.9
+  and 2.4 (1.4–4.8) at 0.9 and above.
+- The interface adds to AlphaMissense, modestly. Among variants AlphaMissense
+  calls likely benign, the pathogenic ones still sit at an interface 1.4× as
+  often as the benign ones (1.1–1.9, 442 proteins); among those it calls
+  likely pathogenic, 1.4× (1.0–2.0, 309 proteins). Too few are ambiguous to
+  say (0.7×, 0.4–1.2, 128 proteins).
 - 26,588 classified missense variants sit at a confident interface: 2,533
   pathogenic, 23,233 of uncertain significance and 822 benign. Examples:
   VHL's 48 pathogenic variants at the elongin C interface, and GNAO1's at the
@@ -155,7 +164,8 @@ one.
 - `pnpm alphamissense`: downloads AlphaMissense's 1.2 GB
   `AlphaMissense_aa_substitutions.tsv.gz` and writes `out/alphamissense.json`,
   a score for each variant in `out/clinvar.ndjson`.
-- `pnpm analyze`: the enrichment, in `out/analysis.json`.
+- `pnpm analyze`: the enrichment, overall, by confidence band and by
+  AlphaMissense class, in `out/analysis.json`.
 - `pnpm gpcr`: the experimental GPCR–G protein interfaces, as
   `site/jbrowse/gpcr_interfaces.bb`, `gpcr_interface_variants.bb` and
   `site/data/gpcr.json`.
