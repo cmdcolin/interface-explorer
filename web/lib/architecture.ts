@@ -249,7 +249,7 @@ function cluster(ids: string[], index: number, all: Node[]) {
   const members = all.filter(node => ids.includes(node.id)).toReversed()
   return `subgraph cluster_${index} {
     label="${quote(COLUMNS[index] ?? '')}"
-    style="rounded,filled" fillcolor="${stage.area}" color="${stage.line}"
+    margin=12 style="rounded,filled" fillcolor="${stage.area}" color="${stage.line}"
     ${members.map(node => `${node.id} [label=<${label(node)}> ${nodeAttributes(node, stage)}];`).join('\n    ')}
   }`
 }
