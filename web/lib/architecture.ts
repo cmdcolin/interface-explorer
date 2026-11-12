@@ -1,11 +1,12 @@
 import { spawnSync } from 'node:child_process'
 
-type Kind = 'source' | 'step' | 'file' | 'viewer'
+type Kind = 'step' | 'file' | 'viewer'
 
 interface Node {
   id: string
   kind: Kind
   title: string
+  source?: string
   chips?: string[]
   lines?: string[]
 }
@@ -24,7 +25,6 @@ interface Numbers {
 }
 
 export const COLUMNS = [
-  'Sources',
   'Fetch and compute',
   'Combine',
   'Published files',
@@ -34,87 +34,19 @@ export const COLUMNS = [
 export function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
   return [
     {
-      id: 'uniprot',
-      kind: 'source',
-      title: 'UniProt · AlphaFold DB',
-      lines: [
-        `${proteins.toLocaleString()} disease proteins`,
-        'heterodimer and homodimer models',
-      ],
-    },
-    {
-      id: 'ebi',
-      kind: 'source',
-      title: 'EBI Proteins API',
-      lines: ['exons on hg38'],
-    },
-    {
-      id: 'clinvar',
-      kind: 'source',
-      title: 'ClinVar',
-      lines: ['weekly variant_summary'],
-    },
-    {
-      id: 'am',
-      kind: 'source',
-      title: 'AlphaMissense',
-      lines: ['every substitution'],
-    },
-    {
-      id: 'pdb',
-      kind: 'source',
-      title: 'RCSB PDB · PDBe SIFTS',
-      lines: ['experimental complexes'],
-    },
-    {
-      id: 'ppi',
-      kind: 'source',
-      title: 'IntAct · BioGRID',
-      lines: ['reported human pairs'],
-    },
-    {
-      id: 'crossSource',
-      kind: 'source',
-      title: 'Complex Portal · STRING',
-      lines: ['curated complexes, IDs'],
-    },
-    {
-      id: 'ucsc',
-      kind: 'source',
-      title: 'UCSC phyloP 100-way',
-      lines: ['hg38 bigWig'],
-    },
-    {
-      id: 'gnomadSource',
-      kind: 'source',
-      title: 'gnomAD v4.1 exomes',
-      lines: ['hg38 bigBed'],
-    },
-    {
-      id: 'gpcrdb',
-      kind: 'source',
-      title: 'GPCRdb · PDBe',
-      lines: ['receptor–G protein structures'],
-    },
-    {
-      id: 'afdbIso',
-      kind: 'source',
-      title: 'AlphaFold DB isoforms',
-      lines: ['monomer models'],
-    },
-
-    {
       id: 'atlas',
       kind: 'step',
+      source: 'UniProt · AlphaFold DB',
       title: 'Find interface residues',
       lines: [
-        `contacts ≤ ${contact} Å, ipSAE ≥ ${ipsae}`,
-        `pLDDT ≥ ${plddt}, solvent exposure`,
+        `${proteins.toLocaleString()} proteins, ≤ ${contact} Å`,
+        `ipSAE ≥ ${ipsae}, pLDDT ≥ ${plddt}`,
       ],
     },
     {
       id: 'coords',
       kind: 'step',
+      source: 'EBI Proteins API',
       title: 'Map residues to codons',
       chips: ['g2p_mapper'],
       lines: ['residue → codon'],
@@ -122,36 +54,42 @@ export function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
     {
       id: 'clinvarStep',
       kind: 'step',
+      source: 'ClinVar',
       title: 'Pathogenic variants',
-      lines: ['missense SNVs, canonical'],
+      lines: ['missense SNVs'],
     },
     {
       id: 'amStep',
       kind: 'step',
+      source: 'AlphaMissense',
       title: 'Pathogenicity scores',
-      lines: ['AlphaMissense per variant'],
+      lines: ['per variant'],
     },
     {
       id: 'exp',
       kind: 'step',
+      source: 'PDB · SIFTS',
       title: 'Check against PDB',
-      lines: ['predicted pair vs PDB'],
+      lines: ['predicted vs PDB'],
     },
     {
       id: 'ppiStep',
       kind: 'step',
+      source: 'IntAct · BioGRID',
       title: 'Reported interactions',
       lines: ['direct or same complex'],
     },
     {
       id: 'crossStep',
       kind: 'step',
+      source: 'Complex Portal · STRING',
       title: 'Cross-references',
-      lines: ['IDs and links for each pair'],
+      lines: ['IDs and links'],
     },
     {
       id: 'cons',
       kind: 'step',
+      source: 'UCSC phyloP',
       title: 'Conservation',
       chips: ['@gmod/bbi'],
       lines: ['per codon'],
@@ -159,6 +97,7 @@ export function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
     {
       id: 'gnomad',
       kind: 'step',
+      source: 'gnomAD v4.1',
       title: 'Population variants',
       chips: ['@gmod/bbi'],
       lines: ['variant counts'],
@@ -166,6 +105,7 @@ export function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
     {
       id: 'gpcr',
       kind: 'step',
+      source: 'GPCRdb · PDBe',
       title: 'GPCR complexes',
       chips: ['p2s_mapper'],
       lines: ['chain → UniProt'],
@@ -173,6 +113,7 @@ export function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
     {
       id: 'iso',
       kind: 'step',
+      source: 'AlphaFold DB',
       title: 'Isoform differences',
       lines: ['rebuild, compare folds'],
     },
@@ -182,92 +123,70 @@ export function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
       id: 'tracks',
       kind: 'step',
       title: 'Genome tracks',
-      lines: ['BED → bigBed', 'JBrowse config'],
+      lines: ['bigBed, config'],
     },
     {
       id: 'analyze',
       kind: 'step',
       title: 'Enrichment statistics',
-      lines: ['Mantel–Haenszel odds', 'ratios, resampled CIs'],
+      lines: ['odds ratios, CIs'],
     },
     {
       id: 'pages',
       kind: 'step',
       title: 'Gene page data',
       chips: ['p2s_mapper'],
-      lines: ['one JSON file per gene'],
+      lines: ['one JSON per gene'],
     },
 
     {
       id: 'jbFiles',
       kind: 'file',
       title: 'site/jbrowse/',
-      lines: ['bigBed tracks', 'config.json'],
+      lines: ['bigBed, config.json'],
     },
     {
       id: 'data',
       kind: 'file',
       title: 'site/data/',
-      lines: [
-        'genes/*.json',
-        'genes.json, leads.json',
-        'summary.json, gpcr.json',
-        'isoforms/*.json',
-      ],
+      lines: ['genes/, isoforms/', 'summary, leads, gpcr'],
     },
 
     {
       id: 'jbrowse',
       kind: 'viewer',
       title: 'JBrowse 2',
-      lines: [
-        'Protein3d, MsaView,',
-        'opens at a variant;',
-        'UCSC tracks fetched live',
-      ],
+      lines: ['Protein3d, MsaView', 'UCSC tracks live'],
     },
     {
       id: 'astro',
       kind: 'viewer',
       title: 'Astro site',
-      lines: ['astro build → static', 'gene, leads, isoform', 'pages, blog'],
+      lines: ['static build', 'gene and leads pages'],
     },
     {
       id: 'prism',
       kind: 'viewer',
       title: 'Prism 3D viewer',
-      lines: [
-        'Mol* v6 build in gene',
-        'pages; AlphaFold DB',
-        'structures fetched live',
-      ],
+      lines: ['Mol* v6', 'AlphaFold DB live'],
     },
   ]
 }
 
+const toOut = [
+  'atlas',
+  'coords',
+  'clinvarStep',
+  'amStep',
+  'exp',
+  'ppiStep',
+  'crossStep',
+  'cons',
+  'gnomad',
+]
+
 export const edges: Edge[] = [
-  { from: 'uniprot', to: 'atlas' },
-  { from: 'ebi', to: 'coords' },
-  { from: 'clinvar', to: 'clinvarStep' },
-  { from: 'am', to: 'amStep' },
-  { from: 'pdb', to: 'exp' },
-  { from: 'ppi', to: 'ppiStep' },
-  { from: 'crossSource', to: 'crossStep' },
-  { from: 'ucsc', to: 'cons' },
-  { from: 'gnomadSource', to: 'gnomad' },
-  { from: 'gpcrdb', to: 'gpcr' },
-  { from: 'afdbIso', to: 'iso' },
-  ...[
-    'atlas',
-    'coords',
-    'clinvarStep',
-    'amStep',
-    'exp',
-    'ppiStep',
-    'crossStep',
-    'cons',
-    'gnomad',
-  ].map(from => ({ from, to: 'out' })),
+  ...toOut.map(from => ({ from, to: 'out' })),
   { from: 'gpcr', to: 'data', label: 'straight to the site' },
   { from: 'iso', to: 'data' },
   { from: 'out', to: 'tracks' },
@@ -282,32 +201,7 @@ export const edges: Edge[] = [
 ]
 
 export const columns = [
-  [
-    'uniprot',
-    'ebi',
-    'clinvar',
-    'am',
-    'pdb',
-    'ppi',
-    'crossSource',
-    'ucsc',
-    'gnomadSource',
-    'gpcrdb',
-    'afdbIso',
-  ],
-  [
-    'atlas',
-    'coords',
-    'clinvarStep',
-    'amStep',
-    'exp',
-    'ppiStep',
-    'crossStep',
-    'cons',
-    'gnomad',
-    'gpcr',
-    'iso',
-  ],
+  [...toOut, 'gpcr', 'iso'],
   ['out', 'tracks', 'analyze', 'pages'],
   ['jbFiles', 'data'],
   ['jbrowse', 'astro', 'prism'],
@@ -317,30 +211,56 @@ function quote(text: string) {
   return text.replaceAll('\\', '\\\\').replaceAll('"', '\\"')
 }
 
+function escapeHtml(text: string) {
+  return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;')
+}
+
 function label(node: Node) {
-  return [
-    node.title,
+  const body = [
     ...(node.chips ?? []).map(chip => `(${chip})`),
     ...(node.lines ?? []),
   ]
-    .map(quote)
-    .join('\\n')
+  return [
+    ...(node.source
+      ? [`<font color="gray40" point-size="14">${escapeHtml(node.source)}</font>`]
+      : []),
+    `<b>${escapeHtml(node.title)}</b>`,
+    ...body.map(escapeHtml),
+  ].join('<br/>')
 }
 
-function nodeAttributes(node: Node) {
-  return node.kind === 'file'
-    ? 'shape=folder'
-    : node.kind === 'viewer'
-      ? 'color="#3f9b78" penwidth=1.5'
-      : ''
+const FETCH_STAGE = { fill: '#dbe9f8', area: '#eef4fb', line: '#4a7fb5' }
+
+const STAGES = [
+  FETCH_STAGE,
+  { fill: '#f8e5bf', area: '#fbf3e4', line: '#b8832b' },
+  { fill: '#e4d9f5', area: '#f3eefb', line: '#7a5aa6' },
+  { fill: '#cdebdd', area: '#e9f6f0', line: '#3f9b78' },
+]
+
+const BYPASS = '#d0573a'
+
+function nodeAttributes(node: Node, stage: (typeof STAGES)[number]) {
+  return `${node.kind === 'file' ? 'shape=folder ' : ''}style=filled fillcolor="${stage.fill}" color="${stage.line}"`
 }
 
 function cluster(ids: string[], index: number, all: Node[]) {
+  const stage = STAGES[index] ?? FETCH_STAGE
   const members = all.filter(node => ids.includes(node.id)).toReversed()
   return `subgraph cluster_${index} {
     label="${quote(COLUMNS[index] ?? '')}"
-    ${members.map(node => `${node.id} [label="${label(node)}" ${nodeAttributes(node)}];`).join('\n    ')}
+    style="rounded,filled" fillcolor="${stage.area}" color="${stage.line}"
+    ${members.map(node => `${node.id} [label=<${label(node)}> ${nodeAttributes(node, stage)}];`).join('\n    ')}
   }`
+}
+
+function edgeAttributes(edge: Edge) {
+  const bypass = edge.to === 'data' && edge.from !== 'pages'
+  return [
+    `color="${bypass ? BYPASS : 'gray40'}"`,
+    `fontcolor="${BYPASS}"`,
+    edge.label ? `label="${quote(edge.label)}"` : '',
+  ].join(' ')
 }
 
 export function architectureDot(numbers: Numbers) {
@@ -348,13 +268,13 @@ export function architectureDot(numbers: Numbers) {
   return `digraph architecture {
   rankdir=LR
   bgcolor=white
-  nodesep=0.25
-  ranksep=0.6
-  graph [fontname="Helvetica" fontsize=15 color=gray style=rounded]
-  node [shape=box fontname="Helvetica" fontsize=14]
-  edge [fontname="Helvetica" fontsize=12 arrowsize=0.7]
+  nodesep=0.12
+  ranksep=0.35
+  graph [fontname="Helvetica" fontsize=18]
+  node [shape=box fontname="Helvetica" fontsize=18 penwidth=1.3]
+  edge [fontname="Helvetica" fontsize=15 arrowsize=0.7]
   ${columns.map((ids, index) => cluster(ids, index, all)).join('\n  ')}
-  ${edges.map(edge => `${edge.from} -> ${edge.to}${edge.label ? ` [label="${quote(edge.label)}"]` : ''};`).join('\n  ')}
+  ${edges.map(edge => `${edge.from} -> ${edge.to} [${edgeAttributes(edge)}];`).join('\n  ')}
 }`
 }
 

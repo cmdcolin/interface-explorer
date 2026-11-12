@@ -18,7 +18,7 @@ const svg = architectureSvg({ proteins: s.proteins, contact: t.contact, ipsae: t
   </p>
 
   <figure class="architecture">
-    <div class="architecture-scroll" role="img" aria-label="Pipeline diagram. UniProt and AlphaFold DB, the EBI Proteins API, ClinVar, AlphaMissense, RCSB PDB and PDBe SIFTS, IntAct and BioGRID, Complex Portal and STRING, UCSC phyloP, gnomAD, GPCRdb and PDBe, and AlphaFold DB isoforms each feed a fetch step. Most steps write cached results to out/, which are combined into bigBed tracks for JBrowse, enrichment statistics, and per-gene JSON for the Astro site. The GPCR and isoform steps write straight to site/data/. The Astro site embeds the Prism 3D viewer.">
+    <div class="architecture-scroll" role="img" aria-label="Pipeline diagram. Eleven fetch steps each name their public source: UniProt and AlphaFold DB, the EBI Proteins API, ClinVar, AlphaMissense, RCSB PDB and PDBe SIFTS, IntAct and BioGRID, Complex Portal and STRING, UCSC phyloP, gnomAD, GPCRdb and PDBe, and AlphaFold DB isoforms. Most steps write cached results to out/, which are combined into bigBed tracks for JBrowse, enrichment statistics, and per-gene JSON for the Astro site. The GPCR and isoform steps write straight to site/data/. The Astro site embeds the Prism 3D viewer.">
       <Fragment set:html={svg} />
     </div>
     <figcaption>
