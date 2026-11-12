@@ -8,7 +8,17 @@ import {
 } from '../../../src/links.ts'
 import Layout from '../../layouts/Layout.astro'
 import { gene as readGene, geneRows, isoformIndex, summary } from '../../lib/data.ts'
-import { LABEL_KEYS, amCell, chip, clinvarHref, conditionCell, esc, percent } from '../../lib/html.ts'
+import {
+  LABEL_KEYS,
+  amCell,
+  chip,
+  clinvarHref,
+  conditionCell,
+  conservedCell,
+  esc,
+  percent,
+  phylopCell,
+} from '../../lib/html.ts'
 import { pathogenicAtSameResidue, proteinMap, variantData } from '../../lib/maps.ts'
 import { initialPartner, stories, structureData } from '../../lib/structure.ts'
 import { JBROWSE, geneHref, href, isoformHref } from '../../lib/site.ts'
@@ -18,7 +28,8 @@ export function getStaticPaths() {
 }
 
 const gene = readGene(Astro.params.page ?? '')
-const { alphaMissense: am, thresholds } = summary()
+const { alphaMissense: am, thresholds, conservation } = summary()
+const edges = conservation.variants.edges
 const pages = new Map(geneRows().map(row => [row.accession, row.page]))
 const sameResidue = pathogenicAtSameResidue(gene)
 const partnerHref = (accession: string | null) => {
@@ -44,11 +55,12 @@ const rows = gene.variants
     const partners = gene.partners.filter(p => v.partners.includes(p.gene))
     const partnerLinks = (shown: typeof partners) =>
       shown.map(p => `<a href="${sessionUrl(variantSpec(gene, v, p), JBROWSE)}">${esc(p.gene)}</a>`).join(', ')
-    return `<tr ${variantData(v, same)} data-position="${v.position}" data-partners="${esc(partners.map(p => p.gene).join(','))}" data-am="${v.alphaMissense ?? -1}">
+    return `<tr ${variantData(v, same)} data-position="${v.position}" data-partners="${esc(partners.map(p => p.gene).join(','))}" data-am="${v.alphaMissense ?? -1}" data-phylop="${v.phylop ?? -99}">
       <td>${esc(v.change)}${same.length ? `<div class="cell-note" title="A pathogenic substitution at the same residue">pathogenic ${same.map(esc).join(', ')} here</div>` : ''}</td>
       <td class="nowrap">${chip(v.label)} <a href="${clinvarHref(v.variation)}" title="${esc(v.review)}">VCV${String(v.variation).padStart(9, '0')}</a></td>
       <td>${conditionCell(v.conditions)}</td>
       <td class="num">${amCell(v.alphaMissense, am)}</td>
+      <td class="num">${phylopCell(v.phylop, edges)}</td>
       <td class="nowrap">${partnerLinks(partners.slice(0, SHOWN_PARTNERS))}${partners.length > SHOWN_PARTNERS ? `<details class="more"><summary>+${partners.length - SHOWN_PARTNERS} more</summary>${partnerLinks(partners.slice(SHOWN_PARTNERS))}</details>` : ''}</td>
       <td class="nowrap"><a href="${genomeUrl(v.chrom, v.pos - 30, v.pos + 30, JBROWSE)}">chr${esc(v.chrom)}:${v.pos.toLocaleString()}</a></td>
     </tr>`
@@ -117,6 +129,7 @@ const rows = gene.variants
           <th>Interface residues</th>
           <th class="num" title="ClinVar missense variants at this partner's interface">Variants</th>
           <th title="The PDB entry holding both proteins, and the share of its contact residues the prediction also found">Experiment</th>
+          <th class="num" title="The share of same-size patches on the rest of this protein's folded surface that the interface is more conserved than, across 100 vertebrates. A random patch would beat about half.">Conserved</th>
           <th>Complex</th>
         </tr>
       </thead>
@@ -161,6 +174,7 @@ const rows = gene.variants
                   <span class="muted" title="No PDB entry holding both proteins could be compared">—</span>
                 )}
               </td>
+              <td class="num" set:html={conservedCell(p.conserved)} />
               <td class="nowrap">
                 <a href={sessionUrl(complexSpec(gene.gene, p.entity, locus), JBROWSE)}>3D + genome</a> ·
                 <a href={`https://alphafold.ebi.ac.uk/entry/${p.entity}`}>AFDB</a>
@@ -171,6 +185,11 @@ const rows = gene.variants
       </tbody>
     </table>
   </div>
+  <p class="muted">
+    Conserved: the share of patches of the same size on the rest of {gene.gene}'s folded surface that the interface is more
+    conserved than, across 100 vertebrates. A random patch beats about half; see
+    <a href={href('blog/2026-11-12-are-the-interfaces-real/#against-evolution')}>Are the interfaces real?</a>
+  </p>
   <h2>ClinVar missense variants at an interface</h2>
   <div class="toolbar filters">
     {
@@ -192,6 +211,7 @@ const rows = gene.variants
       <select id="variant-sort">
         <option value="position">position</option>
         <option value="alphaMissense">AlphaMissense</option>
+        <option value="phylop">conservation</option>
       </select>
     </label>
     <label>
@@ -205,12 +225,14 @@ const rows = gene.variants
   <p class="muted">
     <a href="https://doi.org/10.1126/science.adg7492">AlphaMissense</a> predicts how likely a substitution is to be
     pathogenic, from 0 to 1: above {am.likelyPathogenic} is likely pathogenic, below {am.likelyBenign} likely benign. It is
-    a prediction from sequence and the single-protein structure, and does not see the partner.
+    a prediction from sequence and the single-protein structure, and does not see the partner. phyloP is the conservation
+    of the changed base across 100 vertebrates: above {edges[2]} is the most conserved quarter of these variants, below
+    {edges[0]} the least. See <a href={href('blog/2026-11-12-disease-variants-cluster/#conservation-explains-only-part-of-it')}>how conservation bears on the interface finding</a>.
   </p>
   <div class="table-wrap">
     <table id="variants">
       <thead>
-        <tr><th>Change</th><th>ClinVar</th><th>Condition</th><th class="num">AlphaMissense</th><th title="Partners whose interface holds this residue; each opens the variant in 3D with that partner">3D</th><th>Genome</th></tr>
+        <tr><th>Change</th><th>ClinVar</th><th>Condition</th><th class="num">AlphaMissense</th><th class="num" title="Conservation of the changed base across 100 vertebrates">phyloP</th><th title="Partners whose interface holds this residue; each opens the variant in 3D with that partner">3D</th><th>Genome</th></tr>
       </thead>
       <tbody set:html={rows} />
     </table>

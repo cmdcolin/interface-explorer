@@ -1,9 +1,11 @@
 export const CLINVAR_TRACK = 'hg38-clinvarMain'
+export const PHYLOP_TRACK = 'hg38-phyloP100way'
 export const INTERFACE_TRACKS = [
   'hg38-ncbiRefSeqCurated',
   'interfaces',
   'interface-variants',
   CLINVAR_TRACK,
+  PHYLOP_TRACK,
 ]
 export const ISOFORM_TRACKS = ['hg38-ncbiRefSeqCurated', CLINVAR_TRACK]
 export const GPCR_TRACKS = [

@@ -17,13 +17,21 @@ import {
 } from './atlasData.ts'
 import type { AtlasProtein } from './atlasData.ts'
 import { downloaded } from './clinvar.ts'
-import { CONSERVATION } from './conservation.ts'
+import {
+  CONSERVATION,
+  cachedCodonScores,
+  readPatchRanks,
+  variantScore,
+} from './conservation.ts'
+import type { PatchRank } from './conservation.ts'
 import { readComparisons, validation } from './experimental.ts'
 import type { Comparison } from './experimental.ts'
+import type { ScoredVariant } from './analyze.ts'
 import { CONFIDENT, CONTACT, LABELS, MIN_PLDDT } from './constants.ts'
 import { codingPositions } from './coordinates.ts'
 import type { CodingPositions } from './coordinates.ts'
 import { readJson, record, writeJson } from './json.ts'
+import { pythonRound } from './numeric.ts'
 import { OUT, SITE_DATA } from './paths.ts'
 import { diseaseFeatures } from './uniprot.ts'
 import type { Feature } from './uniprot.ts'
@@ -80,14 +88,19 @@ function experimentOf(comparison: Comparison | undefined) {
     : undefined
 }
 
+function rounded(value: number | undefined) {
+  return value === undefined ? undefined : pythonRound(value, 2)
+}
+
 export function geneRecord(
   protein: AtlasProtein,
-  variants: Variant[],
+  variants: ScoredVariant[],
   coding: Pick<CodingPositions, 'chrom' | 'strand' | 'start' | 'end'>,
   scores = new Map<string, number>(),
   experiments = new Map<string, Comparison>(),
   chains = new Map<string, string | undefined>(),
   features: Feature[] = [],
+  patchRanks = new Map<string, PatchRank>(),
 ) {
   const atResidue = new Map<number, string[]>()
   const partners = protein.interfaces
@@ -113,6 +126,7 @@ export function geneRecord(
         residues: residues.length,
         runs: runs(residues),
         experiment: experimentOf(experiments.get(complex.entity)),
+        conserved: patchRanks.get(complex.entity),
       }
     })
   const atInterface = variants.flatMap(variant => {
@@ -123,6 +137,7 @@ export function geneRecord(
             change: variant.change,
             label: variant.label,
             alphaMissense: scores.get(variant.change),
+            phylop: rounded(variant.phylop),
             position: variant.position,
             partners: [...new Set(names)].sort(),
             variation: variant.variation,
@@ -211,18 +226,23 @@ async function main() {
   const experiments = Map.groupBy(comparisons, pair => pair.accession)
   const analysis = record(readJson(join(OUT, 'analysis.json')))
   const conservation = record(readJson(CONSERVATION))
+  const patchRanks = readPatchRanks()
   const mapped = await Promise.all(
     proteins.map(async protein => ({
       protein,
       coding: await codingPositions(protein.accession, protein.length),
     })),
   )
-  const genes = mapped.flatMap(({ protein, coding }) =>
-    coding
+  const genes = mapped.flatMap(({ protein, coding }) => {
+    const codons = cachedCodonScores(protein.accession)
+    return coding
       ? [
           geneRecord(
             protein,
-            variants.get(protein.accession) ?? [],
+            (variants.get(protein.accession) ?? []).map(variant => ({
+              ...variant,
+              phylop: codons && variantScore(variant, coding, codons),
+            })),
             coding,
             scores.get(protein.accession),
             new Map(
@@ -237,10 +257,28 @@ async function main() {
               ]),
             ),
             features.get(protein.accession),
+            new Map(
+              protein.interfaces.flatMap(complex => {
+                const rank = patchRanks.get(
+                  `${protein.accession} ${complex.entity}`,
+                )
+                return rank
+                  ? [
+                      [
+                        complex.entity,
+                        {
+                          anywhere: rounded(rank.anywhere),
+                          nearby: rounded(rank.nearby),
+                        },
+                      ] satisfies [string, PatchRank],
+                    ]
+                  : []
+              }),
+            ),
           ),
         ]
-      : [],
-  )
+      : []
+  })
   const unmapped = mapped.flatMap(({ protein, coding }) =>
     coding ? [] : [protein.gene],
   )

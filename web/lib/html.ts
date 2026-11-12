@@ -1,3 +1,4 @@
+import type { PatchRank } from '../../src/conservation.ts'
 import type { Label } from './types.ts'
 
 export const LABELS: Record<Label, string> = {
@@ -47,6 +48,23 @@ export function amCell(
   return score === undefined
     ? '<span class="muted" title="AlphaMissense has no score for this substitution">—</span>'
     : `<span class="count ${amClass(score, thresholds)}" title="AlphaMissense: ${AM_TITLE[amClass(score, thresholds)]}">${score.toFixed(2)}</span>`
+}
+
+const QUARTERS = ['least', 'second least', 'second most', 'most']
+
+export function phylopCell(score: number | undefined, edges: number[]) {
+  const quarter =
+    QUARTERS[edges.filter(edge => (score ?? -Infinity) >= edge).length]
+  return score === undefined
+    ? '<span class="muted" title="No phyloP score at this base">—</span>'
+    : `<span title="phyloP across 100 vertebrates at the changed base: in the ${quarter} conserved quarter of ClinVar variants in proteins with a predicted partner">${score.toFixed(1)}</span>`
+}
+
+export function conservedCell(rank: PatchRank | undefined) {
+  const share = (x: number) => `${Math.round(100 * x)}%`
+  return rank?.anywhere === undefined
+    ? '<span class="muted" title="Too little other folded surface on this protein to compare with">—</span>'
+    : `<span title="Across 100 vertebrates, this interface is more conserved than ${share(rank.anywhere)} of patches of the same size on the rest of the protein's folded surface${rank.nearby === undefined ? '' : `, and ${share(rank.nearby)} of those within 25 Å of it`}. A random patch would beat about half.">${share(rank.anywhere)}</span>`
 }
 
 export function conditionCell(conditions: string[]) {

@@ -69,6 +69,53 @@ test('an interface variant carries its AlphaMissense score', () => {
   ])
 })
 
+test('a partner carries its patch rank, and an interface variant its phyloP', () => {
+  const record = geneRecord(
+    {
+      accession: 'P00001',
+      gene: 'GENE',
+      length: 100,
+      context: {},
+      complexes: 1,
+      hetero: 1,
+      interfaces: [
+        {
+          entity: 'AF-1',
+          partner: 'P00002',
+          partner_gene: 'PARTNER',
+          modelled_as: null,
+          iptm: 0.8,
+          ipsae: 0.7,
+          pdockq: 0.5,
+          residues: { 10: 90 },
+        },
+      ],
+    },
+    [
+      {
+        position: 10,
+        label: 'uncertain',
+        change: 'A10V',
+        variation: 1,
+        review: '',
+        chrom: '1',
+        pos: 100,
+        allele: 'C>T',
+        conditions: [],
+        phylop: 6.4371,
+      },
+    ],
+    { chrom: 'chr1', strand: '+', start: 1, end: 300 },
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    new Map([['AF-1', { anywhere: 0.93, nearby: 0.8 }]]),
+  )
+  expect(record.partners[0]?.conserved).toEqual({ anywhere: 0.93, nearby: 0.8 })
+  expect(record.variants[0]?.phylop).toBe(6.44)
+})
+
 test('AlphaMissense calls are counted per ClinVar label, over scored variants', () => {
   expect(
     alphaMissenseCalls([

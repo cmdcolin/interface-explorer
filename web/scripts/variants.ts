@@ -30,11 +30,16 @@ function render() {
   for (const mark of marks) {
     mark.style.display = visible(mark) ? '' : 'none'
   }
-  const key = sort?.value === 'alphaMissense' ? 'am' : 'position'
+  const key =
+    sort?.value === 'alphaMissense'
+      ? 'am'
+      : sort?.value === 'phylop'
+        ? 'phylop'
+        : 'position'
   const order = (row: HTMLTableRowElement) => Number(row.dataset[key])
   body?.append(
     ...rows.toSorted((a, b) =>
-      key === 'am' ? order(b) - order(a) : order(a) - order(b),
+      key === 'position' ? order(a) - order(b) : order(b) - order(a),
     ),
   )
 }

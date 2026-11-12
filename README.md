@@ -29,13 +29,18 @@ one.
   it. The address then holds the view (`?partner=GNB1&residue=23`), so it can be
   shared. When the partner is a disease protein too, its side of the interface
   and its variants are painted the same way, and the sentence links to its page;
-  1,422 of the partner views have such a side. The page lists the ClinVar variants at an interface, each with its
-  AlphaMissense score, and they can be narrowed to one ClinVar condition. It
-  also launches JBrowse on the genome, or a variant inside its complex beside
-  the genome with the variant marked.
+  1,422 of the partner views have such a side. The partners table gives how
+  conserved each interface is across 100 vertebrates: the share of same-size
+  patches on the rest of the protein's surface it beats. The page lists the
+  ClinVar variants at an interface, each with its AlphaMissense score and the
+  phyloP of its base, and they can be narrowed to one ClinVar condition. It
+  also launches JBrowse on the genome, with the phyloP track under the
+  interface and ClinVar tracks, or a variant inside its complex beside the
+  genome with the variant marked.
 - **Leads:** the 675 variants of uncertain significance that change an
   interface residue where a different substitution is already classified
-  pathogenic, ranked by AlphaMissense score. Each opens on its gene page in 3D,
+  pathogenic, ranked by AlphaMissense score, with the phyloP of each changed
+  base. Each opens on its gene page in 3D,
   zoomed to the residue.
 - **Isoforms:** for disease genes with AlphaFold DB isoform models, where each
   isoform differs from the canonical protein, whether the part they share keeps

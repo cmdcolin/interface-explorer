@@ -2,7 +2,7 @@
 import { complexSpec, genomeUrl, sessionUrl } from '../../src/links.ts'
 import Layout from '../layouts/Layout.astro'
 import { leadRows, summary } from '../lib/data.ts'
-import { amCell, clinvarHref, conditionCell, esc } from '../lib/html.ts'
+import { amCell, clinvarHref, conditionCell, esc, phylopCell } from '../lib/html.ts'
 import { JBROWSE, geneHref, href } from '../lib/site.ts'
 import { sortableTable } from '../lib/table.ts'
 
@@ -29,6 +29,12 @@ const table = sortableTable({
       sort: lead => lead.knownConditions[0] ?? '',
     },
     { label: 'AlphaMissense', num: true, cell: lead => amCell(lead.alphaMissense, am), sort: lead => lead.alphaMissense ?? -1 },
+    {
+      label: 'phyloP',
+      num: true,
+      cell: lead => phylopCell(lead.phylop, s.conservation.variants.edges),
+      sort: lead => lead.phylop ?? -99,
+    },
     { label: 'Pathogenic at this residue', cell: lead => lead.sameResidue.map(esc).join(', '), sort: lead => lead.sameResidue.length },
     {
       label: 'Other pathogenic residues on the interface',
@@ -64,7 +70,9 @@ const table = sortableTable({
   <p class="note">
     A pathogenic substitution at the same residue is evidence clinical guidelines already count towards pathogenicity; the
     interface adds a hypothesis for why the residue matters. These are leads, not classifications: a milder substitution at
-    the same residue can be harmless. AlphaMissense above {am.likelyPathogenic} is likely pathogenic. See
+    the same residue can be harmless. AlphaMissense above {am.likelyPathogenic} is likely pathogenic; phyloP is the
+    conservation of the changed base across 100 vertebrates, the most conserved quarter above
+    {s.conservation.variants.edges[2]}. See
     <a href={href('about/')}>About</a>.
   </p>
   <Fragment set:html={table} />

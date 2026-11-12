@@ -26,7 +26,16 @@ import { squaredDistance } from './contacts.ts'
 import type { Point } from './contacts.ts'
 import { codingPositions, mergeBlocks } from './coordinates.ts'
 import type { CodingPositions } from './coordinates.ts'
-import { list, number, readJson, writeAtomically, writeJson } from './json.ts'
+import {
+  list,
+  number,
+  readJson,
+  record,
+  records,
+  text,
+  writeAtomically,
+  writeJson,
+} from './json.ts'
 import { nanPercentile, pythonRound, seededRandom } from './numeric.ts'
 import { DATA, OUT } from './paths.ts'
 import { readVariants } from './variants.ts'
@@ -44,6 +53,11 @@ const QUARTERS = [0, 1, 2, 3]
 const NEIGHBOURHOOD = 25
 
 type CodonScores = (number | null)[][]
+
+export interface PatchRank {
+  anywhere?: number
+  nearby?: number
+}
 
 export interface Residue {
   stratum: string
@@ -109,6 +123,31 @@ async function fetchCodons(
 function readCodons(path: string): CodonScores {
   return list(readJson(path)).map(codon =>
     list(codon).map(s => number(s) ?? null),
+  )
+}
+
+export function cachedCodonScores(accession: string) {
+  const path = join(CACHE, `${accession}.json`)
+  return existsSync(path) ? readCodons(path) : undefined
+}
+
+export function readPatchRanks() {
+  return new Map(
+    records(record(readJson(CONSERVATION)).complexes).flatMap(complex => {
+      const accession = text(complex.accession)
+      const entity = text(complex.entity)
+      return accession !== undefined && entity !== undefined
+        ? [
+            [
+              `${accession} ${entity}`,
+              {
+                anywhere: number(complex.anywhere),
+                nearby: number(complex.nearby),
+              },
+            ] satisfies [string, PatchRank],
+          ]
+        : []
+    }),
   )
 }
 
@@ -489,7 +528,7 @@ export async function main(workers = 4) {
       scores,
       monomerCentres(protein.accession),
       random,
-    ),
+    ).map(d => ({ ...d, accession: protein.accession })),
   )
   const result = {
     source: PHYLOP,
@@ -540,7 +579,19 @@ export async function main(workers = 4) {
       ),
     },
   }
-  writeJson(CONSERVATION, result, 2)
+  writeJson(
+    CONSERVATION,
+    {
+      ...result,
+      complexes: differences.map(d => ({
+        accession: d.accession,
+        entity: d.entity,
+        anywhere: d.anywhere.interface,
+        nearby: d.nearby.interface,
+      })),
+    },
+    2,
+  )
   console.log(JSON.stringify(result, undefined, 2))
 }
 
