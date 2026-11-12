@@ -129,6 +129,7 @@ export interface Summary {
     clinvarDownloaded: string
     intactDownloaded: string
     biogridRelease: string
+    complexPortalDownloaded: string
   }
 }
 

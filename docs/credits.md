@@ -18,6 +18,10 @@ assistance.
 - [IntAct](https://www.ebi.ac.uk/intact/) (EMBL-EBI, CC-BY 4.0) and
   [BioGRID](https://thebiogrid.org/) (MIT) reported interactions, classified
   with the [PSI-MI](https://github.com/HUPO-PSI/psi-mi-CV) ontology.
+- [Complex Portal](https://www.ebi.ac.uk/complexportal/) (EMBL-EBI, CC-BY 4.0)
+  curated complexes, [STRING](https://string-db.org/) (CC-BY 4.0) protein IDs,
+  and [PDBe PISA](https://www.ebi.ac.uk/pdbe/pisa/) interfaces, linked from
+  each pair.
 - [Mol\*](https://molstar.org/) (MIT): the 3D view.
 - [EBI Proteins API](https://www.ebi.ac.uk/proteins/api/doc/) protein → genome
   coordinates.

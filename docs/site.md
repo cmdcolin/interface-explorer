@@ -7,7 +7,8 @@
   residues and the ClinVar variants on them (with whether a residue is at its only
   interface or shared, and which partner causes the same disease or one in the
   same OMIM phenotypic series), a protein map with UniProt domains
-  and regions, whether IntAct or BioGRID report each pair (with its papers),
+  and regions, whether IntAct or BioGRID report each pair (with its papers and
+  links to the pair in IntAct, STRING, Complex Portal and PDBe PISA),
   and a JBrowse launch. Hovering links the map and the 3D view,
   and the address holds the view (`?partner=GNB1&residue=23`) so it can be
   shared.

@@ -1,4 +1,5 @@
 import type { PatchRank } from '../../src/conservation.ts'
+import type { Complex } from '../../src/crossrefs.ts'
 import type { PairEvidence } from '../../src/interactions.ts'
 import {
   ALPHAMISSENSE_EVIDENCE,
@@ -67,12 +68,50 @@ export function pubmedHref(publications: string[]) {
     : undefined
 }
 
-export function reportedCell(reported: PairEvidence | undefined) {
+export function intactHref(a: string, b: string) {
+  return `https://www.ebi.ac.uk/intact/search?query=${encodeURIComponent(`id:${a} AND id:${b}`)}&advancedSearch=true#interactionTable`
+}
+
+export function stringHref([a, b]: [string, string]) {
+  return `https://string-db.org/interaction/${a}/${b}`
+}
+
+export function pisaHref(pdb: string) {
+  return `https://www.ebi.ac.uk/msd-srv/prot_int/cgi-bin/piserver?qi=${pdb.toLowerCase()}`
+}
+
+interface ReportedPartner {
+  accession: string | null
+  homodimer: boolean
+  reported?: PairEvidence
+  complexes: Complex[]
+  string?: [string, string]
+}
+
+export function reportedCell(accession: string, partner: ReportedPartner) {
+  const { reported, complexes } = partner
   const papers = (n: number) => `${n} paper${n === 1 ? '' : 's'}`
   const link = reported && pubmedHref(reported.publications)
-  return reported
-    ? `<span title="${esc(`IntAct or BioGRID report this pair ${reported.evidence === 'direct' ? 'binding directly' : 'only in the same complex'}, by ${reported.methods.join(', ')}`)}">${reported.evidence === 'direct' ? 'direct' : 'same complex'}</span> <span class="muted">${link ? `<a href="${esc(link)}">${papers(reported.publications.length)}</a>` : papers(reported.publications.length)}</span>`
+  const [complex] = complexes
+  const links = [
+    reported?.databases.includes('IntAct') &&
+    partner.accession &&
+    !partner.homodimer
+      ? `<a href="${esc(intactHref(accession, partner.accession))}" title="IntAct's records of this pair: method, constructs and figure for each">IntAct</a>`
+      : '',
+    partner.string
+      ? `<a href="${esc(stringHref(partner.string))}" title="STRING's evidence for this pair, the list AlphaFold DB chose its pairs from">STRING</a>`
+      : '',
+    complex
+      ? `<a href="https://www.ebi.ac.uk/complexportal/complex/${esc(complex.ac)}" title="${esc(`Complex Portal curates ${complexes.length === 1 ? 'a complex' : `${complexes.length} complexes`} holding both: ${complexes.map(c => c.name).join('; ')}`)}">Complex Portal${complexes.length > 1 ? ` (${complexes.length})` : ''}</a>`
+      : '',
+  ].filter(Boolean)
+  const value = reported
+    ? `<span title="${esc(`${reported.databases.join(' and ')} report${reported.databases.length === 1 ? 's' : ''} this pair ${reported.evidence === 'direct' ? 'binding directly' : 'only in the same complex'}, by ${reported.methods.join(', ')}`)}">${reported.evidence === 'direct' ? 'direct' : 'same complex'}</span> <span class="muted">${link ? `<a href="${esc(link)}">${papers(reported.publications.length)}</a>` : papers(reported.publications.length)}</span>`
     : '<span class="muted" title="Neither IntAct nor BioGRID reports this pair: the prediction is the only evidence">—</span>'
+  return links.length
+    ? `${value}<div class="cell-note">${links.join(' · ')}</div>`
+    : value
 }
 
 export function conditionCell(conditions: string[]) {

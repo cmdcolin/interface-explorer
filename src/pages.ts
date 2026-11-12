@@ -35,6 +35,8 @@ import {
 } from './constants.ts'
 import { codingPositions } from './coordinates.ts'
 import type { CodingPositions } from './coordinates.ts'
+import { readCrossrefs } from './crossrefs.ts'
+import type { Complex } from './crossrefs.ts'
 import { pairKey, readInteractions, readSources } from './interactions.ts'
 import type { PairEvidence } from './interactions.ts'
 import { readJson, record, writeJson } from './json.ts'
@@ -102,6 +104,12 @@ function rounded(value: number | undefined) {
   return value === undefined ? undefined : pythonRound(value, 2)
 }
 
+function stringPair(own: string | undefined, partner: string | undefined) {
+  return own && partner
+    ? ([own, partner] satisfies [string, string])
+    : undefined
+}
+
 export function geneRecord(
   protein: AtlasProtein,
   variants: ScoredVariant[],
@@ -114,6 +122,10 @@ export function geneRecord(
   contexts = new Map<string, ProteinContext>(),
   sharedDiseases = (_variant: Variant, _partner: string): SharedDisease[] => [],
   interactions = new Map<string, PairEvidence>(),
+  crossrefs = {
+    complexes: new Map<string, Complex[]>(),
+    string: new Map<string, string>(),
+  },
 ) {
   const atResidue = new Map<number, string[]>()
   const partners = protein.interfaces
@@ -139,6 +151,17 @@ export function geneRecord(
         residues: residues.length,
         runs: runs(residues),
         experiment: experimentOf(experiments.get(complex.entity)),
+        complexes: complex.partner
+          ? (crossrefs.complexes.get(
+              pairKey(protein.accession, complex.partner),
+            ) ?? [])
+          : [],
+        string: stringPair(
+          crossrefs.string.get(protein.accession),
+          complex.partner && complex.partner !== protein.accession
+            ? crossrefs.string.get(complex.partner)
+            : undefined,
+        ),
         reported: complex.partner
           ? interactions.get(pairKey(protein.accession, complex.partner))
           : undefined,
@@ -394,6 +417,7 @@ async function main() {
   const ontology = await readOntology()
   const diseases = await humanDiseases()
   const interactions = readInteractions()
+  const crossrefs = readCrossrefs()
   const comparisons = readComparisons()
   const experiments = Map.groupBy(comparisons, pair => pair.accession)
   const analysis = record(readJson(join(OUT, 'analysis.json')))
@@ -451,6 +475,7 @@ async function main() {
             (variant, partner) =>
               ontology.shared(variant.diseases, diseases.get(partner) ?? []),
             interactions,
+            crossrefs,
           ),
         ]
       : []
@@ -552,7 +577,11 @@ async function main() {
     },
     validation: validation(comparisons),
     thresholds: { ipsae: CONFIDENT, plddt: MIN_PLDDT, contact: CONTACT },
-    provenance: { clinvarDownloaded: downloaded(), ...readSources() },
+    provenance: {
+      clinvarDownloaded: downloaded(),
+      ...readSources(),
+      complexPortalDownloaded: crossrefs.complexPortalDownloaded,
+    },
   }
   writeJson(join(SITE_DATA, 'genes.json'), index)
   writeJson(join(SITE_DATA, 'leads.json'), shortlist)

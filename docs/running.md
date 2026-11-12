@@ -16,6 +16,9 @@
   release and the PSI-MI ontology, and writes `out/interactions.json`: each
   predicted pair either database reports, as direct or same-complex, with its
   publications and methods.
+- `pnpm crossrefs`: downloads Complex Portal's human complexes and maps each
+  protein to its STRING ID, into `out/crossrefs.json`, for the gene pages'
+  links to each pair in IntAct, STRING and Complex Portal.
 - `pnpm analyze`: the enrichment, overall, by confidence band, by
   AlphaMissense evidence band and by the pair's reported evidence, in
   `out/analysis.json`.

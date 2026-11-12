@@ -131,6 +131,7 @@ test('IntAct co-purification is same-complex evidence, on the canonical accessio
     ),
   ).toEqual({
     accessions: ['P04637', 'Q00987'],
+    database: 'IntAct',
     evidence: 'complex',
     method: 'anti tag coimmunoprecipitation',
     publication: '12345',
@@ -182,12 +183,14 @@ test('BioGRID gives one report per pair of Swiss-Prot accessions', () => {
   expect(biogridReports(biogridRow())).toEqual([
     {
       accessions: ['P04637', 'Q00987'],
+      database: 'BioGRID',
       evidence: 'direct',
       method: 'Two-hybrid',
       publication: '32296183',
     },
     {
       accessions: ['P04637', 'Q9XXXX'],
+      database: 'BioGRID',
       evidence: 'direct',
       method: 'Two-hybrid',
       publication: '32296183',
@@ -217,6 +220,9 @@ test('a pair is direct when any report is, and keeps every publication', async (
   const found = await collect(
     [
       ...biogridReports(biogridRow({ system: 'Affinity Capture-MS' })),
+      ...[
+        intactReport(intactRow({ publications: 'pubmed:999' }), PARENTS),
+      ].flatMap(report => report ?? []),
       ...biogridReports(biogridRow({ b: 'Q00987', publication: 'PUBMED:999' })),
       ...biogridReports(
         biogridRow({ a: 'P11111', b: 'P22222', system: 'Co-fractionation' }),
@@ -226,8 +232,13 @@ test('a pair is direct when any report is, and keeps every publication', async (
   )
   expect(found.get(pairKey('P04637', 'Q00987'))).toEqual({
     evidence: 'direct',
+    databases: ['IntAct', 'BioGRID'],
     publications: ['32296183', '999'],
-    methods: ['Affinity Capture-MS', 'Two-hybrid'],
+    methods: [
+      'Affinity Capture-MS',
+      'Two-hybrid',
+      'anti tag coimmunoprecipitation',
+    ],
   })
   expect(found.get(pairKey('P11111', 'P22222'))?.evidence).toBe('complex')
   expect(found.has(pairKey('P04637', 'Q9XXXX'))).toBe(false)

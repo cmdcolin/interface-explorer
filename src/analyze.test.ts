@@ -157,7 +157,12 @@ test('evidence bands rank each residue by its best-supported confident partner',
   const interactions = new Map([
     [
       'P1 P2',
-      { evidence: 'direct' as const, publications: ['1'], methods: [] },
+      {
+        evidence: 'direct' as const,
+        databases: [],
+        publications: ['1'],
+        methods: [],
+      },
     ],
   ])
   expect(interfaceScore(PROTEIN, byEvidence(interactions))).toEqual(

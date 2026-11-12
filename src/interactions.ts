@@ -22,6 +22,8 @@ const HUMAN = '9606'
 
 export const EVIDENCE = ['direct', 'complex'] as const
 export type Evidence = (typeof EVIDENCE)[number]
+export const DATABASES = ['IntAct', 'BioGRID'] as const
+export type Database = (typeof DATABASES)[number]
 
 const TERMS = {
   association: 'MI:0914',
@@ -53,6 +55,7 @@ const BIOGRID_SYSTEMS = new Map<string, Evidence>([
 
 export interface Report {
   accessions: [string, string]
+  database: Database
   evidence: Evidence
   method: string
   publication: string
@@ -60,6 +63,7 @@ export interface Report {
 
 export interface PairEvidence {
   evidence: Evidence
+  databases: Database[]
   publications: string[]
   methods: string[]
 }
@@ -133,6 +137,7 @@ export function intactReport(
     !within(method.id, TERMS.proximityLabelling, TERMS.proximityLigation)
     ? {
         accessions: [a, b],
+        database: 'IntAct',
         evidence:
           within(type.id, TERMS.directInteraction) ||
           within(
@@ -169,6 +174,7 @@ export function biogridReports(fields: string[]): Report[] {
     fields[16] === HUMAN
     ? pairs.map(accessions => ({
         accessions,
+        database: 'BioGRID' as const,
         evidence,
         method: fields[11] ?? '',
         publication:
@@ -185,17 +191,24 @@ export async function collect(
 ) {
   const found = new Map<
     string,
-    { direct: boolean; publications: Set<string>; methods: Set<string> }
+    {
+      direct: boolean
+      databases: Set<Database>
+      publications: Set<string>
+      methods: Set<string>
+    }
   >()
   for await (const report of reports) {
     const key = pairKey(...report.accessions)
     if (wanted.has(key)) {
       const pair = found.get(key) ?? {
         direct: false,
+        databases: new Set<Database>(),
         publications: new Set<string>(),
         methods: new Set<string>(),
       }
       pair.direct ||= report.evidence === 'direct'
+      pair.databases.add(report.database)
       pair.publications.add(report.publication)
       pair.methods.add(report.method)
       found.set(key, pair)
@@ -206,6 +219,7 @@ export async function collect(
       key,
       {
         evidence: pair.direct ? 'direct' : 'complex',
+        databases: DATABASES.filter(d => pair.databases.has(d)),
         publications: [...pair.publications].sort(),
         methods: [...pair.methods].sort(),
       } satisfies PairEvidence,
@@ -264,6 +278,9 @@ export function readInteractions() {
               key,
               {
                 evidence,
+                databases: DATABASES.filter(d =>
+                  strings(record(value).databases).includes(d),
+                ),
                 publications: strings(record(value).publications),
                 methods: strings(record(value).methods),
               } satisfies PairEvidence,

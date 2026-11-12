@@ -28,6 +28,12 @@
   reported evidence ranks each residue by the best-supported confident pair it
   touches, as the confidence bands rank it by the best ipSAE, and leaves
   residues of other classes out of both sides.
+- **Links for each pair:** IntAct's advanced search for the two accessions
+  (when IntAct reports the pair), STRING's evidence page by the STRING ID its
+  API maps each accession to, the Complex Portal complexes whose expanded
+  participant list holds both proteins (a homodimer needs two copies), and
+  PDBe PISA's interface list for the compared PDB entry. These are links only;
+  none changes a pair's evidence class.
 - **Variants:** NCBI ClinVar `variant_summary` single-nucleotide missense
   variants classified pathogenic, likely pathogenic, uncertain, likely benign
   or benign; conflicting classifications are left out. Each keeps the condition

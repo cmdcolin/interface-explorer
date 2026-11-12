@@ -22,6 +22,7 @@ import {
   percent,
   reachNote,
   phylopCell,
+  pisaHref,
   reportedCell,
 } from '../../lib/html.ts'
 import { pathogenicAtSameResidue, proteinMap, variantData, partnerLabel } from '../../lib/maps.ts'
@@ -222,12 +223,15 @@ const rows = gene.variants
                     >
                       {p.experiment.experimental ? `${percent(p.experiment.shared, p.experiment.experimental)} recovered` : 'no contact'}
                     </span>
+                    <div class="cell-note">
+                      <a href={pisaHref(p.experiment.pdb)} title="PDBe PISA's interfaces in this structure: residues, buried area and an estimate of whether each is biological or a crystal contact">PISA interfaces</a>
+                    </div>
                   </>
                 ) : (
                   <span class="muted" title="No PDB entry holding both proteins could be compared">—</span>
                 )}
               </td>
-              <td class="nowrap" set:html={reportedCell(p.reported)} />
+              <td class="nowrap" set:html={reportedCell(gene.accession, p)} />
               <td class="num" set:html={conservedCell(p.conserved)} />
               <td class="nowrap">
                 <a href={sessionUrl(complexSpec(gene.gene, p.entity, locus), JBROWSE)}>3D + genome</a> ·
