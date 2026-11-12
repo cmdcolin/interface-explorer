@@ -22,7 +22,8 @@ const uncertain = s.alphaMissense.calls.uncertain
     <li>All {s.proteins.toLocaleString()} reviewed human proteins with a UniProt disease annotation.</li>
     <li>
       Their heterodimers from AlphaFold DB's 2026 complex release (AlphaFold-Multimer), kept at ipSAE ≥ {t.ipsae}, the
-      AlphaFold DB team's threshold.
+      AlphaFold DB team's threshold. Where AlphaFold DB modelled the partner with another species' protein, the partner is
+      named as the human protein of identical sequence; where a partner was modelled twice, the more confident complex is kept.
     </li>
     <li>
       Interface residues: any heavy atom within {t.contact} Å of the partner, residue pLDDT ≥ {t.plddt}. Mapped to hg38

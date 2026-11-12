@@ -1,6 +1,11 @@
 import { expect, test } from 'vitest'
 
-import { atomsByChain, interfaceResidues } from './atlas.ts'
+import {
+  atomsByChain,
+  distinctPartners,
+  interfaceResidues,
+  partnerIdentity,
+} from './atlas.ts'
 
 const COMPLEX = `data_x
 loop_
@@ -42,4 +47,61 @@ test('interface residues take the last contacting atom of each residue', () => {
   expect(
     interfaceResidues(chains.get('B') ?? [], chains.get('A') ?? []),
   ).toEqual(new Map([[7, 90]]))
+})
+
+test('a non-human partner takes the identity of its sequence-identical human protein', () => {
+  const human = new Map([
+    [
+      'ABC',
+      [
+        {
+          primaryAccession: 'P63218',
+          genes: [{ geneName: { value: 'GNG5' } }],
+        },
+      ],
+    ],
+  ])
+  const rat = {
+    uniprotAccession: 'P63219',
+    gene: 'Gng5',
+    taxId: 10116,
+    organismScientificName: 'Rattus norvegicus',
+    sequenceChecksum: 'abc',
+  }
+  expect(partnerIdentity(rat, human)).toEqual({
+    partner: 'P63218',
+    partner_gene: 'GNG5',
+    modelled_as: { accession: 'P63219', organism: 'Rattus norvegicus' },
+  })
+  expect(partnerIdentity({ ...rat, sequenceChecksum: 'def' }, human)).toEqual({
+    partner: 'P63219',
+    partner_gene: 'Gng5',
+    modelled_as: { accession: 'P63219', organism: 'Rattus norvegicus' },
+  })
+  expect(
+    partnerIdentity(
+      { ...rat, taxId: 9606, organismScientificName: 'Homo sapiens' },
+      human,
+    ),
+  ).toEqual({ partner: 'P63219', partner_gene: 'Gng5', modelled_as: null })
+})
+
+test('a partner modelled twice keeps its first, most confident complex', () => {
+  const complex = (entity: string, partner: string) => ({
+    entity,
+    partner,
+    partner_gene: null,
+    modelled_as: null,
+    iptm: null,
+    ipsae: null,
+    pdockq: null,
+    residues: {},
+  })
+  expect(
+    distinctPartners([
+      complex('AF-1', 'P1'),
+      complex('AF-2', 'P2'),
+      complex('AF-3', 'P1'),
+    ]).map(c => c.entity),
+  ).toEqual(['AF-1', 'AF-2'])
 })

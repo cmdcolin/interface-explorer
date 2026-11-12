@@ -8,6 +8,7 @@ export interface Interface {
   entity: string
   partner: string | null
   partner_gene: string | null
+  modelled_as: { accession: string; organism: string } | null
   iptm: number | null
   ipsae: number | null
   pdockq: number | null
@@ -38,11 +39,19 @@ function numbers(value: unknown) {
   )
 }
 
+function parseModelledAs(value: unknown) {
+  const { accession, organism } = record(value)
+  const id = text(accession)
+  const species = text(organism)
+  return id && species ? { accession: id, organism: species } : null
+}
+
 function parseInterface(value: Record<string, unknown>): Interface {
   return {
     entity: text(value.entity) ?? '',
     partner: text(value.partner) ?? null,
     partner_gene: text(value.partner_gene) ?? null,
+    modelled_as: parseModelledAs(value.modelled_as),
     iptm: number(value.iptm) ?? null,
     ipsae: number(value.ipsae) ?? null,
     pdockq: number(value.pdockq) ?? null,

@@ -6,14 +6,22 @@ import { ATLAS } from './atlasData.ts'
 import { CONTACT, MAX_COMPLEXES } from './constants.ts'
 import { withinDistance } from './contacts.ts'
 import type { Point } from './contacts.ts'
-import { number, records, text, writeJson } from './json.ts'
+import { number, record, records, text, writeJson } from './json.ts'
 import { DATA, OUT } from './paths.ts'
 import { numpyRound, pairwiseSum, pythonRound } from './numeric.ts'
 import { atomAreas } from './sasa.ts'
-import { accessionOf, diseaseEntries, geneOf, sequenceOf } from './uniprot.ts'
+import {
+  accessionOf,
+  diseaseEntries,
+  geneOf,
+  humanEntries,
+  sequenceOf,
+} from './uniprot.ts'
+import type { UniProtEntry } from './uniprot.ts'
 
 const ALPHAFOLD_API = 'https://alphafold.ebi.ac.uk/api'
 const PROGRESS_EVERY = 250
+const HUMAN = 9606
 
 export const MAX_ASA: Record<string, number> = {
   ALA: 129,
@@ -115,6 +123,45 @@ export function interfaceResidues(own: ChainAtom[], partner: ChainAtom[]) {
   return residues
 }
 
+function checksumOf(entry: UniProtEntry) {
+  return (text(record(entry.sequence).md5) ?? '').toUpperCase()
+}
+
+let human: Promise<Map<string, UniProtEntry[]>> | undefined
+
+function humanByChecksum() {
+  human ??= humanEntries().then(entries => Map.groupBy(entries, checksumOf))
+  return human
+}
+
+export function partnerIdentity(
+  chain: Record<string, unknown> | undefined,
+  byChecksum: Map<string, UniProtEntry[]>,
+) {
+  const accession = text(chain?.uniprotAccession) ?? null
+  const organism = text(chain?.organismScientificName)
+  const twins =
+    byChecksum.get((text(chain?.sequenceChecksum) ?? '').toUpperCase()) ?? []
+  const twin = twins.length === 1 ? twins[0] : undefined
+  return number(chain?.taxId) === HUMAN || !accession || !organism
+    ? {
+        partner: accession,
+        partner_gene: text(chain?.gene) ?? null,
+        modelled_as: null,
+      }
+    : twin
+      ? {
+          partner: accessionOf(twin),
+          partner_gene: geneOf(twin) || null,
+          modelled_as: { accession, organism },
+        }
+      : {
+          partner: accession,
+          partner_gene: text(chain?.gene) ?? null,
+          modelled_as: { accession, organism },
+        }
+}
+
 async function complexInterface(
   accession: string,
   entry: Record<string, unknown>,
@@ -142,8 +189,7 @@ async function complexInterface(
     ? [
         {
           entity,
-          partner: text(partner?.uniprotAccession) ?? null,
-          partner_gene: text(partner?.gene) ?? null,
+          ...partnerIdentity(partner, await humanByChecksum()),
           iptm: number(entry.complexPredictionAccuracy_ipTM) ?? null,
           ipsae: number(entry.complexPredictionAccuracy_ipSAE) ?? null,
           pdockq: number(entry.complexPredictionAccuracy_pDockQ) ?? null,
@@ -155,6 +201,15 @@ async function complexInterface(
         } satisfies Interface,
       ]
     : []
+}
+
+export function distinctPartners(interfaces: Interface[]) {
+  return interfaces.filter(
+    (complex, index) =>
+      complex.partner === null ||
+      interfaces.findIndex(other => other.partner === complex.partner) ===
+        index,
+  )
 }
 
 export async function proteinInterfaces(accession: string) {
@@ -178,7 +233,7 @@ export async function proteinInterfaces(accession: string) {
   return {
     complexes: complexes.length,
     hetero: hetero.length,
-    interfaces,
+    interfaces: distinctPartners(interfaces),
   } satisfies ProteinInterfaces
 }
 
