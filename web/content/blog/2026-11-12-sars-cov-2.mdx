@@ -90,7 +90,8 @@ select; what the structure adds is that the residues are the ones PLpro grips.
 Bars: the ISG15 residues within 5 Å of the protease in {v.byGene('ISG15')?.pdb}.
 Marks above: the ClinVar variants on them, none of which is classified
 pathogenic. Both of ISG15's domains meet the protease, and the contact runs to
-residue 157, at the foot of the C-terminal tail the protease cuts.
+residue {v.lastContact('ISG15')}, at the foot of the C-terminal tail the
+protease cuts.
 
 **NEMO inside the main protease.** 3CL protease (nsp5) cleaves NEMO (IKBKG), and
 the structure of the protease with the NEMO peptide holds residues{' '}

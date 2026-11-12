@@ -1,4 +1,5 @@
 export const CONTACT = 5
+export const REACH = 15
 export const CONFIDENT = 0.6
 export const MIN_PLDDT = 70
 export const MAX_COMPLEXES = 30

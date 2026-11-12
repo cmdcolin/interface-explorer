@@ -46,6 +46,18 @@ export function neighbourGrid<T>(
   }
 }
 
+export function nearestDistance(own: Point[], other: Point[], reach: number) {
+  const limit = reach * reach
+  const near = neighbourGrid(other, point => point, reach)
+  return own.map(point => {
+    const best = near(point).reduce(
+      (closest, neighbour) => Math.min(closest, squaredDistance(point, neighbour)),
+      Infinity,
+    )
+    return best <= limit ? Math.sqrt(best) : undefined
+  })
+}
+
 export function withinDistance(own: Point[], other: Point[], distance: number) {
   const limit = distance * distance
   const near =

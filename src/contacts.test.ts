@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { withinDistance } from './contacts.ts'
+import { nearestDistance, withinDistance } from './contacts.ts'
 import type { Point } from './contacts.ts'
 
 test('marks each point with a neighbour closer than the distance', () => {
@@ -53,4 +53,41 @@ test('agrees with a brute-force search', () => {
   )
   expect(withinDistance(own, other, 4)).toEqual(brute)
   expect(brute.filter(Boolean).length).toBeGreaterThan(50)
+})
+
+test('the nearest distance agrees with a brute-force search within reach', () => {
+  let state = 7
+  const random = () => {
+    state = (state * 48271) % 2147483647
+    return (state / 2147483647) * 40 - 20
+  }
+  const points = (n: number) =>
+    Array.from(
+      { length: n },
+      () => [random(), random(), random()] satisfies Point,
+    )
+  const own = points(200)
+  const other = points(200)
+  const brute = own.map(([x, y, z]) => {
+    const best = Math.sqrt(
+      Math.min(
+        ...other.map(([a, b, c]) => (x - a) ** 2 + (y - b) ** 2 + (z - c) ** 2),
+      ),
+    )
+    return best <= 12 ? best : undefined
+  })
+  const found = nearestDistance(own, other, 12)
+  found.forEach((distance, i) => {
+    const expected = brute[i]
+    expect(distance === undefined).toBe(expected === undefined)
+    if (distance !== undefined && expected !== undefined) {
+      expect(distance).toBeCloseTo(expected, 9)
+    }
+  })
+  expect(found.filter(d => d !== undefined).length).toBeGreaterThan(50)
+})
+
+test('a point out of reach has no distance', () => {
+  expect(nearestDistance([[0, 0, 0]], [[100, 0, 0]], 12)).toEqual([undefined])
+  expect(nearestDistance([[0, 0, 0]], [], 12)).toEqual([undefined])
 })

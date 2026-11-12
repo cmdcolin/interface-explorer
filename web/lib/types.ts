@@ -207,6 +207,7 @@ export interface Agreement {
 
 export interface PredictedGAlpha extends Agreement {
   accession: string
+  distances: Record<number, number>
   experimental: number[]
   predictedResidues: number[]
   receptors: Agreement[]

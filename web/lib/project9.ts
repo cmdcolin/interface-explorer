@@ -46,6 +46,7 @@ export function project9() {
   })
   return {
     complexes: dataset.length,
+    golfReach: golf?.distances ?? {},
     or51e2: {
       pdb: or51e2?.pdb ?? '',
       resolution: or51e2?.resolution ?? '',
@@ -82,6 +83,7 @@ export function project9() {
       predicted: drd5Complex?.gAlphaAfdb?.predicted ?? 0,
       recall: Math.round((drd5Complex?.gAlphaAfdb?.recall ?? 0) * 100),
       precision: Math.round((drd5Complex?.gAlphaAfdb?.precision ?? 0) * 100),
+      reach: drd5Complex?.gAlphaAfdb?.distances ?? {},
     },
     contacts: labels.length,
     numbered: numbered.length,

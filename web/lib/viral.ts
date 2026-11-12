@@ -34,6 +34,10 @@ export function viralContacts() {
     ].toSorted(),
     pageOf: (gene: string) => pages.get(gene),
     byGene: (gene: string) => data.contacts.find(c => c.gene === gene),
+    lastContact: (gene: string) =>
+      Math.max(
+        ...(data.contacts.find(c => c.gene === gene)?.residues ?? [0]),
+      ),
   }
 }
 

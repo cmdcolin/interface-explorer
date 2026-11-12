@@ -8,8 +8,8 @@ import { confidentResidues, isConfident, readAtlas } from './atlasData.ts'
 import type { Interface, ProteinInterfaces } from './atlasData.ts'
 import { getJson, getText } from './cache.ts'
 import { cifCategory } from './cif.ts'
-import { CONTACT } from './constants.ts'
-import { withinDistance } from './contacts.ts'
+import { CONTACT, REACH } from './constants.ts'
+import { nearestDistance, withinDistance } from './contacts.ts'
 import type { Point } from './contacts.ts'
 import { codingPositions, mergeBlocks } from './coordinates.ts'
 import { number, record, records, text, writeJson } from './json.ts'
@@ -442,6 +442,48 @@ function contacts(own: Atom[], other: Atom[]) {
   return [...residues.values()]
 }
 
+function nearestResidues(own: Atom[], other: Atom[]) {
+  const distances = nearestDistance(
+    own.map(atom => atom.xyz),
+    other.map(atom => atom.xyz),
+    REACH,
+  )
+  const closest = new Map<string, { source: Source; distance: number }>()
+  own.forEach((atom, i) => {
+    const distance = distances[i]
+    if (atom.source && distance !== undefined) {
+      const current = closest.get(sourceKey(atom.source))
+      if (!current || distance < current.distance) {
+        closest.set(sourceKey(atom.source), { source: atom.source, distance })
+      }
+    }
+  })
+  return [...closest.values()]
+}
+
+function distancesToHuman(
+  rows: { source: Source; distance: number }[],
+  orthologs: Map<string, Ortholog>,
+) {
+  const byAccession = new Map<string, Map<number, number>>()
+  for (const { source, distance } of rows) {
+    const human = orthologs.get(source.accession)
+    const position = human?.pairs.get(source.number)
+    if (human && position) {
+      const found = byAccession.get(human.accession) ?? new Map<number, number>()
+      const current = found.get(position)
+      byAccession.set(
+        human.accession,
+        found.set(
+          position,
+          current === undefined ? distance : Math.min(current, distance),
+        ),
+      )
+    }
+  }
+  return byAccession
+}
+
 function toHuman(
   residues: ({ source: Source } & Contact)[],
   orthologs: Map<string, Ortholog>,
@@ -583,15 +625,28 @@ async function predictedGAlpha(
   receptorAccession: string,
   gProteins: Side[],
   accession: string,
+  gDistances: Map<string, Map<number, number>>,
 ) {
   const { gene, sequence } = await uniprot(accession)
+  const closest = new Map<number, number>()
   const mapped = await Promise.all(
-    gProteins.map(async g =>
-      mappedResidues(
-        g.residues,
-        residueMap((await uniprot(g.accession)).sequence, sequence).pairs,
-      ),
-    ),
+    gProteins.map(async g => {
+      const { pairs } = residueMap(
+        (await uniprot(g.accession)).sequence,
+        sequence,
+      )
+      for (const [position, distance] of gDistances.get(g.accession) ?? []) {
+        const target = pairs.get(position)
+        if (target !== undefined) {
+          const current = closest.get(target)
+          closest.set(
+            target,
+            current === undefined ? distance : Math.min(current, distance),
+          )
+        }
+      }
+      return mappedResidues(g.residues, pairs)
+    }),
   )
   const experimental = new Set(mapped.flat())
   const gpcrs = await gpcrAccessions()
@@ -603,6 +658,14 @@ async function predictedGAlpha(
     ? {
         ...agreement(experimental, own.residues, gene),
         accession,
+        distances: Object.fromEntries(
+          [...closest]
+            .sort(([a], [b]) => a - b)
+            .map(([position, distance]) => [
+              position,
+              pythonRound(distance, 1),
+            ]),
+        ),
         experimental: [...experimental].sort(byNumber),
         predictedResidues: [...own.residues].sort(byNumber),
         receptors: predictions.map(p =>
@@ -784,6 +847,10 @@ async function structureContacts({
     )?.[1],
     receptorSides: toHuman(contacts(receptorAtoms, gAtoms), orthologs),
     gSides: toHuman(contacts(gAtoms, receptorAtoms), orthologs),
+    gDistances: distancesToHuman(
+      nearestResidues(gAtoms, receptorAtoms),
+      orthologs,
+    ),
   }
 }
 
@@ -796,6 +863,7 @@ async function interfaceRecord(
     receptorHuman,
     receptorSides,
     gSides,
+    gDistances,
   }: Awaited<ReturnType<typeof structureContacts>>,
   atlas: Atlas,
   variants: Variants,
@@ -853,6 +921,7 @@ async function interfaceRecord(
           receptorAccession,
           gProteins,
           prediction.accession,
+          gDistances,
         )
       : null,
     axis,

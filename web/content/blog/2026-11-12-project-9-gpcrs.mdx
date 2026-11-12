@@ -90,17 +90,17 @@ ClinVar has {p.gnalVariants.length} variants of uncertain significance where
 AlphaFold DB puts Gαolf against an olfactory receptor. Three GNAL variants are
 worth placing:
 
-- **L380R**, at the tip of α5 like the Gαs variants above: L380 (Gαs L393)
-  touches OR51E2 in the structure and in the prediction. It is the one to look
-  at first.
+- **L380R**, at the tip of α5 like the Gαs variants above: L380 (Gαs L393) is{' '}
+  {p.golfReach[380]} Å from OR51E2 in {p.or51e2.pdb}, so it touches the receptor
+  in the structure and in the prediction. It is the one to look at first.
 - **K376Q:** K376 is the residue the prediction misses. Its Gαs counterpart,
-  R389, is 2.8 Å from OR51E2 in 8F76; AlphaFold DB puts K376 against OR2A1 and
-  OR2J3 instead.
+  R389, is {p.golfReach[376]} Å from OR51E2 in {p.or51e2.pdb}; AlphaFold DB puts
+  K376 against OR2A1 and OR2J3 instead.
 - **D227N**, the dystonia 25 variant, is not a receptor contact. Its Gαs
-  counterpart, D240, is 11.6 Å from OR51E2 in 8F76 and 8.4 Å from DRD5 in{' '}
-  {p.drd5Golf.pdb}. AlphaFold DB has it against Gβ and the adenylyl cyclases
-  ADCY2, ADCY3 and ADCY4, and within 5 Å of DRD5 in its DRD5–Gαolf complex,
-  which {p.drd5Golf.pdb} does not bear out.
+  counterpart, D240, is {p.golfReach[227]} Å from OR51E2 in {p.or51e2.pdb} and{' '}
+  {p.drd5Golf.reach[227]} Å from DRD5 in {p.drd5Golf.pdb}. AlphaFold DB has it
+  against Gβ and the adenylyl cyclases ADCY2, ADCY3 and ADCY4, and within 5 Å
+  of DRD5 in its DRD5–Gαolf complex, which {p.drd5Golf.pdb} does not bear out.
 
 GNAL's other predicted GPCR complexes use the same face. The other olfactory
 receptors ({p.or51e2.golf.olfactory.partners.join(', ')}) cover{' '}
