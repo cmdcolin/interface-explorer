@@ -16,6 +16,7 @@ import { parseJson, readJson, writeAtomically } from './json.ts'
 const ATTEMPTS = 9
 const TIMEOUT = 300_000
 const DOWNLOAD_TIMEOUT = 3_600_000
+const HEADERS = { 'user-agent': 'interface-atlas' }
 
 async function request(
   url: URL,
@@ -23,6 +24,7 @@ async function request(
   attempt = 0,
 ): Promise<Uint8Array | undefined> {
   const response = await fetch(url, {
+    headers: HEADERS,
     signal: AbortSignal.timeout(TIMEOUT),
   }).catch(() => undefined)
   return response?.ok
@@ -76,6 +78,7 @@ export async function download(url: string, path: string) {
   if (!existsSync(path)) {
     const partial = `${path}.part`
     const response = await fetch(url, {
+      headers: HEADERS,
       signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT),
     })
     if (!response.ok || !response.body) {
