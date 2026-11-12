@@ -32,11 +32,16 @@ const tiles = [
     }
   </script>
   <section class="hero">
-    <h1>Explore pathogenic variants at protein interfaces</h1>
-    <p class="lede">
-      See which <a href="https://alphafold.ebi.ac.uk/">AlphaFold</a> predicted partner a ClinVar missense variant touches,
-      in 3D and on the genome.
-    </p>
+    <div class="hero-top">
+      <div>
+        <h1>Explore pathogenic variants at protein interfaces</h1>
+        <p class="lede">
+          See which <a href="https://alphafold.ebi.ac.uk/">AlphaFold</a> predicted partner a ClinVar missense variant
+          touches, in 3D and on the genome.
+        </p>
+      </div>
+      <Fragment set:html={interfaceDiagram()} />
+    </div>
     <a class="hero-shot" href={href(`gene/${vhl.gene}/`)}>
       <img
         src={href('preview.jpg')}
@@ -65,13 +70,10 @@ const tiles = [
       }
     </div>
     <div class="evidence">
-      <div>
-        <p class="lede">
-          Within the same disease protein, a pathogenic variant is <strong>{odds(s.enrichment.all).toFixed(1)}×</strong> as
-          likely as a benign one to sit on an interface.
-        </p>
-        <Fragment set:html={interfaceDiagram()} />
-      </div>
+      <p class="lede">
+        Within the same disease protein, a pathogenic variant is <strong>{odds(s.enrichment.all).toFixed(1)}×</strong> as
+        likely as a benign one to sit on an interface.
+      </p>
       <Fragment set:html={shareFigure(s.enrichment.all)} />
     </div>
   </section>

@@ -760,11 +760,24 @@ h3 {
   margin: 0;
 }
 
+.hero-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+  gap: 16px 48px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 640px) {
+  .hero-top {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .interface-diagram {
   display: block;
   width: 100%;
   max-width: 360px;
-  margin-top: 16px;
 }
 
 .share-figure figcaption {
