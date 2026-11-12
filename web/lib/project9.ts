@@ -65,6 +65,7 @@ export function project9() {
         experimental: golfExperimental.size,
         predicted: golfPredicted.size,
         shared: golf?.shared ?? 0,
+        identity: Math.round((golf?.identity ?? 0) * 100),
         recall: Math.round((golf?.recall ?? 0) * 100),
         precision: Math.round((golf?.precision ?? 0) * 100),
         missed: [...golfExperimental].filter(r => !golfPredicted.has(r)),

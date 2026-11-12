@@ -629,12 +629,14 @@ async function predictedGAlpha(
 ) {
   const { gene, sequence } = await uniprot(accession)
   const closest = new Map<number, number>()
+  const identities = new Array<number>()
   const mapped = await Promise.all(
     gProteins.map(async g => {
-      const { pairs } = residueMap(
+      const { pairs, identity } = residueMap(
         (await uniprot(g.accession)).sequence,
         sequence,
       )
+      identities.push(identity)
       for (const [position, distance] of gDistances.get(g.accession) ?? []) {
         const target = pairs.get(position)
         if (target !== undefined) {
@@ -658,6 +660,7 @@ async function predictedGAlpha(
     ? {
         ...agreement(experimental, own.residues, gene),
         accession,
+        identity: pythonRound(Math.min(...identities), 2),
         distances: Object.fromEntries(
           [...closest]
             .sort(([a], [b]) => a - b)

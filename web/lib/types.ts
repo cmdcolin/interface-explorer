@@ -208,6 +208,7 @@ export interface Agreement {
 
 export interface PredictedGAlpha extends Agreement {
   accession: string
+  identity: number
   distances: Record<number, number>
   experimental: number[]
   predictedResidues: number[]
