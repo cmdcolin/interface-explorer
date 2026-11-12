@@ -19,12 +19,12 @@ import { atoms, mmcif } from './pdbe.ts'
 import type { Atom } from './pdbe.ts'
 import { accessionOf, diseaseEntries, sequenceOf } from './uniprot.ts'
 
-const SIFTS_URL =
+export const SIFTS_URL =
   'https://ftp.ebi.ac.uk/pub/databases/msd/sifts/flatfiles/tsv/pdb_chain_uniprot.tsv.gz'
-const SIFTS = join(DATA, 'sifts', 'pdb_chain_uniprot.tsv.gz')
-const ENTRIES_URL =
+export const SIFTS = join(DATA, 'sifts', 'pdb_chain_uniprot.tsv.gz')
+export const ENTRIES_URL =
   'https://files.wwpdb.org/pub/pdb/derived_data/index/entries.idx'
-const ENTRIES = join(DATA, 'sifts', 'entries.idx')
+export const ENTRIES = join(DATA, 'sifts', 'entries.idx')
 export const EXPERIMENTAL = join(OUT, 'experimental.json')
 export const TRAINING_CUTOFF = '2021-09-30'
 const NEAR_BEST = 0.9

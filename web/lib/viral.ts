@@ -1,0 +1,57 @@
+import { geneRows, viral } from './data.ts'
+import type { ViralContact } from './types.ts'
+
+const RIBOSOME = /^RP[LS]|^FAU$/
+
+function count(contacts: ViralContact[], label: string) {
+  return contacts.flatMap(c => c.variants.filter(v => v.label === label)).length
+}
+
+export function viralContacts() {
+  const data = viral()
+  const pages = new Map(geneRows().map(row => [row.gene, row.page]))
+  const protease = data.contacts.filter(c => c.protein.includes('3C-like'))
+  const apart = data.apart
+  return {
+    ...data,
+    genes: new Set(data.contacts.map(c => c.gene)).size,
+    pathogenic: count(data.contacts, 'pathogenic'),
+    uncertain: count(data.contacts, 'uncertain'),
+    benign: count(data.contacts, 'benign'),
+    protease,
+    proteaseSites: protease
+      .map(c => new Set(c.viralNumbers))
+      .reduce((shared, numbers) => shared.intersection(numbers))
+      .values()
+      .toArray()
+      .toSorted((a, b) => a - b),
+    ribosomal: apart.filter(pair => RIBOSOME.test(pair.gene)),
+    nsp1Neighbours: [
+      ...new Set(
+        apart
+          .filter(pair => pair.protein.endsWith('nsp1'))
+          .flatMap(pair => pair.neighbours),
+      ),
+    ].toSorted(),
+    pageOf: (gene: string) => pages.get(gene),
+    byGene: (gene: string) => data.contacts.find(c => c.gene === gene),
+    apartGene: (gene: string) => apart.find(pair => pair.gene === gene),
+  }
+}
+
+export function runs(residues: number[]) {
+  return residues
+    .reduce<number[][]>((blocks, residue) => {
+      const last = blocks.at(-1)
+      if (last && residue === (last.at(-1) ?? 0) + 1) {
+        last.push(residue)
+      } else {
+        blocks.push([residue])
+      }
+      return blocks
+    }, [])
+    .map(block =>
+      block.length > 1 ? `${block[0]}–${block.at(-1)}` : String(block[0]),
+    )
+    .join(', ')
+}

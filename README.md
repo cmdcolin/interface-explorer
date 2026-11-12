@@ -15,7 +15,9 @@ one.
   across 100 vertebrates bears on it; three worked examples (VHL, GNAO1,
   APP695); and the receptor–G protein complexes BioHackathon Europe 2026
   Project 9 selected, in 3D, where every pathogenic variant at the interface is
-  on the G protein, with each complex's contacts and GPCRdb numbers.
+  on the G protein, with each complex's contacts and GPCRdb numbers; and which
+  human disease proteins a SARS-CoV-2 protein actually touches in the PDB, with
+  the ClinVar variants on the contact.
 - **Genes:** a searchable table of the 1,331 disease genes with a confident
   predicted partner. Each gene page opens on its predicted complex in 3D,
   starting with the partner whose interface carries the most pathogenic
@@ -191,6 +193,32 @@ one.
   benign ones contact the G protein; none is classified pathogenic. Every
   receptor contact carries its GPCRdb generic number.
 
+## SARS-CoV-2 contacts (13 experimental complexes)
+
+- AlphaFold DB's complexes are human–human, so the virus enters only through
+  the PDB. 51 disease proteins share an entry with one of the 17 reviewed
+  SARS-CoV-2 proteins; in 13 of those 54 pairs the two actually touch, over 12
+  genes, and 11 carry a classified ClinVar missense variant on the contact: 5
+  pathogenic, 28 uncertain and 11 benign.
+- ISG15 gives the largest contact: 34 residues against the papain-like protease
+  (7RBS), carrying 12 variants reported for ISG15 deficiency.
+- Pathogenic variants on a contact are NEMO's L227P, in the 10-residue stretch
+  of IKBKG that sits in the main protease's cleft (7T2U), and 14-3-3ζ's K49N,
+  R127C, R127H and E180K, in the YWHAZ groove that holds the nucleoprotein's
+  phosphopeptide (7ZIT).
+- The three main-protease substrate complexes (NEMO, PTBP1, TRMT1) share 27
+  protease residues, the cleft around the catalytic H41 and C145: the same site
+  read from three independent entries.
+- The expected pairs that do not touch: none of the 25 ribosomal disease
+  proteins in the nsp1 entries touches nsp1, which holds RPS2, RPS3 and FAU
+  around the 40S mRNA channel; SLC6A19 and SLC6A20 are in the spike entries
+  bound to ACE2, not to spike; B2M is in the MHC entries while HLA-B holds the
+  epitope.
+- Three human proteins touch a viral protein only as a structural reagent
+  (APOA1 and PSAP as nanodisc scaffolds, COL18A1 as a trimerisation domain),
+  and ETV6's entries are crystallisation fusions, one chain carrying both
+  sequences. Neither counts as a contact.
+
 ## Caveats
 
 - Coverage: AlphaFold DB modelled STRING physical-interaction pairs only;
@@ -245,6 +273,14 @@ one.
   to another isoform is used when its residues match the canonical sequence at
   their numbers, and left out otherwise. Contacts made only through crystal
   symmetry are missed.
+- **SARS-CoV-2:** the viral proteins are UniProt's reviewed entries for taxon
+  2697049, and a contact in either replicase polyprotein is named by the mature
+  protein (nsp1 … nsp16) whose span holds it, from UniProt's chain features.
+  SIFTS gives the entries holding both proteins; up to four per pair are
+  measured, fewest chains first, and the entry with the most contacts is kept.
+  A chain carrying both sequences is a fusion construct, so both proteins'
+  atoms in that entity are left out. The human chain must match its UniProt
+  sequence at 90% of its mapped residues, as in the experimental check above.
 - **AlphaMissense:** the published pathogenicity of every substitution in the
   canonical proteins, joined to each variant by UniProt accession and change.
   Above 0.564 is likely pathogenic and below 0.34 likely benign.
@@ -289,6 +325,8 @@ one.
 - `pnpm gpcr`: the experimental GPCR–G protein interfaces, as
   `site/jbrowse/gpcr_interfaces.bb`, `gpcr_interface_variants.bb` and
   `site/data/gpcr.json`.
+- `pnpm viral [workers]`: the SARS-CoV-2 contacts, in `out/viral.json` and
+  `site/data/viral.json`.
 - `pnpm tracks`: `site/jbrowse/config.json`, `interfaces.bb` and
   `interface_variants.bb`.
 - `pnpm pages`: `site/data/summary.json`, `genes.json`, `leads.json` and

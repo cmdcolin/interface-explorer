@@ -1,0 +1,131 @@
+---
+title: 'Where SARS-CoV-2 holds a human disease protein'
+date: '2026-11-12'
+order: 5
+description: "The PDB entries that hold both a SARS-CoV-2 protein and a human disease protein, which of them actually touch, and the ClinVar variants on the contact."
+---
+
+import { clinvarHref, esc } from '../../lib/html.ts'
+import { runs, viralContacts } from '../../lib/viral.ts'
+import { geneHref } from '../../lib/site.ts'
+
+export const v = viralContacts()
+export const pdb = id => `https://www.rcsb.org/structure/${id.toUpperCase()}`
+
+AlphaFold DB's predicted complexes, which the rest of this atlas is built on,
+pair human proteins with human proteins. A virus is outside them. But the PDB
+holds experimental structures of SARS-CoV-2 proteins caught with the human
+proteins they act on, and some of those human proteins are disease genes with
+ClinVar variants. This post asks a narrow question of them: where does a viral
+protein touch a human disease protein, and what does human genetics already say
+about the residues it touches?
+
+The answer is small but specific. Of the {v.summary['pairs in one PDB entry']}
+pairs that share a PDB entry, {v.summary['pairs that touch']} touch, over{' '}
+{v.genes} genes, and {v.summary['touching pairs with a classified variant at the contact']}{' '}
+have a classified ClinVar missense variant on the contact: {v.pathogenic}{' '}
+pathogenic, {v.uncertain} uncertain and {v.benign} benign.
+
+## The contacts
+
+<table>
+  <thead>
+    <tr>
+      <th>Gene</th>
+      <th>Viral protein</th>
+      <th>Entry</th>
+      <th class="num">Residues</th>
+      <th>ClinVar on them</th>
+    </tr>
+  </thead>
+  <tbody>
+    {v.contacts.map(c => (
+      <tr>
+        <td>
+          {v.pageOf(c.gene) ? <a href={geneHref(v.pageOf(c.gene))}>{c.gene}</a> : c.gene}
+        </td>
+        <td>{c.protein}</td>
+        <td><a href={pdb(c.pdb)}>{c.pdb}</a></td>
+        <td class="num" title={runs(c.residues)}>{c.residues.length}</td>
+        <td>
+          {c.variants.length
+            ? c.variants.map(variant => (
+                <>
+                  <a href={clinvarHref(variant.variation)}>{variant.change}</a>{' '}
+                  <span class={`count ${variant.label}`}>{variant.label}</span>{' '}
+                </>
+              ))
+            : '—'}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+Hover a residue count for the positions. A gene with no page of its own has no
+confident AlphaFold DB partner; it is here on experiment alone.
+
+## Three worth a second look
+
+**ISG15 and the papain-like protease.** PLpro strips ISG15 from host proteins,
+and the crystal structure of the inactive protease with ISG15 puts{' '}
+{v.byGene('ISG15')?.residues.length} ISG15 residues against it. ClinVar's
+variants in ISG15 are all reported for ISG15 deficiency, a Mendelian
+susceptibility to mycobacterial disease, and{' '}
+{v.byGene('ISG15')?.variants.length} of them sit on that surface. They are
+variants in the protein the virus removes, not in anything the virus is known to
+select; what the structure adds is that the residues are the ones PLpro grips.
+
+**NEMO inside the main protease.** 3CL protease (nsp5) cleaves NEMO (IKBKG), and
+the structure of the protease with the NEMO peptide holds residues{' '}
+{runs(v.byGene('IKBKG')?.residues ?? [])} in its cleft. L227P, pathogenic in
+ClinVar, is one of them. The three nsp5–substrate structures here — NEMO, PTBP1
+and TRMT1 — share <span title={runs(v.proteaseSites)}>{v.proteaseSites.length}{' '}
+protease residues</span>, the substrate cleft around the catalytic H41 and C145:
+three independent entries read as the same site.
+
+**14-3-3ζ and the nucleoprotein.** The N protein binds 14-3-3 when
+phosphorylated, and in {v.byGene('YWHAZ')?.pdb} the peptide lies in the 14-3-3ζ
+groove. On its residues sit{' '}
+{v.byGene('YWHAZ')?.variants.filter(x => x.label === 'pathogenic').length}{' '}
+variants ClinVar calls pathogenic, among them K49N and R127H for Popov–Chang
+syndrome. That groove is where 14-3-3 binds its
+hundreds of human phosphopeptide partners, so a variant there is about 14-3-3's
+own job first.
+
+## What does not touch
+
+The negatives are as informative, because they are the pairs you would expect to
+find by co-occurrence alone:
+
+- **nsp1 and the ribosome.** {v.ribosomal.length} ribosomal disease proteins,
+  including the Diamond–Blackfan anemia genes RPS19, RPS26 and RPS10, sit in the
+  same entries as nsp1. None touches it. What nsp1 does touch in those entries,
+  besides the rRNA, is {v.nsp1Neighbours.join(', ')} — the proteins around the
+  40S mRNA channel, and none of them a disease protein in UniProt.
+- **SLC6A20 and SLC6A19 with spike.** Both share entries with spike, neither
+  touches it: they are there bound to ACE2, which is what spike holds.
+- **B2M with the viral peptides.** B2M shares entries with the spike, N and
+  nsp13 epitopes, but it is the HLA-B heavy chain that holds the peptide in its
+  groove, and HLA-B is in the table above.
+- **ETV6 and nsp14.** Its four shared entries are crystallisation fusions, one
+  chain carrying both sequences, so there is no interface to measure.
+
+## How it is counted
+
+- The viral proteins are the {v.summary['viral proteins']} reviewed SARS-CoV-2
+  entries in UniProt. The two replicase polyproteins are named by the mature
+  protein their contacted residues fall in, from UniProt's chain features, so a
+  contact in pp1ab becomes nsp5 or nsp13.
+- SIFTS gives the PDB entries holding both proteins. Up to four are measured per
+  pair, fewest chains first, and the one with the most contacts is reported. A
+  residue is in contact when a heavy atom is within 5 Å of the partner, the same
+  rule as the rest of the explorer.
+- A chain carrying both sequences is a fusion construct, not a complex, and is
+  left out. So are three human proteins present as structural reagents
+  ({v.reagents.map(r => r.gene).join(', ')}): a nanodisc scaffold or a
+  trimerisation domain touching the viral protein is not biology.
+- Nothing here is evidence about COVID-19 susceptibility. These are variants
+  classified for Mendelian disease that happen to lie where a viral protein
+  binds. Several of the structures are peptide complexes, which show one side of
+  the interaction only.

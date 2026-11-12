@@ -10,6 +10,7 @@ import type {
   IsoformTotals,
   Lead,
   Summary,
+  Viral,
 } from './types.ts'
 
 const DATA = join(process.cwd(), 'site', 'data')
@@ -30,6 +31,7 @@ export const summary = once<Summary>('summary.json')
 export const geneRows = once<GeneRow[]>('genes.json')
 export const leadRows = once<Lead[]>('leads.json')
 export const gpcr = once<Gpcr>('gpcr.json')
+export const viral = once<Viral>('viral.json')
 export const isoformIndex = once<IsoformIndex>('isoforms.json')
 export const isoformTotals = once<IsoformTotals>('isoformTotals.json')
 export const gene = (page: string) => read<Gene>(`genes/${page}.json`)

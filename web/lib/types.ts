@@ -253,3 +253,38 @@ export interface Gpcr {
   gAlphas: GAlpha[]
   others: OtherStructure[]
 }
+
+export interface ViralContact {
+  accession: string
+  gene: string
+  viral: string
+  viralName: string
+  protein: string
+  pdb: string
+  firstDeposited: string
+  tried: string[]
+  fusions: string[]
+  reagent: string | null
+  residues: number[]
+  viralResidues: number[]
+  viralNumbers: number[]
+  neighbours: string[]
+  variants: (SideVariant & {
+    alphaMissense: number | null
+    conditions: string[]
+  })[]
+}
+
+export interface Viral {
+  summary: Record<string, number | unknown[]>
+  contacts: ViralContact[]
+  reagents: ViralContact[]
+  apart: {
+    gene: string
+    accession: string
+    protein: string
+    tried: string[]
+    fusions: string[]
+    neighbours: string[]
+  }[]
+}
