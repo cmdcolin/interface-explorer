@@ -33,6 +33,10 @@ function wire(table: HTMLTableElement) {
     }
   }
 
+  const preset = new URLSearchParams(location.search).get('q')
+  if (filter && preset) {
+    filter.value = preset
+  }
   filter?.addEventListener('input', render)
   headers.forEach((header, index) =>
     header.querySelector('button')?.addEventListener('click', () => {

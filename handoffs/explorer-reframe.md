@@ -15,8 +15,11 @@ description: "Reframe the site from a findings paper to an app for exploring dis
   for exploring those, with the statistics as evidence that the predicted
   interfaces are worth exploring.
 - **State as of 2026-11-12:** renamed to Interface explorer, URL
-  `/interface-explorer/`. Home headline, tiles and the README start-page
-  line done; blog retitles and the README/About openings not started. Claim a step here before starting it.
+  `/interface-explorer/`. Home headline, tiles, README and About
+  openings, and the blog index framing done. The Genes table takes `?q=` to
+  prefill its filter, ready for a nav search. Blog post titles are unchanged;
+  they already read as evidence or worked examples. Claim a step here before
+  starting it.
 
 ## Framing changes
 

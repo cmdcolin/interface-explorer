@@ -1,8 +1,11 @@
 # Interface explorer
 
-For every human disease gene: which codons sit at an interface in an AlphaFold
-DB predicted complex, which ClinVar missense variants fall there, and how each
-alternative isoform's predicted structure differs from the canonical one.
+An explorer for asking which partner a disease variant might disturb. For
+every human disease gene with an AlphaFold DB predicted complex, it shows which
+codons sit at the interface, which ClinVar missense variants fall there, and
+how each alternative isoform's predicted structure differs from the canonical
+one, in 3D and on the genome. The statistics are evidence that the predicted
+interfaces are worth exploring, not the point.
 
 **[Open the explorer](https://cmdcolin.github.io/interface-explorer/)**
 
