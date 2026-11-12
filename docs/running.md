@@ -26,6 +26,9 @@
   `site/data/gpcr.json`.
 - `pnpm viral [workers]`: the SARS-CoV-2 contacts, in `out/viral.json` and
   `site/data/viral.json`.
+- `pnpm md`: SLC35A2's molecular dynamics switch residues, from StarMD's
+  ranking in `slc35a2_switches.tsv`, tested against phyloP, AlphaMissense and
+  ClinVar, in `out/md.json` and `site/data/md.json`.
 - `pnpm tracks`: `site/jbrowse/config.json`, `interfaces.bb` and
   `interface_variants.bb`.
 - `pnpm pages`: `site/data/summary.json`, `genes.json`, `leads.json` and

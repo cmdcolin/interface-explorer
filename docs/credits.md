@@ -19,6 +19,8 @@ assistance.
 - [RCSB PDB](https://www.rcsb.org/) structures with
   [PDBe](https://www.ebi.ac.uk/pdbe/) SIFTS residue mappings, selected from
   [GPCRdb](https://gpcrdb.org/) by BioHackathon Europe 2026 Project 9.
+- SLC35A2 molecular dynamics: GROMACS runs and their StarMD analysis by
+  Jindrich Lnenicka, BioHackathon Europe 2026.
 - hg38 assembly, gene and ClinVar track configuration from
   [jbrowse.org/ucsc/hg38](https://jbrowse.org/ucsc/hg38/config.json); viewer:
   [JBrowse 2](https://jbrowse.org/jb2/) with the protein3d plugin.

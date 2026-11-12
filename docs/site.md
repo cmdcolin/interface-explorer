@@ -15,7 +15,8 @@
 - **Isoforms:** where each AlphaFold DB isoform model differs from the
   canonical protein, and which pathogenic sites and partner interfaces it lacks.
 - **Blog:** the findings as charts, the GPCR–G protein complexes from
-  BioHackathon Europe 2026 Project 9, and SARS-CoV-2 contacts in the PDB.
+  BioHackathon Europe 2026 Project 9, SARS-CoV-2 contacts in the PDB, and the
+  explorer's tests run on SLC35A2's molecular dynamics switch residues.
 - **JBrowse:** the interface and variant [tracks](tracks.md), hosted at
   jbrowse.org.
 - **How it works** and **Comparison** with other resources, each linked to its
