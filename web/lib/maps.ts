@@ -378,17 +378,37 @@ export function isoformMap(record: IsoformRecord) {
     </div>`
 }
 
-export function surfaceMap(g: GAlpha) {
+export function cgnElements(labels: Record<string, string>) {
+  const elements = new Array<{ name: string; start: number; end: number }>()
+  for (const [position, label] of Object.entries(labels)
+    .map(([p, l]) => [Number(p), l] as const)
+    .sort(([a], [b]) => a - b)) {
+    const name = label.split('.')[1] ?? ''
+    const last = elements.at(-1)
+    if (/^[A-Z]/.test(name)) {
+      if (last?.name === name && last.end === position - 1) {
+        last.end = position
+      } else {
+        elements.push({ name, start: position, end: position })
+      }
+    }
+  }
+  return elements
+}
+
+export function surfaceMap(g: GAlpha, labels: Record<string, string> = {}) {
   const width = 1000
   const scale = (x: number) =>
     20 + ((x - 1) / Math.max(g.length - 1, 1)) * (width - 40)
   const most = Math.max(...g.counts.map(([, n]) => n))
   const marks = g.variants.filter(v => v.label !== 'benign')
+  const elements = cgnElements(labels)
   return `
-    <div class="map-wrap"><svg class="map" viewBox="0 0 ${width} 76" role="img" aria-label="${esc(g.gene)} residues contacting a receptor, by number of structures">
+    <div class="map-wrap"><svg class="map" viewBox="0 0 ${width} ${elements.length ? 96 : 76}" role="img" aria-label="${esc(g.gene)} residues contacting a receptor, by number of structures">
       ${marks.map(v => `<rect x="${scale(v.position) - 1.5}" y="0" width="3" height="9" fill="var(--${v.label})"><title>${esc(v.change)} ${LABELS[v.label]}</title></rect>`).join('')}
       ${g.counts.map(([r, n]) => `<rect x="${scale(r) - 1.25}" y="${46 - (30 * n) / most}" width="2.5" height="${(30 * n) / most}" fill="var(--interface)"><title>residue ${r}: contacts the receptor in ${n} of ${g.structures} structures</title></rect>`).join('')}
       <line class="axis" x1="20" x2="${width - 20}" y1="48" y2="48" />
       ${[1, Math.round(g.length / 4), Math.round(g.length / 2), Math.round((3 * g.length) / 4), g.length].map(x => `<text class="tick" x="${scale(x)}" y="66" text-anchor="middle">${x}</text>`).join('')}
+      ${elements.map(e => `<rect x="${scale(e.start) - 1}" y="74" width="${scale(e.end) - scale(e.start) + 2}" height="${e.name.startsWith('S') ? 4 : 8}" fill="var(--chain)"><title>${esc(e.name)} (CGN), residues ${e.start}–${e.end}</title></rect>${e.name.startsWith('H') && e.end - e.start >= 8 ? `<text class="tick" x="${(scale(e.start) + scale(e.end)) / 2}" y="94" text-anchor="middle">${e.name.replace('H', 'α')}</text>` : ''}`).join('')}
     </svg></div>`
 }

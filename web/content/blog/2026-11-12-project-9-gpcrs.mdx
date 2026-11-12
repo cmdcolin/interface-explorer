@@ -25,9 +25,9 @@ olfactory receptor, OR51E2. We took the residues within 5 Å across each
 receptor–Gα interface and placed the ClinVar missense variants on them.
 
 **{p.gAlphaPathogenic} pathogenic variants land on these interfaces, and all are
-on the G protein: {p.gnasPathogenic} on Gαs, {p.tipPathogenic.length} of them in
-its last {p.tip} residues**, the tip of the α5 helix that Gαs pushes into the
-receptor's cytoplasmic cavity. The receptor side has
+on the G protein: {p.gnasPathogenic} on Gαs, {p.alpha5Pathogenic.length} of them on
+its C-terminal α5 helix**, the helix Gαs pushes into the receptor's cytoplasmic
+cavity. The receptor side has
 {p.receptorPathogenic || 'none'}.
 
 <Shot
@@ -43,11 +43,13 @@ receptor's cytoplasmic cavity. The receptor side has
 
 ## The tip of Gαs
 
-<Html html={p.gnas ? surfaceMap(p.gnas) : ''} />
+<Html html={p.gnas ? surfaceMap(p.gnas, p.gnasLabels) : ''} />
 
 Bars: how many of the {p.gnas?.structures} Gαs structures put a receptor within
 5 Å of each residue. Marks above: ClinVar pathogenic (red) and uncertain
-(orange). The pathogenic tip variants are {p.tipPathogenic.join(', ')}.
+(orange). The strip below the axis marks Gαs's helices and strands by the
+common Gα numbering (CGN; Flock et al., Nature 2015). The pathogenic α5 variants
+are {p.alpha5Pathogenic.join(', ')}.
 AlphaFold DB has no complex of Gαs with a GPCR, so this surface comes from
 experiment alone.
 
@@ -98,14 +100,15 @@ ClinVar has {p.gnalVariants.length} variants of uncertain significance where
 AlphaFold DB puts Gαolf against an olfactory receptor. Three GNAL variants are
 worth placing:
 
-- **L380R**, at the tip of α5 like the Gαs variants above: L380 (Gαs L393) is{' '}
+- **L380R**, on α5 like the Gαs variants above: L380 ({p.golfCgn[380]}, Gαs{' '}
+  {p.gnasCounterpart(380)}) is{' '}
   {p.golfReach[380]} Å from OR51E2 in {p.or51e2.pdb}, so it touches the receptor
   in the structure and in the prediction. It is the one to look at first.
-- **K376Q:** K376 is the residue the prediction misses. Its Gαs counterpart,
-  R389, is {p.golfReach[376]} Å from OR51E2 in {p.or51e2.pdb}; AlphaFold DB puts
+- **K376Q:** K376 is the residue the prediction misses. Its Gαs counterpart at{' '}
+  {p.golfCgn[376]}, {p.gnasCounterpart(376)}, is {p.golfReach[376]} Å from OR51E2 in {p.or51e2.pdb}; AlphaFold DB puts
   K376 against OR2A1 and OR2J3 instead.
 - **D227N**, the dystonia 25 variant, is not a receptor contact. Its Gαs
-  counterpart, D240, is {p.golfReach[227]} Å from OR51E2 in {p.or51e2.pdb} and{' '}
+  counterpart at {p.golfCgn[227]}, {p.gnasCounterpart(227)}, is {p.golfReach[227]} Å from OR51E2 in {p.or51e2.pdb} and{' '}
   {p.drd5Golf.reach[227]} Å from DRD5 in {p.drd5Golf.pdb}. AlphaFold DB has it
   against Gβ and the adenylyl cyclases ADCY2, ADCY3 and ADCY4, and within 5 Å
   of DRD5 in its DRD5–Gαolf complex, which {p.drd5Golf.pdb} does not bear out.
@@ -132,7 +135,8 @@ despite an ipSAE just over the threshold. A Gαs structure cannot test the{' '}
 ## For Project 9
 
 - **msa2d:** receptor contacts are labelled with GPCRdb generic numbers ({p.numbered} of{' '}
-  {p.contacts}; the rest are in {p.loops.join(' or ')}). You count within 4 Å,
+  {p.contacts}; the rest are in {p.loops.join(' or ')}), and Gα contacts with CGN,
+  the numbering of your Gα page. You count within 4 Å,
   so ours should be a slightly larger superset on the same structures; if not,
   one of us has a mapping bug. Your 4 Å lists would let us check.
 - **Olfactory receptor group:** whether your OR4 models put the same residues

@@ -32,5 +32,9 @@ From 24 experimental complexes.
   HRH4 uses against Gi1) have a predicted complex with a Gα.
 - On the receptor side, 82 ClinVar variants of uncertain significance and 2
   benign ones contact the G protein; none is classified pathogenic. Every
-  receptor contact is labelled with its GPCRdb generic number.
+  receptor contact is labelled with its GPCRdb generic number, and every Gα
+  contact with its common Gα numbering (CGN; Flock et al., Nature 2015), also
+  from GPCRdb. CGN gives the same label to equivalent positions in every Gα,
+  so the Gαs and Gαolf counterparts quoted in the post (L380 and L393 are both
+  G.H5.25) are read from it rather than from a sequence alignment.
 

@@ -5,6 +5,9 @@ import { pdbModel } from './scene.ts'
 import { JBROWSE } from './site.ts'
 import type { Agreement, Complex, Side, SideVariant } from './types.ts'
 
+const GPCRDB = 'GPCRdb generic number'
+const CGN = 'common Gα numbering, CGN'
+
 function variantCounts(variants: SideVariant[]) {
   return LABEL_KEYS.map(
     label => [label, variants.filter(v => v.label === label).length] as const,
@@ -21,12 +24,13 @@ export function variantDetails(
   variants: SideVariant[],
   differing: number[] = [],
   generic: Record<string, string> = {},
+  numbering = GPCRDB,
 ) {
   return variants.length
     ? `<details><summary>${variantCounts(variants)}</summary>${variants
         .map(
           v =>
-            `<a href="${clinvarHref(v.variation)}">${esc(v.change)}</a>${differing.includes(v.position) ? '<span title="The structure has a different residue here than the human protein">*</span>' : ''}${generic[v.position] ? ` <span class="generic" title="GPCRdb generic number">${esc(generic[v.position])}</span>` : ''} <span class="muted">${LABELS[v.label]}</span>`,
+            `<a href="${clinvarHref(v.variation)}">${esc(v.change)}</a>${differing.includes(v.position) ? '<span title="The structure has a different residue here than the human protein">*</span>' : ''}${generic[v.position] ? ` <span class="generic" title="${numbering}">${esc(generic[v.position])}</span>` : ''} <span class="muted">${LABELS[v.label]}</span>`,
         )
         .join(', ')}</details>`
     : '—'
@@ -44,14 +48,14 @@ export function gAlphaAgreementText({ gProteins, gAlphaAfdb }: Complex) {
     : agreementText(null)
 }
 
-export function sideCell(side: Side) {
+export function sideCell(side: Side, numbering = GPCRDB) {
   const differing = side.differing.length
   const generic = side.generic ?? {}
   const count = residueCount(side.residues.length)
   const labelled = side.generic
-    ? `<span class="tip" title="Residue (GPCRdb generic number): ${esc(side.residues.map(r => (generic[r] ? `${r} (${generic[r]})` : r)).join(', '))}">${count}</span>`
+    ? `<span class="tip" title="Residue (${numbering}): ${esc(side.residues.map(r => (generic[r] ? `${r} (${generic[r]})` : r)).join(', '))}">${count}</span>`
     : count
-  return `${labelled}${differing ? ` <span class="muted" title="Residues ${side.differing.join(', ')} differ from the human protein in this structure">(${differing} not as in human)</span>` : ''}<br />${variantDetails(side.variants, side.differing, generic)}`
+  return `${labelled}${differing ? ` <span class="muted" title="Residues ${side.differing.join(', ')} differ from the human protein in this structure">(${differing} not as in human)</span>` : ''}<br />${variantDetails(side.variants, side.differing, generic, numbering)}`
 }
 
 export function gAlphaCell(gProteins: Side[]) {
@@ -59,7 +63,7 @@ export function gAlphaCell(gProteins: Side[]) {
     ? gProteins
         .map(
           g =>
-            `${gProteins.length > 1 || g.chimera ? `${esc(g.gene)}${g.chimera ? ' <span class="muted">segment</span>' : ''}: ` : ''}${sideCell(g)}`,
+            `${gProteins.length > 1 || g.chimera ? `${esc(g.gene)}${g.chimera ? ' <span class="muted">segment</span>' : ''}: ` : ''}${sideCell(g, CGN)}`,
         )
         .join('<br />')
     : '<span class="muted" title="No part of this Gα matches a human Gα sequence">not mapped</span>'

@@ -26,6 +26,13 @@ exploring; the explorer is for exploring them.
 
 ## Future ideas
 
+- **Alignment as a 2D graph:** the Project 9 msa2d pages draw a family's
+  alignment as a graph, with alignment columns as nodes grouped by helix and
+  strand and contacts as edges, and each structure as a layer over the same
+  nodes. The GPCR complexes, numbered by GPCRdb on the receptor and CGN on Gα,
+  would fit that frame: receptor–Gα contacts as edges between two numbered
+  graphs, and variants placed on columns shared across receptors.
+
 - **Beyond human:** the structural core (interface calling, patch ranking,
   isoforms, the PDB check) is species-agnostic. The variant layers are not:
   ClinVar, AlphaMissense, hg38 phyloP and the hg38 JBrowse links. Another

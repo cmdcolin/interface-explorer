@@ -222,7 +222,37 @@ async function gpcrdbNumbering(accession: string) {
     `https://gpcrdb.org/services/residues/extended/${id}/`,
     join(DATA, 'gpcrdb', `${id}.json`),
   )
-  return genericNumbers(rows, sequence)
+  return { sequence, labels: genericNumbers(rows, sequence) }
+}
+
+async function genericLabels(accession: string, residues: number[]) {
+  const { labels } = await gpcrdbNumbering(accession)
+  return Object.fromEntries(
+    residues.flatMap(position => {
+      const label = labels.get(position)
+      return label ? [[position, label]] : []
+    }),
+  )
+}
+
+async function cgnTables(complexes: ComplexRecord[]) {
+  const accessions = new Set(
+    complexes.flatMap(c => [
+      ...c.gProteins.map(g => g.accession),
+      ...(c.gAlphaAfdb ? [c.gAlphaAfdb.accession] : []),
+    ]),
+  )
+  return Object.fromEntries(
+    await Promise.all(
+      [...accessions].sort().map(async accession => {
+        const { sequence, labels } = await gpcrdbNumbering(accession)
+        return [
+          (await uniprot(accession)).gene,
+          { sequence, labels: Object.fromEntries(labels) },
+        ] as const
+      }),
+    ),
+  )
 }
 
 async function humanCandidates(gene: string) {
@@ -875,16 +905,17 @@ async function interfaceRecord(
   const gProteins = await Promise.all(
     [...gSides]
       .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-      .map(([accession, residues]) =>
-        side(
+      .map(async ([accession, residues]) => {
+        const g = await side(
           accession,
           residues,
           orthologs,
           variants,
           receptorHuman?.gene ?? '',
           chimera,
-        ),
-      ),
+        )
+        return { ...g, generic: await genericLabels(accession, g.residues) }
+      }),
   )
   const gGenes = gProteins.map(g => g.gene).sort()
   const receptor = await side(
@@ -894,20 +925,14 @@ async function interfaceRecord(
     variants,
     gGenes,
   )
-  const numbering = receptorAccession
-    ? await gpcrdbNumbering(receptorAccession)
-    : new Map<number, string>()
   const prediction = await receptorPrediction(atlas, receptor, gGenes)
   return {
     ...complexFields(structure),
     receptorSide: {
       ...receptor,
-      generic: Object.fromEntries(
-        receptor.residues.flatMap(position => {
-          const label = numbering.get(position)
-          return label ? [[position, label]] : []
-        }),
-      ),
+      generic: receptorAccession
+        ? await genericLabels(receptorAccession, receptor.residues)
+        : {},
       afdb:
         prediction && receptor.residues.length && prediction.residues.size
           ? agreement(
@@ -1017,7 +1042,8 @@ async function main() {
   await writeBigBed('gpcr_interface_variants', variantLines, 'bed9')
   const others = listed.filter(s => s.g_family === '-').map(otherFields)
   const gAlphas = await gAlphaSummaries(complexes, atlas, variants)
-  writeJson(join(SITE_DATA, 'gpcr.json'), { complexes, gAlphas, others })
+  const cgn = await cgnTables(complexes)
+  writeJson(join(SITE_DATA, 'gpcr.json'), { complexes, gAlphas, others, cgn })
   console.log(
     `${complexes.length} receptor–G protein complexes, ${features.length} interface features, ${variantLines.length} variants on them`,
   )

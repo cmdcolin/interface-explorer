@@ -258,10 +258,16 @@ export interface OtherStructure {
   degree_active: string
 }
 
+export interface CgnTable {
+  sequence: string
+  labels: Record<string, string>
+}
+
 export interface Gpcr {
   complexes: Complex[]
   gAlphas: GAlpha[]
   others: OtherStructure[]
+  cgn: Record<string, CgnTable>
 }
 
 export interface ViralContact {

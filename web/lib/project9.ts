@@ -2,7 +2,7 @@ import { gene, gpcr } from './data.ts'
 import type { Agreement } from './types.ts'
 
 const OLFACTORY = /^OR\d/
-const TIP = 20
+const ALPHA5 = 'G.H5.'
 const FEATURED = { pdb: '7JVQ', gAlpha: 'GNAS' }
 
 export function project9() {
@@ -25,6 +25,15 @@ export function project9() {
   const gnas = data.gAlphas.find(g => g.gene === 'GNAS')
   const pathogenic = <V extends { label: string }>(list: V[]) => list.filter(v => v.label === 'pathogenic')
   const gnasPathogenic = pathogenic(gnas?.variants ?? [])
+  const gnasCgn = data.cgn.GNAS
+  const golfCgn = data.cgn.GNAL?.labels ?? {}
+  const gnasByLabel = new Map(
+    Object.entries(gnasCgn?.labels ?? {}).map(([position, label]) => [label, Number(position)]),
+  )
+  const gnasCounterpart = (golfPosition: number) => {
+    const position = gnasByLabel.get(golfCgn[golfPosition] ?? '')
+    return position ? `${gnasCgn?.sequence[position - 1]}${position}` : ''
+  }
   const featured = data.complexes.find(c => c.pdb === FEATURED.pdb)
   const gnal = gene('GNAL')
   const olfactory = gnal.partners.filter(p => OLFACTORY.test(p.gene))
@@ -100,10 +109,12 @@ export function project9() {
     receptorPathogenic: pathogenic(data.complexes.flatMap(c => c.receptorSide.variants)).length,
     all: data.complexes.length,
     gnasPathogenic: gnasPathogenic.length,
-    tip: TIP,
-    tipPathogenic: gnasPathogenic
-      .filter(v => v.position > (gnas?.length ?? 0) - TIP)
+    gnasLabels: gnasCgn?.labels ?? {},
+    alpha5Pathogenic: gnasPathogenic
+      .filter(v => gnasCgn?.labels[v.position]?.startsWith(ALPHA5))
       .map(v => v.change),
+    golfCgn,
+    gnasCounterpart,
     featured: {
       ...FEATURED,
       receptor: featured?.receptorSide.gene,

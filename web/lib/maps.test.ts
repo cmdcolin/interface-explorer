@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { lanes, partnerGroups } from './maps.ts'
+import { cgnElements, lanes, partnerGroups } from './maps.ts'
 
 test('overlapping features take the next free lane', () => {
   expect(
@@ -43,4 +43,20 @@ test('a homodimer keeps its own group even when a paralog copies its interface',
     partner('CCS', '10–19', 1),
   ])
   expect(groups.map(g => g.labels)).toEqual([['itself'], ['CCS']])
+})
+
+test('CGN labels group into helices and strands, skipping loops', () => {
+  expect(
+    cgnElements({
+      '3': 'G.H5.02',
+      '1': 'G.S6.01',
+      '2': 'G.s6h5.01',
+      '4': 'G.H5.03',
+      '6': 'G.H5.05',
+    }),
+  ).toEqual([
+    { name: 'S6', start: 1, end: 1 },
+    { name: 'H5', start: 3, end: 4 },
+    { name: 'H5', start: 6, end: 6 },
+  ])
 })
