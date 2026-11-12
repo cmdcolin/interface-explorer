@@ -10,12 +10,11 @@ alternative isoform's predicted structure differs from the canonical one.
 
 ## Docs
 
-- [What's on the site](docs/site.md): the pages and what each shows
-- [Findings](docs/findings.md): the odds ratios, conservation, experimental checks
+- [What is on the site](docs/site.md)
+- [Findings and caveats](docs/findings.md): the odds ratios, conservation, experimental checks
 - [Isoforms](docs/isoforms.md)
 - [GPCRs and their G proteins](docs/gpcrs.md)
 - [SARS-CoV-2 contacts](docs/sars-cov-2.md)
-- [Caveats](docs/caveats.md)
 - [Method](docs/method.md): how interfaces, variants, conservation and the rest are computed
 - [JBrowse tracks](docs/tracks.md)
 - [Running the pipeline and site](docs/running.md)
