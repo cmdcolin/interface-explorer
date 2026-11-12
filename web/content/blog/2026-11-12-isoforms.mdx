@@ -1,0 +1,28 @@
+---
+title: 'Isoforms lose interfaces: APP695 and the Kunitz domain'
+date: '2026-11-12'
+order: 2
+description: 'AlphaFold DB now models alternative isoforms, and some lose half or more of a partner interface or a residue with a pathogenic variant.'
+hero: './heroes/isoforms.jpg'
+heroAlt: 'APP''s eleven isoforms aligned on the canonical sequence, coloured by pLDDT, with the partner interface and pathogenic variants marked above'
+---
+
+import Html from '../../components/Html.astro'
+import { appCase, isoformTotals } from '../../lib/cases.ts'
+
+export const isoforms = isoformTotals()
+
+Splicing changes interfaces too. APP695 (P05067-4), the neuronal isoform of
+APP, has no Kunitz inhibitor domain, so it lacks most of APP's predicted
+interfaces with the proteases KLK11, KLK14 and prostasin; APP751 (P05067-8)
+keeps the domain and lacks none.
+
+<Html html={appCase()} />
+
+## Across the disease genes
+
+Across {isoforms.genes.toLocaleString()} disease genes and
+{isoforms.alternativeIsoforms.toLocaleString()} modelled isoforms,
+{isoforms.lackingInterface.toLocaleString()} isoforms lack half or more of a
+partner interface, and {isoforms.genesLackingPathogenic.toLocaleString()} genes
+have an isoform missing a residue with a pathogenic variant.

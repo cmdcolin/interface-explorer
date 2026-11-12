@@ -31,7 +31,7 @@ await screenshots(
       wait: 45,
     },
     {
-      name: 'three-places-to-start',
+      name: 'isoforms',
       url: local => `${local}isoforms/APP/`,
       clip: '.map-wrap',
       height: 800,
