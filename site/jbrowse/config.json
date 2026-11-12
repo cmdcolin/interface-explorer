@@ -206,7 +206,27 @@
           "type": "LinearMultiRowFeatureDisplay",
           "marks": [
             {
-              "mark": "rect"
+              "mark": {
+                "type": "rect",
+                "height": {
+                  "band": 0.35
+                }
+              },
+              "transform": [
+                {
+                  "type": "filter",
+                  "expr": "jexl:get(feature,'end') - get(feature,'start') > 1"
+                }
+              ]
+            },
+            {
+              "mark": "rect",
+              "transform": [
+                {
+                  "type": "filter",
+                  "expr": "jexl:get(feature,'end') - get(feature,'start') <= 1"
+                }
+              ]
             }
           ],
           "rows": {

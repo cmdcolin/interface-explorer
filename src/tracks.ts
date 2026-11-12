@@ -95,6 +95,8 @@ export function absolute(node: unknown): unknown {
         : node
 }
 
+const SPAN = "get(feature,'end') - get(feature,'start')"
+
 export function withSignificanceRows(track: Record<string, unknown>) {
   const basic = records(track.displays).find(
     display => display.type === 'LinearBasicDisplay',
@@ -105,7 +107,16 @@ export function withSignificanceRows(track: Record<string, unknown>) {
   const names = list(scale.names)
   const rows = {
     type: 'LinearMultiRowFeatureDisplay',
-    marks: [{ mark: 'rect' }],
+    marks: [
+      {
+        mark: { type: 'rect', height: { band: 0.35 } },
+        transform: [{ type: 'filter', expr: `jexl:${SPAN} > 1` }],
+      },
+      {
+        mark: 'rect',
+        transform: [{ type: 'filter', expr: `jexl:${SPAN} <= 1` }],
+      },
+    ],
     rows: {
       field: color.field,
       sort: codes,

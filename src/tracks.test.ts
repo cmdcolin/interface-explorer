@@ -92,7 +92,26 @@ test('the ClinVar track gains a display with one row per significance', () => {
       basic,
       {
         type: 'LinearMultiRowFeatureDisplay',
-        marks: [{ mark: 'rect' }],
+        marks: [
+          {
+            mark: { type: 'rect', height: { band: 0.35 } },
+            transform: [
+              {
+                type: 'filter',
+                expr: "jexl:get(feature,'end') - get(feature,'start') > 1",
+              },
+            ],
+          },
+          {
+            mark: 'rect',
+            transform: [
+              {
+                type: 'filter',
+                expr: "jexl:get(feature,'end') - get(feature,'start') <= 1",
+              },
+            ],
+          },
+        ],
         rows: {
           field: 'sig',
           sort: ['PG', 'VUS'],
