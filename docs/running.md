@@ -47,6 +47,9 @@
   (cached in `data/uniprot_human_diseases.json`), the MONDO ontology (cached in
   `data/mondo.obo.gz`) and which chain of each AlphaFold DB complex is the
   gene's.
+- `pnpm mechanism`: labels each gene by its pathogenic truncating variants in
+  ClinVar and its ClinGen haploinsufficiency score, and each disease by its HPO
+  inheritance mode, into `out/mechanism.json` for `pnpm analyze`.
 - `pnpm findings`: regenerates `docs/findings.md` from `site/data/summary.json`,
   `out/gnomad.json` and the interface tracks, so its numbers never go stale.
 - `pnpm isoforms [workers]`: `site/data/isoforms.json` and

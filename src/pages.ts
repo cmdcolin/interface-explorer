@@ -565,6 +565,7 @@ async function main() {
       byConfidenceBand: analysis.by_confidence_band,
       byAlphaMissenseClass: analysis.by_alphamissense_class,
       byKind: analysis.by_kind,
+      byMechanism: analysis.by_mechanism,
       byPairEvidence: analysis.by_pair_evidence,
     },
     conservation: {

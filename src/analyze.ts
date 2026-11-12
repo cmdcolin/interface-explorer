@@ -15,6 +15,12 @@ import { pairKey, readInteractions } from './interactions.ts'
 import type { PairEvidence } from './interactions.ts'
 import { writeJson } from './json.ts'
 import {
+  notHaploinsufficient,
+  readMechanism,
+  variantInheritance,
+} from './mechanism.ts'
+import type { Mechanism } from './mechanism.ts'
+import {
   nanPercentile,
   pairwiseSum,
   pythonRound,
@@ -105,6 +111,69 @@ export const CONTROLS: Record<string, Keep> = {
 export const KINDS = {
   'with other proteins (heterodimers)': false,
   'with itself (homodimers)': true,
+}
+
+interface Arm {
+  gene: (protein: AtlasProtein) => boolean
+  variant: (variant: ScoredVariant) => boolean
+}
+
+export function mechanismArms(mechanism: Mechanism) {
+  const inheritance = new Map(Object.entries(mechanism.inheritance))
+  const classOf = (p: AtlasProtein) => mechanism.genes[p.gene]?.class
+  const lowDosage = (p: AtlasProtein) =>
+    notHaploinsufficient(mechanism.genes[p.gene]?.haploinsufficiency)
+  const modeOf = (v: ScoredVariant) =>
+    variantInheritance(v.diseases, inheritance)
+  const any = () => true
+  const classes = ['missense-only', 'truncation-pathogenic'] as const
+  const modes = ['dominant', 'recessive'] as const
+  return Object.fromEntries([
+    ...classes.map(
+      c =>
+        [
+          `${c} genes`,
+          { gene: (p: AtlasProtein) => classOf(p) === c, variant: any },
+        ] as const,
+    ),
+    ...modes.map(
+      m =>
+        [
+          `${m} variants`,
+          { gene: any, variant: (v: ScoredVariant) => modeOf(v) === m },
+        ] as const,
+    ),
+    ...classes.flatMap(c =>
+      modes.map(
+        m =>
+          [
+            `${c} genes, ${m} variants`,
+            {
+              gene: (p: AtlasProtein) => classOf(p) === c,
+              variant: (v: ScoredVariant) => modeOf(v) === m,
+            },
+          ] as const,
+      ),
+    ),
+    ...classes.flatMap(c =>
+      modes.map(
+        m =>
+          [
+            `${c} genes, ${m} variants, ClinGen not haploinsufficient`,
+            {
+              gene: (p: AtlasProtein) => classOf(p) === c && lowDosage(p),
+              variant: (v: ScoredVariant) => modeOf(v) === m,
+            },
+          ] as const,
+      ),
+    ),
+  ]) satisfies Record<string, Arm>
+}
+
+export function armProteins(proteins: ProteinVariants[], arm: Arm) {
+  return proteins
+    .filter(arm.gene)
+    .map(p => ({ ...p, variants: p.variants.filter(arm.variant) }))
 }
 
 export const ALPHAMISSENSE_CLASSES: Record<string, Keep> = {
@@ -286,6 +355,24 @@ export async function main() {
         name,
         enrichment(
           tables(withContext, byMetric('ipsae'), CONFIDENT_BAND, keep),
+        ),
+      ]),
+    ),
+    by_mechanism: Object.fromEntries(
+      Object.entries(mechanismArms(readMechanism())).map(([name, arm]) => [
+        name,
+        Object.fromEntries(
+          Object.entries(CONTROLS).map(([control, keep]) => [
+            control,
+            enrichment(
+              tables(
+                armProteins(withContext, arm),
+                byMetric('ipsae'),
+                CONFIDENT_BAND,
+                keep,
+              ),
+            ),
+          ]),
         ),
       ]),
     ),

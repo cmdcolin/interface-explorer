@@ -107,6 +107,7 @@ export interface Summary {
     byConfidenceBand: Record<string, Enrichment>
     byAlphaMissenseClass: Record<string, Enrichment>
     byKind: Record<string, Record<string, Enrichment>>
+    byMechanism: Record<string, Record<string, Enrichment>>
     byPairEvidence: Record<string, Enrichment>
   }
   conservation: {

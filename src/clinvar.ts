@@ -57,7 +57,7 @@ export const AMINO_ACIDS = new Map([
 ])
 const UNNAMED = new Set(['not provided', 'not specified', 'See cases'])
 const AGREEMENT = 0.95
-const LABELS = new Map<string, Label>([
+export const CLINICAL_SIGNIFICANCE = new Map<string, Label>([
   ['Pathogenic', 'pathogenic'],
   ['Likely pathogenic', 'pathogenic'],
   ['Pathogenic/Likely pathogenic', 'pathogenic'],
@@ -123,7 +123,9 @@ export function downloaded() {
 
 function missenseVariant(field: (name: string) => string) {
   const match = MISSENSE.exec(field('Name'))
-  const label = LABELS.get(field('ClinicalSignificance').split(';')[0] ?? '')
+  const label = CLINICAL_SIGNIFICANCE.get(
+    field('ClinicalSignificance').split(';')[0] ?? '',
+  )
   const [, transcript, wildType, position, mutant] = match ?? []
   const from = AMINO_ACIDS.get(wildType ?? '')
   const to = AMINO_ACIDS.get(mutant ?? '')

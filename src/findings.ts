@@ -10,6 +10,7 @@ const FINDINGS = join(ROOT, 'docs', 'findings.md')
 const ODDS = 'Mantel–Haenszel odds ratio'
 const INTERVAL = '95% CI (bootstrap over proteins)'
 const SURFACE = 'ordered and surface (pLDDT ≥ 70, RSA ≥ 0.2)'
+const ALL = 'all residues'
 
 interface GnomadRow {
   proteins: number
@@ -110,6 +111,10 @@ export function findings(
   mapping: ReturnType<typeof mappingCheck>,
 ) {
   const e = s.enrichment
+  const arm = (name: string, control: string) => {
+    const row = e.byMechanism[name]?.[control]
+    return row ? odds(row) : '—'
+  }
   const [hetero, homo] = Object.values(e.byKind).map(kind => kind[SURFACE])
   const bands = Object.entries(e.byConfidenceBand).filter(([name]) =>
     name.startsWith('ipSAE'),
@@ -178,6 +183,19 @@ ${Object.entries(e.byPairEvidence)
   evidence bands, as calibrated for clinical use by Bergquist et al. 2025
   ([Genet Med 27:101402](https://doi.org/10.1016/j.gim.2025.101402)):
 ${amBands.map(([name, band]) => `  ${name.replace('AlphaMissense ', '')}, ${odds(band)}`).join(';\n')}.
+- Inheritance does not change what the interface marks. Over all residues
+  the effect looks larger for variants of dominant diseases,
+  ${arm('dominant variants', ALL)}, than of recessive ones,
+  ${arm('recessive variants', ALL)}, as it would if dominant missense acted
+  through binding and recessive missense through the fold. On the folded
+  surface they match: ${arm('dominant variants', SURFACE)} against
+  ${arm('recessive variants', SURFACE)}. The gap closes once the buried core is set aside, so it
+  reflects where in the fold the variants fall rather than the interface, and
+  position and inheritance alone give no mechanism hint. Genes with no pathogenic
+  truncating variant in ClinVar give ${arm('missense-only genes', SURFACE)} on
+  the folded surface, and those with at least two give
+  ${arm('truncation-pathogenic genes', SURFACE)}. Inheritance is HPO's, through
+  each variant's OMIM diseases.
 - Conservation explains only part of it. Of the variants classified pathogenic
   or benign, ${share(highest)} are pathogenic in the top quarter of 100-way vertebrate
   phyloP, against ${share(lowest)} in the bottom quarter. Comparing variants only within the

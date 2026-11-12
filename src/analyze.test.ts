@@ -2,11 +2,13 @@ import { describe, expect, test } from 'vitest'
 
 import {
   ALPHAMISSENSE_CLASSES,
+  armProteins,
   bands,
   byEvidence,
   byMetric,
   interfaceScore,
   mantelHaenszel,
+  mechanismArms,
   tables,
 } from './analyze.ts'
 import type { ProteinVariants } from './analyze.ts'
@@ -183,4 +185,28 @@ test('evidence bands rank each residue by its best-supported confident partner',
   expect(tables([PROTEIN], byEvidence(interactions), [0, 1])).toEqual([
     [0, 1, 0, 1],
   ])
+})
+
+test('a mechanism arm keeps its gene class and its inheritance mode', () => {
+  const arms = mechanismArms({
+    genes: {
+      [PROTEIN.gene]: { class: 'missense-only', haploinsufficiency: 0 },
+    },
+    inheritance: { 'OMIM:1': 'dominant', 'OMIM:2': 'recessive' },
+  })
+  const protein = {
+    ...PROTEIN,
+    variants: PROTEIN.variants.map((v, i) => ({
+      ...v,
+      diseases: [i % 2 ? 'OMIM:2' : 'OMIM:1'],
+    })),
+  }
+  const dominant = arms['missense-only genes, dominant variants']
+  const truncating = arms['truncation-pathogenic genes']
+  expect(
+    dominant &&
+      armProteins([protein], dominant)[0]?.variants.map(v => v.diseases),
+  ).toEqual(protein.variants.filter((_, i) => i % 2 === 0).map(v => v.diseases))
+  expect(truncating && armProteins([protein], truncating)).toEqual([])
+  expect(Object.keys(arms)).toHaveLength(12)
 })

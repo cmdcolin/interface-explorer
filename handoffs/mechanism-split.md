@@ -10,10 +10,15 @@ description: "Test whether interfaces are where non-loss-of-function missense li
   points to, and for broken binding, which partner. The aggregate odds ratio
   becomes a supporting fact; the per-variant mechanism hint becomes a feature
   of the explorer (see `handoffs/explorer-reframe.md`).
-- **State as of 2026-11-12:** claimed by the session that added homodimers
-  (branch `mechanism`): labels, analysis rows and, if the split holds, the
-  per-variant hint. Homodimers are now in the atlas, so the caveat below about
-  their absence no longer applies.
+- **State as of 2026-11-12:** labels (`src/mechanism.ts`) and analysis rows
+  (`by_mechanism` in `out/analysis.json`) are done; the result is in
+  `docs/findings.md`. The split does not hold on the fair comparison: the
+  dominant–recessive gap over all residues closes on the folded surface, and
+  the gene-class arms match there too, so no per-variant hint was built. The
+  expected labels below were wrong: GNAO1 and PSEN1 have pathogenic truncating
+  variants in ClinVar. Homodimers are now in the atlas, so the caveat below
+  about their absence no longer applies. Open: gnomAD LOEUF as a second dosage
+  check, and the decomposition under "Later".
 
 ## Hypothesis
 

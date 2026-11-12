@@ -46,6 +46,19 @@ Across all 5,350 UniProt disease proteins.
   BP4 (≤ 0.169), 1.4× (95% CI 1.0–1.9), 374 proteins;
   indeterminate, 1.0× (95% CI 0.8–1.3), 539 proteins;
   PP3 (≥ 0.792), 1.5× (95% CI 1.0–2.3), 226 proteins.
+- Inheritance does not change what the interface marks. Over all residues
+  the effect looks larger for variants of dominant diseases,
+  3.5× (95% CI 2.3–5.7), 196 proteins, than of recessive ones,
+  1.5× (95% CI 1.2–1.9), 424 proteins, as it would if dominant missense acted
+  through binding and recessive missense through the fold. On the folded
+  surface they match: 2.5× (95% CI 1.6–4.2), 110 proteins against
+  3.2× (95% CI 2.4–4.5), 219 proteins. The gap closes once the buried core is set aside, so it
+  reflects where in the fold the variants fall rather than the interface, and
+  position and inheritance alone give no mechanism hint. Genes with no pathogenic
+  truncating variant in ClinVar give 2.5× (95% CI 1.5–4.1), 107 proteins on
+  the folded surface, and those with at least two give
+  3.3× (95% CI 2.7–4.0), 545 proteins. Inheritance is HPO's, through
+  each variant's OMIM diseases.
 - Conservation explains only part of it. Of the variants classified pathogenic
   or benign, 89% are pathogenic in the top quarter of 100-way vertebrate
   phyloP, against 20% in the bottom quarter. Comparing variants only within the
