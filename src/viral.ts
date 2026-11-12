@@ -163,6 +163,7 @@ interface Candidate {
 interface Contact {
   accession: string
   gene: string
+  length: number
   viral: string
   viralName: string
   protein: string
@@ -345,6 +346,7 @@ export async function main(workers = 4) {
             {
               accession,
               gene: genes.get(accession) ?? '',
+              length: sequences.get(accession)?.length ?? 0,
               viral: protein.accession,
               viralName: protein.name,
               protein:

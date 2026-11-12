@@ -257,6 +257,7 @@ export interface Gpcr {
 export interface ViralContact {
   accession: string
   gene: string
+  length: number
   viral: string
   viralName: string
   protein: string

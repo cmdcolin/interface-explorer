@@ -1,12 +1,21 @@
 ---
 title: 'Where SARS-CoV-2 holds a human disease protein'
 date: '2026-11-12'
-order: 5
+order: 4
 description: "The PDB entries that hold both a SARS-CoV-2 protein and a human disease protein, which of them actually touch, and the ClinVar variants on the contact."
+hero: './heroes/sars-cov-2.jpg'
+heroAlt: "ISG15's residues held by the SARS-CoV-2 papain-like protease, with the ClinVar variants on them marked above"
 ---
 
-import { clinvarHref, esc } from '../../lib/html.ts'
-import { runs, viralContacts } from '../../lib/viral.ts'
+import Html from '../../components/Html.astro'
+import { clinvarHref } from '../../lib/html.ts'
+import { surfaceMap } from '../../lib/maps.ts'
+import {
+  contactSurface,
+  listed,
+  runs,
+  viralContacts,
+} from '../../lib/viral.ts'
 import { geneHref } from '../../lib/site.ts'
 
 export const v = viralContacts()
@@ -76,6 +85,13 @@ susceptibility to mycobacterial disease, and{' '}
 variants in the protein the virus removes, not in anything the virus is known to
 select; what the structure adds is that the residues are the ones PLpro grips.
 
+<Html html={surfaceMap(contactSurface(v.byGene('ISG15')))} />
+
+Bars: the ISG15 residues within 5 Å of the protease in {v.byGene('ISG15')?.pdb}.
+Marks above: the ClinVar variants on them, none of which is classified
+pathogenic. Both of ISG15's domains meet the protease, and the contact runs to
+residue 157, at the foot of the C-terminal tail the protease cuts.
+
 **NEMO inside the main protease.** 3CL protease (nsp5) cleaves NEMO (IKBKG), and
 the structure of the protease with the NEMO peptide holds residues{' '}
 {runs(v.byGene('IKBKG')?.residues ?? [])} in its cleft. L227P, pathogenic in
@@ -101,8 +117,8 @@ find by co-occurrence alone:
 - **nsp1 and the ribosome.** {v.ribosomal.length} ribosomal disease proteins,
   including the Diamond–Blackfan anemia genes RPS19, RPS26 and RPS10, sit in the
   same entries as nsp1. None touches it. What nsp1 does touch in those entries,
-  besides the rRNA, is {v.nsp1Neighbours.join(', ')} — the proteins around the
-  40S mRNA channel, and none of them a disease protein in UniProt.
+  besides the rRNA, is {listed(v.nsp1Neighbours)} — the proteins around the 40S
+  mRNA channel, none of them a disease protein in UniProt.
 - **SLC6A20 and SLC6A19 with spike.** Both share entries with spike, neither
   touches it: they are there bound to ACE2, which is what spike holds.
 - **B2M with the viral peptides.** B2M shares entries with the spike, N and
@@ -123,7 +139,7 @@ find by co-occurrence alone:
   rule as the rest of the explorer.
 - A chain carrying both sequences is a fusion construct, not a complex, and is
   left out. So are three human proteins present as structural reagents
-  ({v.reagents.map(r => r.gene).join(', ')}): a nanodisc scaffold or a
+  ({listed(v.reagents.map(r => r.gene))}): a nanodisc scaffold or a
   trimerisation domain touching the viral protein is not biology.
 - Nothing here is evidence about COVID-19 susceptibility. These are variants
   classified for Mendelian disease that happen to lie where a viral protein

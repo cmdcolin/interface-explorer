@@ -18,7 +18,6 @@ export function viralContacts() {
     pathogenic: count(data.contacts, 'pathogenic'),
     uncertain: count(data.contacts, 'uncertain'),
     benign: count(data.contacts, 'benign'),
-    protease,
     proteaseSites: protease
       .map(c => new Set(c.viralNumbers))
       .reduce((shared, numbers) => shared.intersection(numbers))
@@ -35,8 +34,32 @@ export function viralContacts() {
     ].toSorted(),
     pageOf: (gene: string) => pages.get(gene),
     byGene: (gene: string) => data.contacts.find(c => c.gene === gene),
-    apartGene: (gene: string) => apart.find(pair => pair.gene === gene),
   }
+}
+
+export function contactSurface(contact: ViralContact) {
+  return {
+    gene: contact.gene,
+    accession: contact.accession,
+    length: contact.length,
+    locus: null,
+    counts: contact.residues.map(
+      residue => [residue, 1] satisfies [number, number],
+    ),
+    receptors: [contact.protein],
+    chimeras: 0,
+    structures: 1,
+    chimeraOnly: false,
+    afdbReceptors: [],
+    afdb: null,
+    variants: contact.variants,
+  }
+}
+
+export function listed(items: string[]) {
+  return items.length > 1
+    ? `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`
+    : (items[0] ?? '')
 }
 
 export function runs(residues: number[]) {
