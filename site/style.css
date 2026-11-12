@@ -174,7 +174,8 @@ th button {
   cursor: pointer;
 }
 
-td.nowrap {
+td.nowrap,
+td .nowrap {
   white-space: nowrap;
 }
 

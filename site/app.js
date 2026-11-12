@@ -348,6 +348,14 @@ async function home() {
         Share of scored variants at an interface with AlphaMissense above ${summary.alphaMissense.likelyPathogenic}. The uncertain ones fall between
         the known pathogenic and benign: ${am.uncertain.likelyPathogenic.toLocaleString()} leads worth a look.
       </p>
+      <h3>Where to start</h3>
+      <p>
+        ${summary.leads.variants.toLocaleString()} of the uncertain variants, in ${summary.leads.genes.toLocaleString()} genes, change an interface residue
+        where a different substitution is already classified pathogenic.
+      </p>
+      <div class="actions">
+        <a class="button primary" href="#/leads">The ${summary.leads.variants.toLocaleString()} strongest leads</a>
+      </div>
     </section>
 
     <section>
@@ -435,6 +443,40 @@ async function genesPage() {
       { key: 'pathogenic', label: 'Pathogenic', num: true, cell: g => g.pathogenic },
       { key: 'uncertain', label: 'Uncertain', num: true, cell: g => g.uncertain },
       { key: 'benign', label: 'Benign', num: true, cell: g => g.benign },
+    ],
+  })
+}
+
+async function leadsPage() {
+  const [summary, leads] = await Promise.all([load('data/summary.json'), load('data/leads.json')])
+  const am = summary.alphaMissense
+  const amClass = score => (score > am.likelyPathogenic ? 'pathogenic' : score < am.likelyBenign ? 'benign' : 'uncertain')
+  app.innerHTML = `
+    <h1>Leads</h1>
+    <p class="lede">
+      ${leads.length.toLocaleString()} ClinVar variants of uncertain significance, in ${summary.leads.genes.toLocaleString()} genes, that change a residue at a
+      confident predicted interface where a different substitution is already classified pathogenic.
+    </p>
+    <p class="note">
+      A pathogenic substitution at the same residue is evidence clinical guidelines already count towards pathogenicity; the interface
+      adds a hypothesis for why the residue matters. These are leads, not classifications: a milder substitution at the same residue can be harmless.
+      AlphaMissense above ${am.likelyPathogenic} is likely pathogenic. See <a href="#/about">About</a>.
+    </p>
+    ${tableShell('leads', 'Filter genes, changes or partners')}`
+  sortableTable({
+    id: 'leads',
+    rows: leads.map(lead => ({ ...lead, score: lead.alphaMissense ?? -1, known: lead.sameResidue.length, touches: lead.partners.join(', ') })),
+    sortKey: 'score',
+    noun: 'variants',
+    matches: lead => [lead.gene, lead.change, ...lead.partners],
+    columns: [
+      { key: 'gene', label: 'Gene', cell: lead => `<a href="#/gene/${encodeURIComponent(lead.page)}">${esc(lead.gene)}</a>` },
+      { key: 'position', label: 'Change', cell: lead => `<a href="https://www.ncbi.nlm.nih.gov/clinvar/variation/${lead.variation}/" title="${esc(lead.review)}">${esc(lead.change)}</a>` },
+      { key: 'score', label: 'AlphaMissense', num: true, cell: lead => (lead.alphaMissense === undefined ? '<span class="muted">—</span>' : `<span class="count ${amClass(lead.alphaMissense)}">${lead.alphaMissense.toFixed(2)}</span>`) },
+      { key: 'known', label: 'Pathogenic at this residue', cell: lead => lead.sameResidue.map(esc).join(', ') },
+      { key: 'pathogenicResidues', label: 'Other pathogenic residues on the interface', num: true, cell: lead => lead.pathogenicResidues },
+      { key: 'touches', label: 'Touches', cell: lead => `<span class="muted">${esc(lead.partners.slice(0, 3).join(', '))}${lead.partners.length > 3 ? ` +${lead.partners.length - 3}` : ''}</span>` },
+      { key: 'pos', label: 'Open', cell: lead => `<span class="nowrap"><a href="${genomeLink(lead.chrom, lead.pos - 30, lead.pos + 30)}">Genome</a> · <a href="${complexLink(lead.gene, lead.entity, `chr${lead.chrom}:${lead.pos - 30}-${lead.pos + 30}`, `chr${lead.chrom}:${lead.pos}${lead.allele ? ` ${lead.allele}` : ''}`)}">3D</a></span>` },
     ],
   })
 }
@@ -951,6 +993,8 @@ async function route() {
       await gpcrPage()
     } else if (page === 'genes') {
       await genesPage()
+    } else if (page === 'leads') {
+      await leadsPage()
     } else if (page === 'about') {
       await about()
     } else {

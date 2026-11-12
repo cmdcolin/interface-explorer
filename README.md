@@ -16,6 +16,9 @@ one.
   ClinVar variants at an interface, each with its AlphaMissense score. It
   launches JBrowse on the genome, or a variant inside its complex beside the
   genome with the variant marked.
+- **Leads:** the 675 variants of uncertain significance that change an
+  interface residue where a different substitution is already classified
+  pathogenic, ranked by AlphaMissense score.
 - **Isoforms:** for disease genes with AlphaFold DB isoform models, where each
   isoform differs from the canonical protein, whether the part they share keeps
   its predicted fold, and which pathogenic sites and partner interfaces it
@@ -67,6 +70,10 @@ one.
 - AlphaMissense scores 23,068 of the 23,233 uncertain ones and calls 10,756
   (47%) likely pathogenic, against 88% of the pathogenic and 17% of the benign
   variants at an interface. It sees one protein at a time, not the partner.
+- 675 of the uncertain variants, in 245 genes, change an interface residue
+  where a different substitution is already classified pathogenic; AlphaMissense
+  calls 523 of them likely pathogenic. Examples: GNB1 W99R and D118V at the Gα
+  interface, HRAS G60R, and BAP1 C91W and C91Y at the ubiquitin interface.
 - 98.8% of those variants' genomic positions fall inside their gene's
   interface codons, an independent check of the residue → codon mapping. The
   rest belong to proteins encoded by several identical genes (histones H3.3
@@ -175,7 +182,7 @@ one.
   `site/data/gpcr.json`.
 - `pnpm tracks`: `site/jbrowse/config.json`, `interfaces.bb` and
   `interface_variants.bb`.
-- `pnpm pages`: `site/data/summary.json`, `genes.json` and
+- `pnpm pages`: `site/data/summary.json`, `genes.json`, `leads.json` and
   `genes/<GENE>.json`.
 - `pnpm isoforms [workers]`: `site/data/isoforms.json` and
   `isoforms/<GENE>.json`.

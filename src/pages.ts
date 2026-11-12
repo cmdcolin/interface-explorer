@@ -138,6 +138,41 @@ export function geneRecord(
   }
 }
 
+export function leads(gene: ReturnType<typeof geneRecord>) {
+  const pathogenic = gene.variants.filter(v => v.label === 'pathogenic')
+  return gene.variants
+    .filter(v => v.label === 'uncertain')
+    .flatMap(variant => {
+      const sameResidue = [
+        ...new Set(
+          pathogenic
+            .filter(p => p.position === variant.position)
+            .map(p => p.change),
+        ),
+      ]
+      const partner = gene.partners.find(p => variant.partners.includes(p.gene))
+      return sameResidue.length && partner
+        ? [
+            {
+              ...variant,
+              gene: gene.gene,
+              sameResidue,
+              pathogenicResidues: new Set(
+                pathogenic
+                  .filter(
+                    p =>
+                      p.position !== variant.position &&
+                      p.partners.some(name => variant.partners.includes(name)),
+                  )
+                  .map(p => p.position),
+              ).size,
+              entity: partner.entity,
+            },
+          ]
+        : []
+    })
+}
+
 async function main() {
   const proteins = readAtlas().filter(protein =>
     protein.interfaces.some(isConfident),
@@ -189,6 +224,9 @@ async function main() {
       ...g.counts,
     }))
     .sort((a, b) => (a.gene < b.gene ? -1 : a.gene > b.gene ? 1 : 0))
+  const shortlist = pages.flatMap(page =>
+    leads(page).map(lead => ({ ...lead, page: page.page })),
+  )
   const summaryCounts = record(analysis.summary)
   const controlled = record(analysis.controlled_for_order_and_surface)
   const summary = {
@@ -198,6 +236,10 @@ async function main() {
     unmapped: unmapped.length,
     partners: genes.reduce((n, g) => n + g.partners.length, 0),
     variantsAtInterface: labelCounts(genes.flatMap(g => g.variants)),
+    leads: {
+      variants: shortlist.length,
+      genes: new Set(shortlist.map(lead => lead.page)).size,
+    },
     alphaMissense: {
       calls: alphaMissenseCalls(genes.flatMap(g => g.variants)),
       likelyBenign: LIKELY_BENIGN,
@@ -214,6 +256,7 @@ async function main() {
     provenance: { clinvarDownloaded: downloaded() },
   }
   writeJson(join(SITE_DATA, 'genes.json'), index)
+  writeJson(join(SITE_DATA, 'leads.json'), shortlist)
   writeJson(join(SITE_DATA, 'summary.json'), summary)
   console.log(
     `${genes.length} gene pages, ${summary.partners} partners, ${JSON.stringify(summary.variantsAtInterface)}; ${unmapped.length} genes with a confident partner left out because their coding coordinates don't map: ${JSON.stringify(unmapped.slice(0, 20))}`,
