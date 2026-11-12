@@ -29,39 +29,4 @@ function wireScatter() {
   })
 }
 
-function wireSearch() {
-  const form = document.getElementById('gene-search')
-  const input = form?.querySelector('input')
-  const miss = document.getElementById('gene-search-miss')
-  const options = [
-    ...document.querySelectorAll<HTMLOptionElement>('#gene-names option'),
-  ]
-  const open = () => {
-    const query = input?.value.trim().toUpperCase() ?? ''
-    const url = options.find(o => o.value.toUpperCase() === query)?.dataset.url
-    if (miss) {
-      miss.textContent =
-        url || !query
-          ? ''
-          : `No gene called ${input?.value.trim()} has a confident predicted partner.`
-    }
-    if (url) {
-      location.href = url
-    }
-  }
-  form?.addEventListener('submit', event => {
-    event.preventDefault()
-    open()
-  })
-  input?.addEventListener('input', event => {
-    if (
-      !(event instanceof InputEvent) ||
-      event.inputType === 'insertReplacementText'
-    ) {
-      open()
-    }
-  })
-}
-
 wireScatter()
-wireSearch()

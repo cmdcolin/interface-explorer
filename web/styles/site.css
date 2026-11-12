@@ -471,19 +471,6 @@ h3 {
   margin: 24px 0 6px;
 }
 
-.search {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  margin: 20px 0;
-}
-
-.search .button {
-  font: inherit;
-  cursor: pointer;
-}
-
 .split {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
@@ -717,6 +704,13 @@ h3 {
   margin: 0;
 }
 
+.interface-diagram {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  margin-top: 16px;
+}
+
 .share-figure figcaption {
   color: var(--text-2);
   margin-bottom: 12px;
@@ -741,19 +735,6 @@ h3 {
   height: 22px;
   min-width: 4px;
   border-radius: 0 4px 4px 0;
-}
-
-.hero .actions {
-  margin: 20px 0 0;
-}
-
-.hero .search {
-  margin: 16px 0 6px;
-}
-
-.examples {
-  margin: 0;
-  font-size: 14px;
 }
 
 .hero-shot {
