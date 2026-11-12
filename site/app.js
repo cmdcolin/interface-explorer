@@ -99,9 +99,27 @@ function forestPosition(x) {
   return (100 * Math.log(x / FOREST.min)) / Math.log(FOREST.max / FOREST.min)
 }
 
-function shareAt(e, label) {
+function interfaceShare(e, label) {
   const [n, d] = e[`${label} at interface`].split('/').map(Number)
-  return `${percent(n, d)} of ${d.toLocaleString()} ${label}`
+  return { n, d, share: n / d }
+}
+
+function shareFigure(e) {
+  const shares = ['pathogenic', 'benign'].map(label => ({ label, ...interfaceShare(e, label) }))
+  const most = Math.max(...shares.map(s => s.share))
+  return `
+    <figure class="share-figure">
+      <figcaption>Share of ClinVar missense variants that sit at a predicted interface</figcaption>
+      ${shares
+        .map(
+          s => `<div class="share-row" title="${s.n.toLocaleString()} of ${s.d.toLocaleString()} ${s.label} variants">
+            <div class="share-value">${Math.round(100 * s.share)}%</div>
+            <div class="share-bar"><span style="width:${(100 * s.share) / most}%;background:var(--${s.label})"></span></div>
+            <div class="muted">${LABELS[s.label]}: ${s.n.toLocaleString()} of ${s.d.toLocaleString()}</div>
+          </div>`,
+        )
+        .join('')}
+    </figure>`
 }
 
 function forestPlot(rows) {
@@ -111,7 +129,7 @@ function forestPlot(rows) {
         .map(({ label, e }) => {
           const [low, high] = e[INTERVAL]
           return `<div class="forest-row" title="${e['proteins informative']} proteins with both pathogenic and benign variants">
-            <div class="forest-label"><strong>${label}</strong><span class="muted">at an interface: ${shareAt(e, 'pathogenic')}, ${shareAt(e, 'benign')}</span></div>
+            <div class="forest-label"><strong>${label}</strong><span class="muted">at an interface: ${['pathogenic', 'benign'].map(label => `${percent(interfaceShare(e, label).n, interfaceShare(e, label).d)} of ${interfaceShare(e, label).d.toLocaleString()} ${label}`).join(', ')}</span></div>
             <div class="forest-track">
               <span class="forest-null" style="left:${forestPosition(1)}%"></span>
               <span class="forest-ci" style="left:${forestPosition(low)}%;width:${forestPosition(high) - forestPosition(low)}%"></span>
@@ -289,14 +307,19 @@ async function home() {
   const compared = gpcr.gAlphas.filter(g => g.afdb && !g.chimeraOnly)
   app.innerHTML = `
     <section class="hero">
+      <div class="hero-top">
+      <div>
       <h1>Disease variants cluster where proteins touch</h1>
       <p class="lede">
         We mapped every confident <a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a> predicted
         complex of a human disease protein back to the genome, codon by codon, and asked which
-        ClinVar missense variants land on an interface. Pathogenic ones do
-        <strong>${e.all[ODDS].toFixed(1)}×</strong> as often as benign ones.
+        ClinVar missense variants land on an interface. Within a protein, the odds for a pathogenic
+        variant are <strong>${e.all[ODDS].toFixed(1)}×</strong> those for a benign one.
       </p>
       ${geneSearch(genes)}
+      </div>
+      ${shareFigure(e.all)}
+      </div>
       <div class="tiles">
         <div class="tile"><div class="value">${summary.proteins.toLocaleString()}</div><div class="label">human disease proteins checked</div></div>
         <div class="tile"><div class="value">${summary.withPartner.toLocaleString()}</div><div class="label">have a confident predicted partner (${percent(summary.withPartner, summary.proteins)})</div></div>
@@ -346,7 +369,7 @@ async function home() {
       ${callBars(am)}
       <p class="muted">
         Share of scored variants at an interface with AlphaMissense above ${summary.alphaMissense.likelyPathogenic}. The uncertain ones fall between
-        the known pathogenic and benign: ${am.uncertain.likelyPathogenic.toLocaleString()} leads worth a look.
+        the known pathogenic and benign: ${am.uncertain.likelyPathogenic.toLocaleString()} of them score likely pathogenic.
       </p>
       <h3>Where to start</h3>
       <p>

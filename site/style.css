@@ -521,7 +521,7 @@ h3 {
 
 .scatter circle {
   fill: var(--interface);
-  fill-opacity: 0.45;
+  fill-opacity: 0.55;
   stroke: var(--surface);
   cursor: pointer;
 }
@@ -587,4 +587,41 @@ h3 {
   .bar-row {
     grid-template-columns: 8rem 1fr 3rem;
   }
+}
+
+.hero-top {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: 16px 48px;
+  align-items: center;
+}
+
+.share-figure {
+  margin: 0;
+}
+
+.share-figure figcaption {
+  color: var(--text-2);
+  margin-bottom: 12px;
+}
+
+.share-row {
+  margin-bottom: 16px;
+}
+
+.share-value {
+  font-size: 40px;
+  font-weight: 650;
+  line-height: 1.1;
+}
+
+.share-bar {
+  margin: 4px 0;
+}
+
+.share-bar span {
+  display: block;
+  height: 22px;
+  min-width: 4px;
+  border-radius: 0 4px 4px 0;
 }
