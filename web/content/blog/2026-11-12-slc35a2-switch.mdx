@@ -2,20 +2,22 @@
 title: 'SLC35A2 has no partner to map, so we mapped its moving parts'
 date: '2026-11-12'
 order: 5
-description: 'Molecular dynamics of the Golgi UDP-galactose transporter picks out the residues that switch between its two open states. They are more conserved than residues buried as deeply, and have eight variants of uncertain significance.'
+description: 'Molecular dynamics of the Golgi UDP-galactose transporter picks out the residues that switch between its two open states. They are more conserved than residues buried as deeply, and several hold variants of uncertain significance.'
 hero: './heroes/slc35a2-switch.jpg'
 heroAlt: "SLC35A2's AlphaFold model side-on, with the residues that switch between its lumen-open and cytosol-open states in blue and their ClinVar variants marked"
 ---
 
 import ComplexView from '../../components/ComplexView.astro'
 import Html from '../../components/Html.astro'
+import { summary } from '../../lib/data.ts'
 import { mdPost, switchView } from '../../lib/md.ts'
 import { isoformHref } from '../../lib/site.ts'
 
 export const m = mdPost()
+export const plddt = summary().thresholds.plddt
 
 The explorer places ClinVar variants on the surfaces two proteins share.
-SLC35A2, the Golgi transporter that carries UDP-galactose in for
+SLC35A2, the transporter that imports UDP-galactose into the Golgi for
 glycosylation, has {m.pathogenicTotal} pathogenic missense variants in ClinVar
 (SLC35A2-CDG), but AlphaFold DB predicts no complex for it, so it has no
 gene page here. A transporter works by switching between states,
@@ -41,19 +43,20 @@ conformer to {m.top?.c2} nm in the other.
 ## Conservation, AlphaMissense and ClinVar at the switch residues
 
 We took StarMD's {m.pairCount} top-ranked pairs and {m.localCount} top 3Di
-residues and asked of them what the explorer asks of an interface. The
-comparison is with the {m.ordered} residues AlphaFold models confidently
-(pLDDT ≥ 70), drawing random sets of the same size that are buried to the same
-degree, since buried residues are conserved anyway; {m.tested} switch residues
-pass the pLDDT cut.
+residues and asked of them what the explorer asks of an interface. The{' '}
+{m.tested} switch residues AlphaFold models confidently (pLDDT ≥ {plddt}) are
+compared with random sets of the same size, buried to the same degree, drawn
+from the {m.ordered} confident residues. Buried residues are conserved anyway,
+so burial has to be matched.
 
 - **Conservation:** vertebrate phyloP averages {m.phylop} on the switch
   residues against {m.phylopBackground} on the rest (p {m.phylopP}). They are
   no more buried than average ({m.burial} neighbours within 10 Å, against{' '}
-  {m.burialBackground}).
+  {m.burialBackground}), so the matching changes little.
 - **AlphaMissense** does not single them out: {m.alphaMissense} against{' '}
   {m.alphaMissenseBackground} (p {m.alphaMissenseP}). It scores most of the
-  transmembrane core high already, and it works from one structure, which cannot show the switch.
+  transmembrane core high already, and it scores a single structure, so it
+  cannot see the switch.
 - **ClinVar:** {m.pathogenicOn} of the {m.pathogenicTotal} pathogenic variants
   sits on a switch residue (<Html html={m.pathogenicLinks} />; p {m.pathogenicP}), and{' '}
   {m.pathogenicNearby} within one residue of one (p {m.pathogenicNearbyP}). The
@@ -66,11 +69,12 @@ ClinVar has little evidence about what changing them does.
 ## The variants worth a look
 
 The uncertain variants on switch residues are{' '}
-<Html html={m.uncertainLinks} />. Most of the pairs that change most run from{' '}
+<Html html={m.uncertainLinks} />. Most of the top-ranked pairs run from{' '}
 {m.hub} to the stretch {m.stretch}, which holds {m.stretchUncertain} of them.
-{m.hub} also pairs with R314, L315 and F316: L315P is the one
-pathogenic variant on a switch residue, and R314C, uncertain, is next to it. These are the places where a substitution would most plausibly jam the
-transporter in one state, and the ones a new simulation would test first.
+{m.hub} also pairs with R314, L315 and F316. L315P is the one pathogenic variant
+on a switch residue, and R314C, uncertain, is next to it. A substitution here
+would most plausibly jam the transporter in one state, so these are the ones a
+new simulation would test first.
 
 SLC35A2's <a href={isoformHref('SLC35A2')}>isoform page</a> has its variants
 along the protein and in the genome.
@@ -79,8 +83,8 @@ along the protein and in the genome.
 
 - It is one protein, and the residue lists are StarMD's top-ranked rows, not
   every residue that moves.
-- Which conformer is lumen-open and which cytosol-open isn't labelled here; the
-  switch is between the two, either way.
+- We don't label which conformer is lumen-open and which cytosol-open; the
+  switch analysis doesn't depend on it.
 - {m.hub}, at the centre of most pairs, is modelled with pLDDT{' '}
   {Math.round(m.hubPlddt)}, below the cut, so it is left out of the tests.
 

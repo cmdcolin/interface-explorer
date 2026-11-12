@@ -16,6 +16,7 @@ import {
 } from '../../lib/charts.ts'
 import { gene, summary } from '../../lib/data.ts'
 import { percent } from '../../lib/html.ts'
+import { NEIGHBOURHOOD } from '../../../src/constants.ts'
 
 export const s = summary()
 export const all = s.validation.all
@@ -29,9 +30,9 @@ export const rom1 = prph2.partners.find(p => p.gene === 'ROM1')
 export const rom1Variants = prph2.variants.filter(v => v.partners.includes('ROM1'))
 export const count = label => rom1Variants.filter(v => v.label === label).length
 
-Every interface in the explorer is a prediction. Two checks indicate that most of them are real:
-they match experimental structures where those exist, and the predicted
-surfaces are more conserved than the rest.
+Every interface in the explorer is a prediction. Two checks suggest most are
+real: they match experimental structures where those exist, and they are more
+conserved than the rest of the protein's surface.
 
 ## Against experiment
 
@@ -57,21 +58,21 @@ median is {share(unseen.recall)}, and
 experimental interface predicted, against
 {percent(all.recovered, all.touching)} of all pairs.
 
-In the other direction, a
-median {share(all.precision)} of the predicted residues the structure resolves
-are in the experimental interface ({share(unseen.precision)} for pairs with no
-structure before the cutoff). Each gene page names the structure its partners
-were checked against.
+Precision is similar: a median {share(all.precision)} of the predicted residues
+that the structure resolves fall in the experimental interface
+({share(unseen.precision)} for pairs with no structure before the cutoff). Each
+gene page names the structure its partners were checked against.
 
-Peripherin-2 and ROM1 are a pair AlphaFold could not have seen. They pair in the rims of photoreceptor
-discs, and variants in [PRPH2](../../gene/PRPH2/?partner=ROM1) cause
-retinitis pigmentosa, alone or together with ROM1. The first structure of the
-pair, <a href={`https://www.rcsb.org/structure/${rom1.experiment.pdb}`}>{rom1.experiment.pdb.toUpperCase()}</a>,
-came out in 2022. It puts {rom1.experiment.experimental} residues of PRPH2
-against ROM1, and the prediction has {rom1.experiment.shared} of them, with
-{rom1.experiment.predicted - rom1.experiment.shared} more of its own. On that
-interface ClinVar has {count('pathogenic')} pathogenic and {count('uncertain')}
-uncertain missense variants.
+Peripherin-2 and ROM1 are a pair AlphaFold could not have seen. They pair in the
+rims of photoreceptor discs, and variants in
+[PRPH2](../../gene/PRPH2/?partner=ROM1) cause retinitis pigmentosa, alone or
+together with ROM1 variants. The first structure of the pair,
+<a href={`https://www.rcsb.org/structure/${rom1.experiment.pdb}`}>{rom1.experiment.pdb.toUpperCase()}</a>,
+was deposited after the cutoff. It puts {rom1.experiment.experimental} residues
+of PRPH2 against ROM1, and the prediction has {rom1.experiment.shared} of them,
+with {rom1.experiment.predicted - rom1.experiment.shared} more of its own. On
+that interface ClinVar has {count('pathogenic')} pathogenic and
+{count('uncertain')} uncertain missense variants.
 
 ## Against evolution
 
@@ -89,15 +90,14 @@ exposure and pLDDT. The interface is more conserved in
 Share of complexes whose interface is more conserved, by ipSAE. Hover a row for
 the counts.
 
-Any compact patch of folded surface might stand out like that. So we ranked
-each interface among patches of its size from the same protein's surface at no
-confident interface, one centred on each such residue, and ranked a random patch
-the same way in the interface's place to learn what chance gives. The interface
-beats the median patch in
+Any compact patch of folded surface might stand out like that. So we compared
+each interface with same-sized patches from the rest of the protein's surface,
+one centred on each residue at no confident interface. As a control, we ranked
+a random patch the same way. The interface beats the median patch in
 **{percent(pa['above the median patch'].interface, pa.complexes)}** of
 {pa.complexes.toLocaleString()} complexes, against
-{percent(pa['above the median patch'].fake, pa.complexes)} for the stand-in, and
-beats 95% of its patches in
+{percent(pa['above the median patch'].fake, pa.complexes)} for the random patch,
+and beats 95% of patches in
 {percent(pa['above 95% of patches'].interface, pa.complexes)}, against
 {percent(pa['above 95% of patches'].fake, pa.complexes)}.
 
@@ -105,10 +105,11 @@ beats 95% of its patches in
 
 The share rises with ipSAE, as it would if the more confident predictions are
 more often right. Conserved domains do not explain it: ranked only among patches
-centred within 25 Å of its middle, the interface beats the median one in
-{percent(near['above the median patch'].interface, near.complexes)} of
+centred within {NEIGHBOURHOOD} Å of its middle, the interface beats the median
+one in {percent(near['above the median patch'].interface, near.complexes)} of
 {near.complexes.toLocaleString()} complexes, against
-{percent(near['above the median patch'].fake, near.complexes)} for a stand-in.
+{percent(near['above the median patch'].fake, near.complexes)} for the random
+patch.
 
 Conservation cannot vouch for the partner, though: AlphaFold reads the same
 alignments, and could dock a wrong partner, such as a paralog, on a real
@@ -124,10 +125,11 @@ conserved site.
   crystal symmetry are also missed.
 - A pair first deposited after the cutoff can still resemble an older structure
   of related proteins.
-- phyloP measures DNA, not protein: a codon can be conserved for splicing, and a
-  free third position lowers a codon's mean.
+- phyloP scores DNA: a codon can be conserved for splicing, and a free third
+  position lowers a codon's mean.
 - Surface residues at no confident interface may touch partners AlphaFold DB did
-  not model, which makes the conservation comparisons conservative. Patches are
-  the residues nearest a point, so they are rounder than many real interfaces,
-  and the patch test covers {pa.complexes.toLocaleString()} of the
+  not model, which makes the conservation comparisons conservative.
+- Patches are the residues nearest a point, so they are rounder than many real
+  interfaces.
+- The patch test covers {pa.complexes.toLocaleString()} of the
   {r.all.complexes.toLocaleString()} complexes.

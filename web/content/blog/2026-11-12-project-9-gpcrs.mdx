@@ -10,10 +10,12 @@ heroAlt: 'The dopamine D1 receptor holding Gαs in 7JVQ, seen side-on: the α5 h
 import ComplexView from '../../components/ComplexView.astro'
 import GpcrComplexes from '../../components/GpcrComplexes.astro'
 import Html from '../../components/Html.astro'
+import { summary } from '../../lib/data.ts'
 import { surfaceMap } from '../../lib/maps.ts'
 import { project9 } from '../../lib/project9.ts'
 
 export const p = project9()
+export const t = summary().thresholds
 
 BioHackathon Europe 2026 Project 9 picked {p.complexes} cryo-EM and X-ray
 structures of biogenic amine receptors bound to a G protein; we added one
@@ -49,22 +51,22 @@ The Project 9 receptors' contact residues have {p.uncertain} variants of
 uncertain significance and {p.benign} benign ones, mostly from gene-panel
 testing. The count reflects ClinVar as much as the interface: GNAS is a
 Mendelian disease gene (pseudohypoparathyroidism), and most amine receptors are
-not. Several GPCRdb positions are hit in more than one receptor, which is what{' '}
-{p.variants} variants spread over {p.positions} numbered positions would give
-anyway, so we have not ranked them as leads.
+not. Some GPCRdb positions have variants in more than one receptor, but{' '}
+{p.variants} variants over {p.positions} numbered positions would produce that
+by chance, so we have not ranked them as leads.
 
-## Where AlphaFold DB can be checked
-
-Its DRD5–Golf complex covers {p.drd5Recall}% of the receptor residues DRD5 uses
-against Gs in the cryo-EM structure, and its GPCR complexes of Gαi1 cover{' '}
-{p.gnai1Recall}% of what the {p.gnai1Structures} Gαi1 complexes use.
+The Gαs surface above comes from experiment alone, but where AlphaFold DB has a
+matching complex it agrees: its DRD5–Golf complex covers {p.drd5Recall}% of the
+receptor residues DRD5 uses against Gs in the cryo-EM structure, and its GPCR
+complexes of Gαi1 cover {p.gnai1Recall}% of what the {p.gnai1Structures} Gαi1
+complexes use.
 
 ## Gαolf and the olfactory receptors
 
 Olfactory receptors signal through Gαolf (GNAL). AlphaFold DB predicts GNAL
 complexes with {p.olfactory.length} olfactory receptors
 ({p.olfactory.join(', ')}), at ipSAE {p.ipsaeRange.join('–')}, just above the
-0.6 threshold.
+{t.ipsae} threshold.
 
 OR51E2 bound to propionate with mini-Gs
 (<a href={`https://www.rcsb.org/structure/${p.or51e2.pdb}`}>{p.or51e2.pdb}</a>,
@@ -76,7 +78,7 @@ of the residues it predicts are among them.
 
 ### The Gαolf side
 
-The mini-Gs is an engineered Gαs, not Gαolf, but the two are 80% identical and
+The mini-Gs is an engineered Gαs, but Gαs and Gαolf are close paralogs and
 their α5 helices end alike (QYELL). Mapped onto Gαolf by sequence, the{' '}
 {p.or51e2.golf.experimental} mini-Gs residues within 5 Å of OR51E2 test the other
 half of the prediction. AlphaFold DB's OR51E2–Gαolf complex puts{' '}
@@ -101,23 +103,25 @@ worth placing:
   {p.drd5Golf.reach[227]} Å from DRD5 in {p.drd5Golf.pdb}. AlphaFold DB has it
   against Gβ and the adenylyl cyclases ADCY2, ADCY3 and ADCY4, and within 5 Å
   of DRD5 in its DRD5–Gαolf complex, which {p.drd5Golf.pdb} does not bear out.
+  GNAL's disease links are to dystonia; see [GNAL's page](../../gene/GNAL/).
 
-GNAL's other predicted GPCR complexes use the same face. The other olfactory
-receptors ({p.or51e2.golf.olfactory.partners.join(', ')}) cover{' '}
-{p.or51e2.golf.olfactory.recall} of the 8F76 surface, with{' '}
-{p.or51e2.golf.olfactory.precision} of their predicted residues on it. The{' '}
-{p.or51e2.golf.others.partners.length} other GPCRs, DRD5 and the trace amine
-receptors among them, cover {p.or51e2.golf.others.recall} but predict larger
-interfaces, only {p.or51e2.golf.others.precision} of which is on it. DRD5's own
-Gs structure ({p.drd5Golf.pdb}) agrees: AlphaFold DB's DRD5–Gαolf complex covers{' '}
-{p.drd5Golf.recall}% of its Gαs contacts mapped onto Gαolf, and{' '}
-{p.drd5Golf.precision}% of the {p.drd5Golf.predicted} residues it predicts are
-among them.
+GNAL's other predicted GPCR complexes use the same face:
+
+- The other olfactory receptors
+  ({p.or51e2.golf.olfactory.partners.join(', ')}) cover{' '}
+  {p.or51e2.golf.olfactory.recall} of the {p.or51e2.pdb} surface, with{' '}
+  {p.or51e2.golf.olfactory.precision} of their predicted residues on it.
+- The {p.or51e2.golf.others.partners.length} other GPCRs, DRD5 and the trace
+  amine receptors among them, cover {p.or51e2.golf.others.recall} but predict
+  larger interfaces, only {p.or51e2.golf.others.precision} of which is on it.
+- DRD5's own Gs structure ({p.drd5Golf.pdb}) agrees: AlphaFold DB's DRD5–Gαolf
+  complex covers {p.drd5Golf.recall}% of its Gαs contacts mapped onto Gαolf,
+  and {p.drd5Golf.precision}% of the {p.drd5Golf.predicted} residues it
+  predicts are among them.
 
 So on OR51E2, the Gαolf face AlphaFold DB predicts is the one a Gs mimic uses,
-despite an ipSAE just over the threshold. A Gαs structure cannot test the fifth
-of Gαolf that differs from Gαs. GNAL is a disease gene because of dystonia, not
-smell; see [GNAL's page](../../gene/GNAL/).
+despite an ipSAE just over the threshold. A Gαs structure cannot test the
+residues where Gαolf differs from Gαs.
 
 ## For Project 9
 

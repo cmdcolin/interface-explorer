@@ -19,6 +19,7 @@ export function viralContacts() {
     pathogenic: count(data.contacts, 'pathogenic'),
     uncertain: count(data.contacts, 'uncertain'),
     benign: count(data.contacts, 'benign'),
+    proteaseStructures: protease.length,
     proteaseSites: protease
       .map(c => new Set(c.viralNumbers))
       .reduce((shared, numbers) => shared.intersection(numbers))

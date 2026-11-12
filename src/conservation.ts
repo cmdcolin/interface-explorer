@@ -21,7 +21,7 @@ import { atomsByChain, boundedMap } from './atlas.ts'
 import type { ChainAtom } from './atlas.ts'
 import { confidentResidues, isConfident, readAtlas } from './atlasData.ts'
 import type { AtlasProtein } from './atlasData.ts'
-import { CONFIDENT, MIN_PLDDT } from './constants.ts'
+import { CONFIDENT, MIN_PLDDT, NEIGHBOURHOOD } from './constants.ts'
 import { squaredDistance } from './contacts.ts'
 import type { Point } from './contacts.ts'
 import { codingPositions, mergeBlocks } from './coordinates.ts'
@@ -50,7 +50,6 @@ const MIN_RESIDUES = 5
 const VERY_CONFIDENT = 90
 const IPSAE_BANDS = bands([CONFIDENT, 0.7, 0.8, 0.9, Infinity])
 const QUARTERS = [0, 1, 2, 3]
-const NEIGHBOURHOOD = 25
 
 type CodonScores = (number | null)[][]
 

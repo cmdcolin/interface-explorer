@@ -2,6 +2,7 @@ export const CONTACT = 5
 export const REACH = 15
 export const CONFIDENT = 0.6
 export const MIN_PLDDT = 70
+export const NEIGHBOURHOOD = 25
 export const MAX_COMPLEXES = 30
 export const LABELS = ['pathogenic', 'uncertain', 'benign'] as const
 export type Label = (typeof LABELS)[number]
@@ -26,6 +27,7 @@ export const ALPHAMISSENSE_EVIDENCE = [
 
 export const PP3_SUPPORTING = 0.792
 export const BP4_SUPPORTING = 0.169
+export const ALPHAMISSENSE_LIKELY_PATHOGENIC = 0.564
 
 export function alphaMissenseEvidence(score: number) {
   return ALPHAMISSENSE_EVIDENCE.find(band => score >= band.from) ?? BP4_LOWEST

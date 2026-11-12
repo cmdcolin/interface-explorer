@@ -22,7 +22,11 @@ import {
 } from '../../lib/charts.ts'
 import { gene, leadRows, summary } from '../../lib/data.ts'
 import { evidenceText, percent } from '../../lib/html.ts'
-import { BP4_SUPPORTING, PP3_SUPPORTING } from '../../../src/constants.ts'
+import {
+  ALPHAMISSENSE_LIKELY_PATHOGENIC,
+  BP4_SUPPORTING,
+  PP3_SUPPORTING,
+} from '../../../src/constants.ts'
 
 export const s = summary()
 export const e = s.enrichment
@@ -59,6 +63,10 @@ surface, leaves the effect standing: among exposed residues the odds ratio is
   ])}
 />
 
+In this and the plots below: Mantel–Haenszel odds ratios across proteins; lines
+are 95% intervals from resampling proteins, and the dashed line marks no
+difference. Hover a row for the number of proteins behind it.
+
 ### It holds at every confidence level
 
 Interfaces grouped by the complex's ipSAE, each against residues at no
@@ -66,20 +74,17 @@ interface.
 
 <Html html={forestPlot(confidenceRows(s))} />
 
-### It adds little beyond AlphaMissense
+### Within AlphaMissense's evidence bands
 
-The same comparison among variants in one of AlphaMissense's evidence bands,
-calibrated for clinical use by [Bergquist et al. 2025](https://doi.org/10.1016/j.gim.2025.101402).
-AlphaMissense scores each protein without its partner, yet the interface
-adds a clear signal only among variants it already gives pathogenic evidence
-(PP3, score ≥ {PP3_SUPPORTING}); where its score is indeterminate, the interface
-makes no difference.
+We repeated the comparison within each of AlphaMissense's evidence bands,
+calibrated for clinical use by
+[Bergquist et al. 2025](https://doi.org/10.1016/j.gim.2025.101402).
+AlphaMissense scores each protein without its partner, yet the interface still
+separates pathogenic from benign among variants it already gives pathogenic
+evidence (PP3, score ≥ {PP3_SUPPORTING}). Where its score is indeterminate, the
+interface makes no difference.
 
 <Html html={forestPlot(alphaMissenseRows(s))} />
-
-Mantel–Haenszel odds ratios across proteins; lines are 95% intervals from
-resampling proteins, and the dashed line marks no difference. Hover a row for
-the number of proteins behind it.
 
 ## Conservation explains only part of it
 
@@ -92,8 +97,8 @@ Share of classified variants that are pathogenic, by the phyloP of the
 variant's base, in quarters of all scored variants.
 
 Interfaces are conserved too, so being at one might be conservation under
-another name. Comparing pathogenic and benign variants only within the same
-quarter, protein by protein:
+another name. So we compared pathogenic and benign variants only within the
+same phyloP quarter of each protein:
 
 <Html html={forestPlot(conservationRows(s))} />
 
@@ -102,10 +107,10 @@ On the folded surface the odds ratio goes from
 **{odds(c.orderedSurface.matched).toFixed(1)}×**: conservation accounts for part
 of the interface signal, not most of it. These rows count only variants with a
 phyloP score, and a quarter of a protein counts only when it holds both a
-pathogenic and a benign variant, so the matched surface row rests on
+pathogenic and a benign variant. The matched surface row therefore rests on
 {counted(c.orderedSurface.matched).toLocaleString()} of
 {counted(c.orderedSurface.unmatched).toLocaleString()} variants. Quarters are
-coarse, and phyloP measures DNA, not protein.
+coarse.
 
 ## {v.uncertain.toLocaleString()} variants of uncertain significance sit at an interface
 
@@ -123,21 +128,24 @@ supporting evidence of pathogenicity in ACMG terms (PP3, ≥ {PP3_SUPPORTING}).
 The uncertain ones fall between the known pathogenic and benign:
 {am.uncertain.pp3.toLocaleString()} of them reach it, and
 {am.uncertain.bp4.toLocaleString()} reach evidence of benignity (BP4, ≤ {BP4_SUPPORTING}).
-The developers' own 0.564 "likely pathogenic" cut-off does not reach even
-supporting evidence, so the site does not use it.
+The developers' own {ALPHAMISSENSE_LIKELY_PATHOGENIC} "likely pathogenic"
+cut-off does not reach even supporting evidence, so the site does not use it.
 
 ### The strongest leads
 
 {s.leads.variants.toLocaleString()} of the uncertain variants, in
 {s.leads.genes.toLocaleString()} genes, change an interface residue where a
 substitution is already classified pathogenic: the same amino-acid change for
-{s.leads.sameChange} of them (ACMG PS1), a different one for the rest (PM5). They are on the
-[Leads](../../leads/) page. The best of them sit on interfaces that
-experiment confirms. PSEN1 {psen1.change}, for instance, is uncertain, but
+{s.leads.sameChange} of them (ACMG PS1), a different one for the rest (PM5).
+They are on the [Leads](../../leads/) page. The best of them sit on interfaces
+that experiment confirms.
+
+PSEN1 {psen1.change}, for instance, is uncertain, but
 {psen1.sameResidue.join(' and ')} at the same residue is a pathogenic cause of
-early-onset Alzheimer disease, and AlphaMissense scores {psen1.change}
-{psen1.alphaMissense.toFixed(2)}, {evidenceText(psen1.alphaMissense)} on the calibrated scale. Residue {psen1.position} is on presenilin's
-predicted interface with APH1A. The γ-secretase structure
+early-onset Alzheimer disease. AlphaMissense scores {psen1.change}{' '}
+{psen1.alphaMissense.toFixed(2)}, {evidenceText(psen1.alphaMissense)} on the
+calibrated scale. Residue {psen1.position} is on presenilin's predicted
+interface with APH1A. The γ-secretase structure
 {aph1a.experiment.pdb.toUpperCase()} puts {aph1a.experiment.experimental}
 residues of presenilin against APH1A, and the prediction has
 {aph1a.experiment.shared} of them.
@@ -145,5 +153,5 @@ residues of presenilin against APH1A, and the prediction has
 ## Caveats
 
 Only {percent(s.withPartner, s.proteins)} of disease proteins have any predicted
-partner, and the complexes are predictions: an interface variant is a lead, not a
-mechanism. The method is on the [About](../../about/) page.
+partner, and the complexes are predictions: an interface variant is a lead to
+test. The method is on the [About](../../about/) page.

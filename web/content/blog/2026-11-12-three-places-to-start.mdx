@@ -15,8 +15,8 @@ export const ELOC = VHL.partners.find(p => p.gene === 'ELOC')
 export const GNAO1 = gnao1()
 export const isoforms = isoformTotals()
 
-Each example opens like every gene in the explorer: its codons on the genome beside
-its residues in the predicted complex.
+Each example below is a gene page: its codons on the genome beside its residues
+in the predicted complex.
 
 ## VHL and elongin C
 
@@ -29,8 +29,8 @@ them.
 
 <Html html={geneCase('VHL')} />
 
-Not every hotspot is a contact. ClinVar classifies five substitutions of R167 as
-pathogenic (R167G, L, P, Q and W), yet in the prediction R167 sits just outside
+Not every hotspot is a contact. ClinVar classifies R167G, L, P, Q and W as
+pathogenic, yet in the prediction R167 sits just outside
 the interface, one residue past the stretch UniProt annotates as "Interaction
 with Elongin BC complex" (157–166). A 5 Å cut-off counts only the residues that
 touch the partner, not the ones that hold them in place. Hover 167 on VHL's
@@ -40,7 +40,7 @@ protein map to find it in 3D.
 
 Gαo's {GNAO1.counts.pathogenic} pathogenic interface variants fall in two
 patches: the N-terminal helix that binds Gβ (L13P, I19M, L23F) and the switch
-regions that bind RGS proteins (T182I, Q205P, R206).
+regions that bind RGS proteins (T182I, Q205P, and R206G, L and P).
 
 <Html html={geneCase('GNAO1')} />
 
