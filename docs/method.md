@@ -5,10 +5,10 @@
   Interface residues have a heavy atom within 5 Å of the partner and pLDDT
   ≥ 70. Codons come from EBI Proteins API coordinates on the primary hg38
   chromosomes.
-- **Doubtful pairs:** from UniProt's subcellular locations and families. The
-  52 pairs that join a protein found only inside mitochondria (outer membrane
+- **Doubtful pairs:** from UniProt's subcellular locations and families. Pairs
+  that join a protein found only inside mitochondria (outer membrane
   aside) with one never found in mitochondria, such as DARS1 and DARS2, are
-  marked "different compartments"; the 554 pairs of same-family proteins that
+  marked "different compartments"; pairs of same-family proteins that
   no PDB entry holds together are marked "paralogs, no structure of both".
   Proteins without a UniProt location are never marked. Neither mark removes a
   pair from the analysis.
