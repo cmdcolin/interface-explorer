@@ -79,13 +79,15 @@ export function leadPartner(candidates: { gene: string; pathogenic: number; agre
   })[0]?.gene
 }
 
-function experimentSentence(gene: string, partner: string, e: NonNullable<Partner['experiment']>) {
+function experimentSentence(gene: string, partner: string, e: NonNullable<Partner['experiment']>, homodimer: boolean) {
   const pdb = `PDB <a href="https://www.rcsb.org/structure/${esc(e.pdb)}">${esc(e.pdb.toUpperCase())}</a>`
+  const holding = homodimer ? `two copies of ${esc(gene)}` : 'both'
+  const other = homodimer ? 'the other copy' : esc(partner)
   return !e.experimental
-    ? `<span class="caution">${pdb} holds both proteins, but there ${esc(gene)} does not touch ${esc(partner)}, so treat this interface with caution.</span>`
+    ? `<span class="caution">${pdb} holds ${homodimer ? holding : 'both proteins'}, but there ${esc(gene)} does not touch ${other}, so treat this interface with caution.</span>`
     : agreement(e) === AGREEMENT.contradicted
-      ? `<span class="caution">${pdb}, an experimental structure holding both, shows a different interface: of the ${residueCount(e.experimental)} of ${esc(gene)} in contact there, the prediction finds only ${e.shared}.</span>`
-      : `${pdb}, an experimental structure holding both, puts ${residueCount(e.experimental)} of ${esc(gene)} in contact with ${esc(partner)}; the prediction finds ${e.shared} of them.`
+      ? `<span class="caution">${pdb}, an experimental structure holding ${holding}, shows a different interface: of the ${residueCount(e.experimental)} of ${esc(gene)} in contact there, the prediction finds only ${e.shared}.</span>`
+      : `${pdb}, an experimental structure holding ${holding}, puts ${residueCount(e.experimental)} of ${esc(gene)} in contact with ${other}; the prediction finds ${e.shared} of them.`
 }
 
 export function stories(gene: Gene) {
@@ -102,17 +104,23 @@ export function stories(gene: Gene) {
       ? `<a href="${geneHref(side.page)}?partner=${encodeURIComponent(side.ownName)}">${esc(p.gene)}'s page</a>`
       : ''
     const html = [
-      `<strong>${esc(gene.gene)}–${esc(p.gene)}.</strong> In AlphaFold DB's predicted complex (ipSAE ${p.ipsae?.toFixed(2)}), ${residueCount(p.residues)} of ${esc(gene.gene)} touch ${esc(p.gene)}.`,
+      p.homodimer
+        ? `<strong>${esc(gene.gene)} with itself.</strong> In AlphaFold DB's predicted homodimer (ipSAE ${p.ipsae?.toFixed(2)}), ${residueCount(p.residues)} of each copy touch the other.`
+        : `<strong>${esc(gene.gene)}–${esc(p.gene)}.</strong> In AlphaFold DB's predicted complex (ipSAE ${p.ipsae?.toFixed(2)}), ${residueCount(p.residues)} of ${esc(gene.gene)} touch ${esc(p.gene)}.`,
       touching.length
         ? `${touching.length} ClinVar missense variant${touching.length === 1 ? '' : 's'} sit on them: ${countList(touching)}.`
         : 'No ClinVar missense variant sits on them yet.',
-      side
+      p.homodimer
+        ? touching.length
+          ? 'Each copy carries the same variants, shaded on both sides of the interface.'
+          : ''
+        : side
         ? side.variants.length
           ? `${esc(p.gene)} is a disease protein too, and its side of the interface carries ${countList(side.variants)} variant${side.variants.length === 1 ? '' : 's'}, shaded the same way (${sideLink}).`
           : `${esc(p.gene)} is a disease protein too, with no ClinVar missense variant on its side of the interface (${sideLink}).`
         : '',
       experiment
-        ? experimentSentence(gene.gene, p.gene, experiment)
+        ? experimentSentence(gene.gene, p.gene, experiment, p.homodimer)
         : '',
       regions.length
         ? `UniProt annotates ${regions.map(f => `${range(f.start, f.end)} as “${esc(f.description)}”`).join(' and ')}.`
@@ -130,6 +138,7 @@ export function partnerPicks(gene: Gene) {
   return partnerGroups(gene.partners.filter(p => p.chain)).map(g => ({
     gene: g.names[0] ?? '',
     names: g.names,
+    labels: g.labels,
     pathogenic: pathogenicOf(g.names[0] ?? ''),
   }))
 }

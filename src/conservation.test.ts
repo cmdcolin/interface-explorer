@@ -114,6 +114,7 @@ const SURFACE_PROTEIN: ProteinVariants = {
   length: 20,
   complexes: 2,
   hetero: 2,
+  homo: 0,
   interfaces: [
     {
       entity: 'AF-1',

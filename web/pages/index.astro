@@ -13,7 +13,7 @@ const s = summary()
 const genes = geneRows()
 const all = await posts()
 const tiles = [
-  [s.withPartner, 'disease genes with a confident predicted partner', href('genes/')],
+  [s.withPartner, 'disease genes with a confident predicted complex', href('genes/')],
   [s.partners, 'predicted interfaces, each in 3D and on the genome', href('genes/')],
   [s.variantsAtInterface.uncertain, 'variants of uncertain significance with a named partner they touch', href('genes/')],
   [s.leads.variants, 'leads: uncertain variants at a residue where another substitution is pathogenic', href('leads/')],
@@ -86,7 +86,7 @@ const tiles = [
     <Fragment set:html={geneScatter(genes)} />
   </section>
   <p class="note">
-    Only {percent(s.withPartner, s.proteins)} of disease proteins have any predicted partner, and the complexes are
+    Only {percent(s.withPartner, s.proteins)} of disease proteins have any predicted complex, and the complexes are
     predictions: an interface variant is a lead, not a mechanism.
   </p>
 </Layout>

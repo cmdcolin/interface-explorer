@@ -10,6 +10,7 @@ heroAlt: 'The genome browser at VHL codon 80, a pathogenic variant on the predic
 import Html from '../../components/Html.astro'
 import {
   alphaMissenseRows,
+  kindRows,
   callBars,
   compositionBar,
   confidenceRows,
@@ -74,15 +75,24 @@ interface.
 
 <Html html={forestPlot(confidenceRows(s))} />
 
+### It holds for partners and for a protein's own copy
+
+Many disease proteins work as homodimers, and a variant where the two copies
+meet can spoil the pair. Interfaces with another protein, and the interface a
+homodimer's two copies share, each on the folded surface against residues at
+no interface of that kind:
+
+<Html html={forestPlot(kindRows(s))} />
+
 ### Within AlphaMissense's evidence bands
 
 We repeated the comparison within each of AlphaMissense's evidence bands,
 calibrated for clinical use by
 [Bergquist et al. 2025](https://doi.org/10.1016/j.gim.2025.101402).
-AlphaMissense scores each protein without its partner, yet the interface still
-separates pathogenic from benign among variants it already gives pathogenic
-evidence (PP3, score ≥ {PP3_SUPPORTING}). Where its score is indeterminate, the
-interface makes no difference.
+AlphaMissense scores each protein without its partner, and within its bands the
+interface adds at most a modest signal: the intervals for pathogenic evidence
+(PP3, score ≥ {PP3_SUPPORTING}) and for benign evidence reach no difference, and
+where its score is indeterminate the interface makes none.
 
 <Html html={forestPlot(alphaMissenseRows(s))} />
 

@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 
 import { readScores } from './alphamissense.ts'
-import { readAtlas } from './atlasData.ts'
+import { isHomodimer, readAtlas } from './atlasData.ts'
 import type { AtlasProtein } from './atlasData.ts'
 import {
   BP4_SUPPORTING,
@@ -69,6 +69,11 @@ export const CONTROLS: Record<string, Keep> = {
     context !== undefined && context[0] >= MIN_PLDDT,
   'ordered and surface (pLDDT ≥ 70, RSA ≥ 0.2)': context =>
     context !== undefined && context[0] >= MIN_PLDDT && context[1] >= SURFACE,
+}
+
+export const KINDS = {
+  'with other proteins (heterodimers)': false,
+  'with itself (homodimers)': true,
 }
 
 export const ALPHAMISSENSE_CLASSES: Record<string, Keep> = {
@@ -223,7 +228,8 @@ export async function main() {
       alphaMissense: scores.get(protein.accession)?.get(v.change),
     })),
   }))
-  const withComplex = proteins.filter(p => p.hetero)
+  const withComplex = proteins.filter(p => p.hetero + p.homo > 0)
+  const withContext = withComplex.filter(p => Object.keys(p.context).length)
   const confident = proteins.filter(p =>
     p.interfaces.some(c => (c.ipsae || 0) >= CONFIDENT),
   )
@@ -231,7 +237,7 @@ export async function main() {
   const result = {
     summary: {
       'disease proteins': proteins.length,
-      'with any predicted hetero complex': withComplex.length,
+      'with any predicted complex': withComplex.length,
       [`with a partner at ipSAE ≥ ${CONFIDENT}`]: confident.length,
       'classified missense variants in proteins with a complex':
         Object.fromEntries(
@@ -246,13 +252,29 @@ export async function main() {
     controlled_for_order_and_surface: Object.fromEntries(
       Object.entries(CONTROLS).map(([name, keep]) => [
         name,
-        enrichment(
-          tables(
-            withComplex.filter(p => Object.keys(p.context).length),
-            'ipsae',
-            CONFIDENT_BAND,
-            keep,
-          ),
+        enrichment(tables(withContext, 'ipsae', CONFIDENT_BAND, keep)),
+      ]),
+    ),
+    by_kind: Object.fromEntries(
+      Object.entries(KINDS).map(([kind, homodimer]) => [
+        kind,
+        Object.fromEntries(
+          Object.entries(CONTROLS).map(([name, keep]) => [
+            name,
+            enrichment(
+              tables(
+                withContext.map(p => ({
+                  ...p,
+                  interfaces: p.interfaces.filter(
+                    c => isHomodimer(p, c) === homodimer,
+                  ),
+                })),
+                'ipsae',
+                CONFIDENT_BAND,
+                keep,
+              ),
+            ),
+          ]),
         ),
       ]),
     ),

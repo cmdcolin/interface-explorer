@@ -17,7 +17,7 @@ const table = sortableTable({
   columns: [
     { label: 'Gene', cell: g => `<a href="${geneHref(g.page)}">${esc(g.gene)}</a>`, sort: g => g.gene },
     { label: 'Partners', num: true, cell: g => g.partners, sort: g => g.partners },
-    { label: 'Most confident partner', cell: g => esc(g.topPartner), sort: g => g.topPartner },
+    { label: 'Most confident partner', cell: g => esc(g.topPartner === g.gene ? 'itself' : g.topPartner), sort: g => g.topPartner },
     { label: 'ipSAE', num: true, cell: g => g.bestIpsae.toFixed(2), sort: g => g.bestIpsae },
     {
       label: 'Interface residues',
@@ -35,13 +35,13 @@ const table = sortableTable({
 <Layout title="Genes" nav="genes">
   <h1>Genes</h1>
   <p class="lede">
-    The {genes.length.toLocaleString()} disease genes with a confident predicted partner in
+    The {genes.length.toLocaleString()} disease genes with a confident predicted partner, or a confident homodimer with a copy of themselves, in
     <a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a>, and the ClinVar missense variants at their interfaces.
     Pick a gene to see its partners and variants, or open them on the genome.
   </p>
   <p class="note">
     Covers all {s.proteins.toLocaleString()} reviewed human proteins with a UniProt disease annotation. Only
-    {percent(s.withPartner, s.proteins)} have any predicted partner, and the complexes are predictions.{
+    {percent(s.withPartner, s.proteins)} have any predicted complex, and the complexes are predictions.{
       s.unmapped
         ? ` ${s.unmapped} more genes with a partner are left out because their coding coordinates don't map to hg38.`
         : ''

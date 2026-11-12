@@ -81,21 +81,27 @@ function overlap(a: Set<number>, b: Set<number>) {
   return shared / (a.size + b.size - shared)
 }
 
-export function partnerGroups(partners: { gene: string; runs: string; variants: number }[]) {
+export function partnerLabel(partner: { gene: string; homodimer?: boolean }) {
+  return partner.homodimer ? 'itself' : partner.gene
+}
+
+export function partnerGroups(partners: { gene: string; runs: string; variants: number; homodimer?: boolean }[]) {
   const groups: { members: typeof partners; residues: Set<number> }[] = []
   for (const partner of partners) {
     const residues = new Set(partnerResidues(partner))
-    const alike = groups.find(g => overlap(g.residues, residues) >= ALIKE)
+    const alike = partner.homodimer
+      ? undefined
+      : groups.find(g => !g.members.some(m => m.homodimer) && overlap(g.residues, residues) >= ALIKE)
     if (alike) {
       alike.members.push(partner)
     } else {
       groups.push({ members: [partner], residues })
     }
   }
-  return groups.map(g => ({
-    names: g.members.toSorted((a, b) => b.variants - a.variants).map(p => p.gene),
-    residues: g.residues,
-  }))
+  return groups.map(g => {
+    const members = g.members.toSorted((a, b) => b.variants - a.variants)
+    return { names: members.map(p => p.gene), labels: members.map(partnerLabel), residues: g.residues }
+  })
 }
 
 export function partnerTracks(partners: Gene['partners']) {
@@ -105,11 +111,12 @@ export function partnerTracks(partners: Gene['partners']) {
   return [
     ...shown.map(g => ({
       label:
-        g.names.length > 1
-          ? `${g.names[0]} +${g.names.length - 1}`
-          : (g.names[0] ?? ''),
+        g.labels.length > 1
+          ? `${g.labels[0]} +${g.labels.length - 1}`
+          : (g.labels[0] ?? ''),
       partner: g.names[0],
       names: g.names,
+      labels: g.labels,
       residues: [
         ...new Set(
           partners
@@ -124,6 +131,7 @@ export function partnerTracks(partners: Gene['partners']) {
             label: `+${rest.flatMap(g => g.names).length} more`,
             partner: undefined,
             names: rest.flatMap(g => g.names),
+            labels: rest.flatMap(g => g.labels),
             residues: [
               ...new Set(
                 partners
@@ -210,9 +218,10 @@ export function proteinMap(gene: Gene) {
         .map((track, index) => {
           const y = top + index * rowHeight
           const names = track.names.join(', ')
-          return `<g class="partner-row"${track.partner ? ` data-partner="${esc(track.partner)}"` : ''} data-names="${esc(names)}"><rect class="row-hit" x="0" y="${y - 1.5}" width="${width}" height="${rowHeight}" /><text class="row-label" x="0" y="${y + 9}">${esc(track.label)}<title>${esc(names)}</title></text>
+          const shown = track.labels.join(', ')
+          return `<g class="partner-row"${track.partner ? ` data-partner="${esc(track.partner)}"` : ''} data-names="${esc(names)}"><rect class="row-hit" x="0" y="${y - 1.5}" width="${width}" height="${rowHeight}" /><text class="row-label" x="0" y="${y + 9}">${esc(track.label)}<title>${esc(shown)}</title></text>
             <line class="baseline" x1="${scale(1)}" x2="${scale(gene.length)}" y1="${y + 5}" y2="${y + 5}" />
-            ${track.residues.map(r => `<rect x="${scale(r) - 1}" y="${y}" width="2.5" height="10" fill="var(--interface)"><title>residue ${r}: interface with ${esc(names)}</title></rect>`).join('')}</g>`
+            ${track.residues.map(r => `<rect x="${scale(r) - 1}" y="${y}" width="2.5" height="10" fill="var(--interface)"><title>residue ${r}: interface with ${esc(shown)}</title></rect>`).join('')}</g>`
         })
         .join('')}
       <line class="axis" x1="${scale(1)}" x2="${scale(gene.length)}" y1="${axisY}" y2="${axisY}" />

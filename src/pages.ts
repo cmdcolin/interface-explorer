@@ -6,6 +6,7 @@ import { readScores } from './alphamissense.ts'
 import {
   confidentResidues,
   isConfident,
+  isHomodimer,
   modelChain,
   partnerName,
   readAtlas,
@@ -132,9 +133,12 @@ export function geneRecord(
         runs: runs(residues),
         experiment: experimentOf(experiments.get(complex.entity)),
         conserved: patchRanks.get(complex.entity),
+        homodimer: isHomodimer(protein, complex),
         ...pairCaution(
           contexts.get(protein.accession),
-          complex.partner ? contexts.get(complex.partner) : undefined,
+          complex.partner && !isHomodimer(protein, complex)
+            ? contexts.get(complex.partner)
+            : undefined,
         ),
       }
     })
@@ -343,7 +347,7 @@ async function main() {
   const matched = record(conservation.enrichment)
   const summary = {
     proteins: summaryCounts['disease proteins'],
-    withPartner: summaryCounts['with any predicted hetero complex'],
+    withPartner: summaryCounts['with any predicted complex'],
     genes: genes.length,
     unmapped: unmapped.length,
     partners: genes.reduce((n, g) => n + g.partners.length, 0),
@@ -371,6 +375,7 @@ async function main() {
       orderedSurface: controlled['ordered and surface (pLDDT ≥ 70, RSA ≥ 0.2)'],
       byConfidenceBand: analysis.by_confidence_band,
       byAlphaMissenseClass: analysis.by_alphamissense_class,
+      byKind: analysis.by_kind,
     },
     conservation: {
       variants: conservation.variants,

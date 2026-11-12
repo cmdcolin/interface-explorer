@@ -29,6 +29,7 @@ test('an interface variant carries its AlphaMissense score', () => {
       context: {},
       complexes: 1,
       hetero: 1,
+      homo: 0,
       interfaces: [
         {
           entity: 'AF-1',
@@ -84,6 +85,7 @@ test('a partner carries its patch rank, and an interface variant its phyloP', ()
       context: {},
       complexes: 1,
       hetero: 1,
+      homo: 0,
       interfaces: [
         {
           entity: 'AF-1',
@@ -161,6 +163,7 @@ test('a lead is an uncertain variant where the same or another substitution is p
       context: {},
       complexes: 1,
       hetero: 1,
+      homo: 0,
       interfaces: [
         {
           entity: 'AF-1',
@@ -209,6 +212,7 @@ test('a gene record carries its complex chain and UniProt features', () => {
       context: {},
       complexes: 1,
       hetero: 1,
+      homo: 0,
       interfaces: [
         {
           entity: 'AF-1',
@@ -255,6 +259,7 @@ test('totals count every classified variant, counts only those at an interface',
       context: {},
       complexes: 1,
       hetero: 1,
+      homo: 0,
       interfaces: [
         {
           entity: 'AF-1',
@@ -299,6 +304,7 @@ test('a lead on a pair that never shares a compartment is marked apart', () => {
       context: {},
       complexes: 1,
       hetero: 1,
+      homo: 0,
       interfaces: [
         {
           entity: 'AF-1',
@@ -348,6 +354,7 @@ test('a pair flagged from both of its genes counts once', () => {
     conserved: undefined,
     apart,
     paralogs: false,
+    homodimer: false,
     variants: 0,
   })
   expect(
@@ -362,4 +369,41 @@ test('a pair flagged from both of its genes counts once', () => {
       p => p.apart,
     ),
   ).toBe(1)
+})
+
+test('a homodimer is the protein paired with itself, never its own paralog', () => {
+  const record = geneRecord(
+    {
+      accession: 'P00001',
+      gene: 'GENE',
+      length: 100,
+      context: {},
+      complexes: 1,
+      hetero: 0,
+      homo: 1,
+      interfaces: [
+        {
+          entity: 'AF-1',
+          partner: 'P00001',
+          partner_gene: 'GENE',
+          modelled_as: null,
+          iptm: 0.8,
+          ipsae: 0.8,
+          pdockq: 0.5,
+          residues: { 10: 90 },
+        },
+      ],
+    },
+    [],
+    { chrom: 'chr1', strand: '+', start: 1, end: 300 },
+    new Map(),
+    new Map(),
+    new Map(),
+    [],
+    new Map(),
+    new Map([['P00001', { family: 'F family', locations: ['Cytoplasm'] }]]),
+  )
+  expect(
+    record.partners.map(p => [p.gene, p.homodimer, p.paralogs, p.apart]),
+  ).toEqual([['GENE', true, false, false]])
 })

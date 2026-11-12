@@ -21,7 +21,7 @@ import {
   percent,
   phylopCell,
 } from '../../lib/html.ts'
-import { pathogenicAtSameResidue, proteinMap, variantData } from '../../lib/maps.ts'
+import { pathogenicAtSameResidue, proteinMap, variantData, partnerLabel } from '../../lib/maps.ts'
 import { initialPartner, partnerPicks, stories, structureData } from '../../lib/structure.ts'
 import { JBROWSE, geneHref, href, isoformHref } from '../../lib/site.ts'
 
@@ -57,7 +57,7 @@ const rows = gene.variants
     const same = sameResidue.get(v) ?? []
     const partners = gene.partners.filter(p => v.partners.includes(p.gene))
     const partnerLinks = (shown: typeof partners) =>
-      shown.map(p => `<a href="${sessionUrl(variantSpec(gene, v, p), JBROWSE)}">${esc(p.gene)}</a>`).join(', ')
+      shown.map(p => `<a href="${sessionUrl(variantSpec(gene, v, p), JBROWSE)}">${esc(partnerLabel(p))}</a>`).join(', ')
     return `<tr ${variantData(v, same)} data-position="${v.position}" data-partners="${esc(partners.map(p => p.gene).join(','))}" data-am="${v.alphaMissense ?? -1}" data-phylop="${v.phylop ?? -99}">
       <td>${esc(v.change)}${same.length ? `<div class="cell-note">${leadNote(v.change, same)}</div>` : ''}</td>
       <td class="nowrap">${chip(v.label)} <a href="${clinvarHref(v.variation)}" title="${esc(v.review)}">VCV${String(v.variation).padStart(9, '0')}</a></td>
@@ -107,7 +107,7 @@ const rows = gene.variants
                 title={s.names.length > 1 ? `${s.names.join(', ')}: nearly the same interface` : undefined}
                 aria-pressed={initial && s.names.includes(initial) ? 'true' : 'false'}
               >
-                {s.gene}
+                {s.labels[0]}
                 {s.names.length > 1 && <span class="pick-more">+{s.names.length - 1}</span>}
                 {s.pathogenic > 0 && <span class="pick-count" title={`${s.pathogenic} pathogenic variants at this interface`}>{s.pathogenic}</span>}
               </button>
@@ -153,7 +153,7 @@ const rows = gene.variants
           gene.partners.map(p => (
             <tr>
               <td>
-                <a href={partnerHref(p.accession)}>{p.gene}</a>
+                {p.homodimer ? <span title={`AlphaFold DB's predicted homodimer: two copies of ${gene.gene}`}>itself <span class="muted">(homodimer)</span></span> : <a href={partnerHref(p.accession)}>{p.gene}</a>}
                 {p.modelledAs && (
                   <div
                     class="cell-note"

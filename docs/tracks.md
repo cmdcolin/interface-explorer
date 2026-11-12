@@ -2,7 +2,8 @@
 
 - **Predicted interface codons:** one feature per partner, e.g.
   "GNAO1–GNB2 (ipSAE 0.73)". The codons are those of residues within 5 Å of
-  the partner in an AlphaFold DB heterodimer with ipSAE ≥ 0.6 and residue
+  the partner, or of the other copy, in an AlphaFold DB heterodimer or
+  homodimer with ipSAE ≥ 0.6 and residue
   pLDDT ≥ 70.
 - **ClinVar missense at a predicted interface:** red is pathogenic, orange is
   uncertain significance, grey is benign.

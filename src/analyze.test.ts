@@ -55,6 +55,7 @@ const PROTEIN: ProteinVariants = {
   length: 10,
   complexes: 2,
   hetero: 2,
+  homo: 0,
   interfaces: [
     {
       entity: 'AF-1',

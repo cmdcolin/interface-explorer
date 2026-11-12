@@ -18,6 +18,7 @@ export interface Interface {
 export interface ProteinInterfaces {
   complexes: number
   hetero: number
+  homo: number
   interfaces: Interface[]
 }
 
@@ -79,6 +80,7 @@ export function parseAtlasProtein(
     length: number(value.length) ?? 0,
     complexes: number(value.complexes) ?? 0,
     hetero: number(value.hetero) ?? 0,
+    homo: number(value.homo) ?? 0,
     interfaces: records(value.interfaces).map(parseInterface),
     context: parseContext(value.context),
   }
@@ -86,6 +88,13 @@ export function parseAtlasProtein(
 
 export function readAtlas() {
   return records(readJson(ATLAS)).filter(isRecord).map(parseAtlasProtein)
+}
+
+export function isHomodimer(
+  protein: { accession: string },
+  complex: Interface,
+) {
+  return complex.partner === protein.accession
 }
 
 export function partnerName(complex: Interface) {

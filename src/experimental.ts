@@ -50,25 +50,39 @@ export interface Pair {
 
 export function parseSifts(content: string) {
   const byChain = new Map<string, number>()
+  const segments = new Map<string, [number, number][]>()
+  const tandem = new Map<string, Set<string>>()
   for (const line of content.split('\n')) {
     const [pdb, chain, accession, , , , , begin, end] = line.split('\t')
     const length = Number(end) - Number(begin) + 1
     if (pdb && chain && accession && Number.isFinite(length)) {
       const key = `${accession}\t${pdb}\t${chain}`
       byChain.set(key, (byChain.get(key) ?? 0) + length)
+      const seen = segments.get(key) ?? []
+      const range: [number, number] = [Number(begin), Number(end)]
+      if (seen.some(([b, e]) => range[0] <= e && b <= range[1])) {
+        tandem.set(accession, (tandem.get(accession) ?? new Set()).add(pdb))
+      }
+      segments.set(key, [...seen, range])
     }
   }
   const coverage = new Map<string, Coverage>()
+  const copies = new Map<string, Coverage>()
   const chains = new Map<string, Set<string>>()
   for (const [key, length] of byChain) {
     const [accession = '', pdb = '', chain = ''] = key.split('\t')
     const entries = coverage.get(accession) ?? new Map<string, number>()
     entries.set(pdb, Math.max(entries.get(pdb) ?? 0, length))
     coverage.set(accession, entries)
+    const counted = copies.get(accession) ?? new Map<string, number>()
+    counted.set(pdb, (counted.get(pdb) ?? 0) + 1)
+    copies.set(accession, counted)
     chains.set(pdb, (chains.get(pdb) ?? new Set<string>()).add(chain))
   }
   return {
     coverage,
+    copies,
+    tandem,
     chains: new Map(chains.entries().map(([pdb, found]) => [pdb, found.size])),
   }
 }
@@ -81,6 +95,18 @@ export function sharedEntries(
     const other = partner.get(pdb)
     return other === undefined ? [] : [{ pdb, covered: covered + other }]
   })
+}
+
+export function homodimerEntries(
+  own: Coverage = new Map(),
+  copies: Coverage = new Map(),
+  tandem = new Set<string>(),
+) {
+  return [...own].flatMap(([pdb, covered]) =>
+    (copies.get(pdb) ?? 0) >= 2 && !tandem.has(pdb)
+      ? [{ pdb, covered: 2 * covered }]
+      : [],
+  )
 }
 
 export function chooseEntry(
@@ -107,11 +133,16 @@ export function interfaceAgreement(
   predicted: number[],
 ) {
   const chain = rows.filter(atom => isoformOf(atom, accession))
-  const own = chain.filter(
+  const homodimer = partner === accession
+  const first = chain[0]?.chain
+  const copy = homodimer ? chain.filter(atom => atom.chain === first) : chain
+  const own = copy.filter(
     atom =>
       atom.source && sequence[atom.source.number - 1] === atom.sourceLetter,
   )
-  const other = rows.filter(atom => isoformOf(atom, partner))
+  const other = homodimer
+    ? chain.filter(atom => atom.chain !== first)
+    : rows.filter(atom => isoformOf(atom, partner))
   const within = withinDistance(
     own.map(atom => atom.xyz),
     other.map(atom => atom.xyz),
@@ -122,7 +153,7 @@ export function interfaceAgreement(
     own.flatMap((atom, i) => (within[i] ? (atom.source?.number ?? []) : [])),
   )
   const comparable = predicted.filter(residue => observed.has(residue))
-  return own.length >= SAME_NUMBERING * chain.length && other.length
+  return own.length >= SAME_NUMBERING * copy.length && other.length
     ? {
         experimental: experimental.size,
         predicted: comparable.length,
@@ -268,17 +299,24 @@ async function confidentPairs() {
 
 export async function main(workers = 4) {
   await download(SIFTS_URL, SIFTS)
-  const { coverage, chains } = parseSifts(
+  const { coverage, copies, tandem, chains } = parseSifts(
     gunzipSync(readFileSync(SIFTS)).toString('utf8'),
   )
   await download(ENTRIES_URL, ENTRIES)
   const deposited = depositionDates(readFileSync(ENTRIES, 'utf8'))
   const pairs = await confidentPairs()
   const located = pairs.map(pair => {
-    const shared = sharedEntries(
-      coverage.get(pair.accession),
-      coverage.get(pair.partner),
-    )
+    const shared =
+      pair.partner === pair.accession
+        ? homodimerEntries(
+            coverage.get(pair.accession),
+            copies.get(pair.accession),
+            tandem.get(pair.accession),
+          )
+        : sharedEntries(
+            coverage.get(pair.accession),
+            coverage.get(pair.partner),
+          )
     return {
       pair: {
         ...pair,

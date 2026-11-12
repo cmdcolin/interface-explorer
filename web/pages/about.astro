@@ -1,7 +1,7 @@
 ---
 import { BP4_SUPPORTING, PP3_SUPPORTING } from '../../src/constants.ts'
 import Layout from '../layouts/Layout.astro'
-import { oddsText } from '../lib/charts.ts'
+import { kindRows, oddsText } from '../lib/charts.ts'
 import { gpcr, summary } from '../lib/data.ts'
 import { percent } from '../lib/html.ts'
 import { href } from '../lib/site.ts'
@@ -41,7 +41,7 @@ const references = [
   </p>
   <h2>In short</h2>
   <ul>
-    <li>{s.proteins.toLocaleString()} human disease proteins, with their AlphaFold DB heterodimer predictions.</li>
+    <li>{s.proteins.toLocaleString()} human disease proteins, with their AlphaFold DB heterodimer and homodimer predictions.</li>
     <li>Interface residues are matched to ClinVar missense variants, AlphaMissense scores and conservation.</li>
     <li>Pathogenic variants sit at predicted interfaces more often than benign ones, within the same protein.</li>
     <li>The complexes are predictions, so an interface variant is a lead, not a mechanism.</li>
@@ -52,7 +52,7 @@ const references = [
       <strong>Proteins:</strong> all {s.proteins.toLocaleString()} reviewed human proteins with a UniProt disease annotation.
     </li>
     <li>
-      <strong>Complexes:</strong> heterodimers from <a href={HAN}>AlphaFold DB's 2026 complex release</a>, kept at ipSAE ≥ {t.ipsae} in both directions.
+      <strong>Complexes:</strong> heterodimers and homodimers from <a href={HAN}>AlphaFold DB's 2026 complex release</a>, kept at ipSAE ≥ {t.ipsae} in both directions. A homodimer is listed as a partner called "itself", and its interface is where one copy touches the other; AlphaFold DB models two copies, so for a larger assembly such as a tetramer it shows one of its interfaces.
       <details class="more">
         <summary>Details</summary>
         <p>
@@ -125,6 +125,13 @@ const references = [
       pathogenic variants and is not an interface.
     </li>
     <li>Only folded, surface-exposed residues: <Fragment set:html={oddsText(s.enrichment.orderedSurface)} /></li>
+    {
+      kindRows(s).map(({ label, e }) => (
+        <li>
+          {label}, folded surface only: <Fragment set:html={oddsText(e)} />
+        </li>
+      ))
+    }
     <li>
       The same, comparing variants only within the same quarter of vertebrate conservation:
       <Fragment set:html={oddsText(s.conservation.enrichment.orderedSurface.matched)} />
@@ -148,8 +155,7 @@ const references = [
     <ul>
       <li>The surface line rules out "folded vs disordered" as the explanation.</li>
       <li>
-        The AlphaMissense lines show the interface adds little to a predictor that never sees the partner, and only among
-        variants it already gives pathogenic evidence.
+        The AlphaMissense lines show the interface adds little to a predictor that never sees the partner.
       </li>
       <li>The conservation line shows that conservation explains only part of it.</li>
       <li>Each confidence band of ipSAE, compared with residues at no interface, gives about the same odds ratio.</li>
@@ -205,7 +211,7 @@ const references = [
   <h2>Caveats</h2>
   <ul>
     <li>
-      Coverage: {percent(s.withPartner, s.proteins)} of disease proteins have any predicted partner. AlphaFold DB modelled
+      Coverage: {percent(s.withPartner, s.proteins)} of disease proteins have any predicted complex. AlphaFold DB modelled
       STRING physical-interaction pairs only; TP53 has none and KRAS has no RAF.
     </li>
     <li>

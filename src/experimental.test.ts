@@ -3,6 +3,7 @@ import { expect, test } from 'vitest'
 import {
   chooseEntry,
   depositionDates,
+  homodimerEntries,
   interfaceAgreement,
   parseSifts,
   sharedEntries,
@@ -76,9 +77,14 @@ test('deposition dates come from the wwPDB entry index', () => {
   )
 })
 
-function atom(accession: string, number: number, x: number): Atom {
+function atom(
+  accession: string,
+  number: number,
+  x: number,
+  chain = accession,
+): Atom {
   return {
-    chain: accession,
+    chain,
     entity: accession,
     seq: number,
     auth: number,
@@ -142,4 +148,44 @@ test('the summary takes medians over pairs that touch', () => {
     recovered: 1,
     histogram: [0, 0, 1, 0, 0, 0, 0, 0, 1, 0],
   })
+})
+
+test('a homodimer entry holds two copies of the protein', () => {
+  const { coverage, copies } = parseSifts(SIFTS)
+  expect(homodimerEntries(coverage.get('P1'), copies.get('P1'))).toEqual([
+    { pdb: '1abc', covered: 140 },
+  ])
+  expect(homodimerEntries(coverage.get('P2'), copies.get('P2'))).toEqual([])
+})
+
+test('a homodimer is compared copy against copy, not against itself', () => {
+  const rows = [
+    atom('P1', 10, 0, 'A'),
+    atom('P1', 11, 3, 'A'),
+    atom('P1', 12, 20, 'A'),
+    atom('P1', 5, 6, 'B'),
+  ]
+  const own = { accession: 'P1', sequence: 'A'.repeat(20) }
+  expect(interfaceAgreement(rows, own, 'P1', [11, 12])).toEqual({
+    experimental: 1,
+    predicted: 2,
+    shared: 1,
+  })
+  expect(
+    interfaceAgreement(rows.slice(0, 3), own, 'P1', [11, 12]),
+  ).toBeUndefined()
+})
+
+test('an entry whose chain fuses two copies is no homodimer comparison', () => {
+  const fused = [
+    SIFTS,
+    '3fus\tA\tP2\t1\t90\t1\t90\t1\t90',
+    '3fus\tA\tP2\t101\t190\t101\t190\t1\t90',
+    '3fus\tB\tP2\t1\t90\t1\t90\t1\t90',
+  ].join('\n')
+  const { coverage, copies, tandem } = parseSifts(fused)
+  expect(tandem.get('P2')).toEqual(new Set(['3fus']))
+  expect(
+    homodimerEntries(coverage.get('P2'), copies.get('P2'), tandem.get('P2')),
+  ).toEqual([])
 })

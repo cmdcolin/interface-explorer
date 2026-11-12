@@ -52,7 +52,7 @@ const table = sortableTable({
     {
       label: 'Touches',
       cell: lead =>
-        `<span class="muted">${esc(lead.partners.slice(0, 2).join(', '))}${lead.partners.length > 2 ? ` +${lead.partners.length - 2}` : ''}</span>${lead.apart ? '<div class="cell-note caution" title="UniProt places one protein of every pair this residue touches only inside mitochondria and the other never in mitochondria">different compartments</div>' : ''}`,
+        `<span class="muted">${esc(lead.partners.slice(0, 2).map(name => (name === lead.gene ? 'itself' : name)).join(', '))}${lead.partners.length > 2 ? ` +${lead.partners.length - 2}` : ''}</span>${lead.apart ? '<div class="cell-note caution" title="UniProt places one protein of every pair this residue touches only inside mitochondria and the other never in mitochondria">different compartments</div>' : ''}`,
       sort: lead => lead.partners.join(', '),
     },
     {

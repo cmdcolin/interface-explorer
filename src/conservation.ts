@@ -482,7 +482,7 @@ export async function main(workers = 4) {
   const phylop = new BigWig({
     filehandle: new RemoteFile(PHYLOP, { fetch: patientFetch }),
   })
-  const atlas = readAtlas().filter(p => p.hetero)
+  const atlas = readAtlas().filter(p => p.hetero + p.homo > 0)
   const scored = (
     await boundedMap(
       atlas,

@@ -89,6 +89,19 @@ export function confidenceRows(summary: Summary) {
     .map(([label, e]) => ({ label, e }))
 }
 
+const SURFACE_CONTROL = 'ordered and surface (pLDDT ≥ 70, RSA ≥ 0.2)'
+
+export function kindRows(summary: Summary) {
+  return Object.entries(summary.enrichment.byKind).flatMap(
+    ([kind, controls]) => {
+      const e = controls[SURFACE_CONTROL]
+      return e
+        ? [{ label: kind.charAt(0).toUpperCase() + kind.slice(1), e }]
+        : []
+    },
+  )
+}
+
 export function alphaMissenseRows(summary: Summary) {
   return Object.entries(summary.enrichment.byAlphaMissenseClass).map(
     ([label, e]) => ({
@@ -128,7 +141,7 @@ export function callBars(
 const SCATTER_TICKS = [0, 5, 25, 50, 100, 200, 400]
 
 function scatterTip(g: GeneRow) {
-  return `<strong>${esc(g.gene)}</strong> with ${esc(g.topPartner)}${g.partners > 1 ? ` and ${g.partners - 1} more` : ''}<br />${LABEL_KEYS.map(label => `<span class="swatch" style="background:var(--${label})"></span>${g[label]} ${label}`).join(' · ')}<br /><span class="muted">${g.interfaceResidues} interface residues of ${g.length}</span>`
+  return `<strong>${esc(g.gene)}</strong> with ${esc(g.topPartner === g.gene ? 'itself' : g.topPartner)}${g.partners > 1 ? ` and ${g.partners - 1} more` : ''}<br />${LABEL_KEYS.map(label => `<span class="swatch" style="background:var(--${label})"></span>${g[label]} ${label}`).join(' · ')}<br /><span class="muted">${g.interfaceResidues} interface residues of ${g.length}</span>`
 }
 
 export function geneScatter(genes: GeneRow[]) {

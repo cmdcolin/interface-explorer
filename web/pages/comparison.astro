@@ -30,7 +30,7 @@ const resources: Resource[] = [
     year: '2026',
     paper: { label: 'Method', url: href('about/') },
     site: { label: 'this site', url: href() },
-    structures: `AlphaFold DB's 2026 heterodimers of ${s.proteins.toLocaleString()} disease proteins: AlphaFold DB's high-confidence set, ipSAE ≥ ${t.ipsae} both ways`,
+    structures: `AlphaFold DB's 2026 heterodimers and homodimers of ${s.proteins.toLocaleString()} disease proteins: AlphaFold DB's high-confidence set, ipSAE ≥ ${t.ipsae} both ways`,
     variants:
       'ClinVar missense and AlphaMissense; odds ratios within proteins, controlled for folded surface, AlphaMissense class and conservation',
     genome: 'Interface codons as hg38 bigBed tracks in JBrowse 2; a variant opens in its complex beside the genome',
@@ -225,7 +225,7 @@ const amClasses = Object.entries(s.enrichment.byAlphaMissenseClass)
       </ul>
     </li>
     <li>
-      <strong>The newest complexes.</strong> AlphaFold DB's 2026 heterodimers had, as far as we found, no published
+      <strong>The newest complexes.</strong> AlphaFold DB's 2026 heterodimers and homodimers had, as far as we found, no published
       disease-variant analysis.
     </li>
     <li>
@@ -249,7 +249,7 @@ const amClasses = Object.entries(s.enrichment.byAlphaMissenseClass)
     <li>MutPred-PPI predicts, per variant, which partner it disrupts; the explorer only says where a variant sits.</li>
     <li>ProtVar adds population and cancer variants; Genomics 2 Proteins adds experimental structures.</li>
     <li>
-      The explorer covers {s.withPartner.toLocaleString()} disease proteins, those with a confident AlphaFold DB heterodimer;
+      The explorer covers {s.withPartner.toLocaleString()} disease proteins, those with a confident AlphaFold DB heterodimer or homodimer;
       AlphaFold DB modelled only STRING physical pairs.
     </li>
   </ul>

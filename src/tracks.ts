@@ -195,7 +195,7 @@ async function writeConfig(defaultLocus: string) {
       'interfaces',
       'Predicted interface codons (AlphaFold DB complexes)',
       'interfaces.bb',
-      `Codons of residues within 5 Å of a partner in an AlphaFold DB heterodimer with ipSAE ≥ ${CONFIDENT}, residue pLDDT ≥ ${MIN_PLDDT}. One feature per partner.`,
+      `Codons of residues within 5 Å of a partner, or of the other copy, in an AlphaFold DB heterodimer or homodimer with ipSAE ≥ ${CONFIDENT}, residue pLDDT ≥ ${MIN_PLDDT}. One feature per partner.`,
     ),
     bedTrack(
       'interface-variants',

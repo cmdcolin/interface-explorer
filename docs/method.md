@@ -1,7 +1,9 @@
 # Method
 
 - **Proteins:** all reviewed human UniProt entries with a disease annotation.
-- **Complexes:** AlphaFold DB heterodimers (up to 30 per protein, by ipSAE).
+- **Complexes:** AlphaFold DB heterodimers (up to 30 per protein, by ipSAE)
+  and the protein's homodimer, listed as the partner "itself"; a homodimer's
+  interface is where one copy touches the other.
   Interface residues have a heavy atom within 5 Å of the partner and pLDDT
   ≥ 70. Codons come from EBI Proteins API coordinates on the primary hg38
   chromosomes.

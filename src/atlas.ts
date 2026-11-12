@@ -174,7 +174,7 @@ async function complexInterface(
     ),
   )
   const own = chains.find(c => c.uniprotAccession === accession)
-  const partner = chains.find(c => c.uniprotAccession !== accession)
+  const partner = chains.find(c => c !== own)
   const cifUrl = text(own?.cifUrl)
   const atoms =
     own && partner && cifUrl
@@ -219,21 +219,32 @@ export async function proteinInterfaces(accession: string) {
       join(DATA, 'complexes', `${accession}.json`),
     ),
   )
+  const byConfidence = (
+    a: Record<string, unknown>,
+    b: Record<string, unknown>,
+  ) =>
+    (number(b.complexPredictionAccuracy_ipSAE) || 0) -
+    (number(a.complexPredictionAccuracy_ipSAE) || 0)
   const hetero = complexes
     .filter(c => c.assemblyType === 'Hetero')
-    .sort(
-      (a, b) =>
-        (number(b.complexPredictionAccuracy_ipSAE) || 0) -
-        (number(a.complexPredictionAccuracy_ipSAE) || 0),
-    )
+    .sort(byConfidence)
+  const homo = complexes
+    .filter(c => c.assemblyType === 'Homo')
+    .sort(byConfidence)
   const interfaces: Interface[] = []
-  for (const entry of hetero.slice(0, MAX_COMPLEXES)) {
+  for (const entry of [
+    ...homo.slice(0, 1),
+    ...hetero.slice(0, MAX_COMPLEXES),
+  ]) {
     interfaces.push(...(await complexInterface(accession, entry)))
   }
   return {
     complexes: complexes.length,
     hetero: hetero.length,
-    interfaces: distinctPartners(interfaces),
+    homo: homo.length,
+    interfaces: distinctPartners(
+      interfaces.toSorted((a, b) => (b.ipsae ?? 0) - (a.ipsae ?? 0)),
+    ),
   } satisfies ProteinInterfaces
 }
 
@@ -346,7 +357,10 @@ async function processProtein(
       gene,
       length: sequence.length,
       ...interfaces,
-      context: interfaces.hetero > 0 ? await proteinContext(accession) : {},
+      context:
+        interfaces.hetero + interfaces.homo > 0
+          ? await proteinContext(accession)
+          : {},
     } satisfies AtlasProtein
   } catch (error) {
     return {
@@ -402,7 +416,7 @@ export async function main(workers = 4, accessions: string[] = []) {
   writeJson(ATLAS, done)
   writeJson(failures, failed, 2)
   console.log(
-    `${done.length} proteins, ${done.filter(r => r.hetero > 0).length} with a hetero complex; ${failed.length} failed, listed in ${failures}`,
+    `${done.length} proteins, ${done.filter(r => r.hetero > 0).length} with a hetero complex, ${done.filter(r => r.homo > 0).length} with a homodimer; ${failed.length} failed, listed in ${failures}`,
   )
 }
 

@@ -84,6 +84,7 @@ export interface Summary {
     orderedSurface: Enrichment
     byConfidenceBand: Record<string, Enrichment>
     byAlphaMissenseClass: Record<string, Enrichment>
+    byKind: Record<string, Record<string, Enrichment>>
   }
   conservation: {
     variants: {
