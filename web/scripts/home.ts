@@ -30,3 +30,20 @@ function wireScatter() {
 }
 
 wireScatter()
+
+function wireTour() {
+  const tour = document.querySelector('.tour')
+  const video = tour?.querySelector('video')
+  const play = tour?.querySelector('button')
+  play?.addEventListener('click', () => {
+    void video?.play()
+  })
+  video?.addEventListener('play', () => {
+    video.controls = true
+    if (play) {
+      play.hidden = true
+    }
+  })
+}
+
+wireTour()

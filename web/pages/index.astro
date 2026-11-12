@@ -3,7 +3,7 @@ import { Image } from 'astro:assets'
 
 import Layout from '../layouts/Layout.astro'
 import { geneScatter, odds, shareFigure } from '../lib/charts.ts'
-import { geneRows, summary } from '../lib/data.ts'
+import { gene, geneRows, summary } from '../lib/data.ts'
 import { interfaceDiagram } from '../lib/interface-diagram.ts'
 import { percent } from '../lib/html.ts'
 import { posts } from '../lib/posts.ts'
@@ -11,6 +11,9 @@ import { href } from '../lib/site.ts'
 
 const s = summary()
 const genes = geneRows()
+const vhl = gene('VHL')
+const shown = vhl.variants.find(v => v.label === 'pathogenic')
+const shownPartner = shown && vhl.partners.find(p => shown.partners.includes(p.gene))
 const all = await posts()
 const tiles = [
   [s.withPartner, 'disease genes with a confident predicted complex', href('genes/')],
@@ -34,15 +37,19 @@ const tiles = [
       See which <a href="https://alphafold.ebi.ac.uk/">AlphaFold</a> predicted partner a ClinVar missense variant touches,
       in 3D and on the genome.
     </p>
-    <figure class="tour">
-      <video controls preload="none" poster={href('preview.jpg')} width="1280" height="720">
-        <source src={href('tour.mp4')} type="video/mp4" />
-      </video>
-      <figcaption>
-        A tour in 80 seconds: find a gene, turn its predicted complex in 3D, follow a variant from the protein map to the
-        structure, and open it beside the genome in JBrowse.
-      </figcaption>
-    </figure>
+    <a class="hero-shot" href={href(`gene/${vhl.gene}/`)}>
+      <img
+        src={href('preview.jpg')}
+        width="1400"
+        height="800"
+        fetchpriority="high"
+        alt={`JBrowse with the VHL codon on the genome on the left, under interface and ClinVar tracks, and the same residue highlighted in the predicted VHL–${shownPartner?.gene ?? ''} complex on the right`}
+      />
+      <span>
+        Each variant on a gene page opens in JBrowse like this: its codon on the genome beside its residue in the
+        predicted complex. Here, a pathogenic {vhl.gene} variant against {shownPartner?.gene}.
+      </span>
+    </a>
   </section>
 
   <section>
@@ -67,6 +74,26 @@ const tiles = [
       </div>
       <Fragment set:html={shareFigure(s.enrichment.all)} />
     </div>
+  </section>
+
+  <section>
+    <figure class="tour">
+      <div class="tour-frame">
+        <video preload="none" poster={href('tour.jpg')} width="1280" height="720">
+          <source src={href('tour.mp4')} type="video/mp4" />
+        </video>
+        <button class="tour-play" type="button">
+          <span class="tour-play-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+          </span>
+          <span class="tour-play-title">A tour in 80 seconds</span>
+        </button>
+      </div>
+      <figcaption>
+        Find a gene, turn its predicted complex in 3D, follow a variant from the protein map to the structure, and open it
+        beside the genome in JBrowse.
+      </figcaption>
+    </figure>
   </section>
 
   <section>

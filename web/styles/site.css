@@ -209,7 +209,8 @@ h2 {
   background: var(--surface-2);
 }
 
-a.tile:hover {
+a.tile:hover,
+.hero-shot:hover img {
   border-color: var(--interface);
 }
 
@@ -792,13 +793,25 @@ h3 {
   border-radius: 0 4px 4px 0;
 }
 
+.hero-shot {
+  display: block;
+  color: var(--text-2);
+  font-size: 14px;
+  text-decoration: none;
+}
+
 .tour {
   margin: 0;
   color: var(--text-2);
   font-size: 14px;
 }
 
-.tour video {
+.tour-frame {
+  position: relative;
+}
+
+.tour video,
+.hero-shot img {
   display: block;
   width: 100%;
   height: auto;
@@ -806,6 +819,50 @@ h3 {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
+}
+
+.tour-play {
+  position: absolute;
+  inset: 0 0 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 2vw, 16px);
+  border: 0;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 0.55);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.tour-play[hidden] {
+  display: none;
+}
+
+.tour-play-icon {
+  display: grid;
+  place-items: center;
+  width: clamp(52px, 10vw, 88px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--interface);
+}
+
+.tour-play:hover .tour-play-icon {
+  scale: 1.08;
+}
+
+.tour-play-icon svg {
+  width: 50%;
+  margin-left: 8%;
+  fill: currentColor;
+}
+
+.tour-play-title {
+  font-size: clamp(18px, 3.5vw, 32px);
+  font-weight: 650;
 }
 
 .post-cards {
