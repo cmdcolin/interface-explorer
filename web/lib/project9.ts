@@ -1,5 +1,6 @@
 import { gene, gpcr } from './data.ts'
 import { complexView } from './gpcr.ts'
+import type { Agreement } from './types.ts'
 
 const OLFACTORY = /^OR\d/
 const TIP = 20
@@ -30,6 +31,19 @@ export function project9() {
   const olfactory = gnal.partners.filter(p => OLFACTORY.test(p.gene))
   const ipsae = olfactory.map(p => p.ipsae ?? 0)
   const or51e2Side = or51e2?.receptorSide
+  const drd5Complex = dataset.find(
+    c => c.receptorSide.gene === 'DRD5' && c.gAlphaAfdb,
+  )
+  const golf = or51e2?.gAlphaAfdb
+  const golfExperimental = new Set(golf?.experimental)
+  const golfPredicted = new Set(golf?.predictedResidues)
+  const percentRange = (values: number[]) =>
+    `${Math.round(Math.min(...values) * 100)}–${Math.round(Math.max(...values) * 100)}%`
+  const ranges = (agreements: Agreement[]) => ({
+    partners: agreements.map(r => r.partner),
+    recall: percentRange(agreements.map(r => r.recall)),
+    precision: percentRange(agreements.map(r => r.precision)),
+  })
   return {
     complexes: dataset.length,
     or51e2: {
@@ -46,6 +60,28 @@ export function project9() {
         )
         .join(', '),
       variantCount: or51e2Side?.variants.length ?? 0,
+      golf: {
+        experimental: golfExperimental.size,
+        predicted: golfPredicted.size,
+        shared: golf?.shared ?? 0,
+        recall: Math.round((golf?.recall ?? 0) * 100),
+        precision: Math.round((golf?.precision ?? 0) * 100),
+        missed: [...golfExperimental].filter(r => !golfPredicted.has(r)),
+        olfactory: ranges(
+          (golf?.receptors ?? []).filter(
+            r => OLFACTORY.test(r.partner) && r.partner !== 'OR51E2',
+          ),
+        ),
+        others: ranges(
+          (golf?.receptors ?? []).filter(r => !OLFACTORY.test(r.partner)),
+        ),
+      },
+    },
+    drd5Golf: {
+      pdb: drd5Complex?.pdb ?? '',
+      predicted: drd5Complex?.gAlphaAfdb?.predicted ?? 0,
+      recall: Math.round((drd5Complex?.gAlphaAfdb?.recall ?? 0) * 100),
+      precision: Math.round((drd5Complex?.gAlphaAfdb?.precision ?? 0) * 100),
     },
     contacts: labels.length,
     numbered: numbered.length,

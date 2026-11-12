@@ -205,6 +205,13 @@ export interface Agreement {
   precision: number
 }
 
+export interface PredictedGAlpha extends Agreement {
+  accession: string
+  experimental: number[]
+  predictedResidues: number[]
+  receptors: Agreement[]
+}
+
 export interface Complex {
   pdb: string
   method: string
@@ -218,6 +225,7 @@ export interface Complex {
   receptor: string
   receptorSide: Side & { afdb: Agreement | null }
   gProteins: Side[]
+  gAlphaAfdb: PredictedGAlpha | null
   axis: number[]
 }
 

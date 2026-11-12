@@ -72,14 +72,52 @@ cryo-EM, {p.or51e2.resolution} Å; Billesbølle et al., Nature 2023) tests the
 receptor side of those predictions: AlphaFold DB's
 OR51E2–{p.or51e2.partner} complex covers {p.or51e2.recall}% of the{' '}
 {p.or51e2.residues} receptor residues within 5 Å of Gα, and {p.or51e2.precision}%
-of the residues it predicts are among them. The mini-Gs is an engineered Gαs, so
-this does not test the Gαolf residues.
+of the residues it predicts are among them.
 
-On Gαolf's side, ClinVar has {p.gnalVariants.length} variants of uncertain
-significance; L380R, at the tip of α5 like the Gαs variants above, is the one to
-look at first. GNAL is a disease gene because of dystonia, not smell, and V204E
-and L380R also contact DRD5, ADRB1 and the TAARs, so this is the face Gαolf
-turns to every receptor. See [GNAL's page](../../gene/GNAL/).
+### The Gαolf side
+
+The mini-Gs is an engineered Gαs, not Gαolf, but the two are 80% identical and
+their α5 helices end alike (QYELL). Mapped onto Gαolf by sequence, the{' '}
+{p.or51e2.golf.experimental} mini-Gs residues within 5 Å of OR51E2 test the other
+half of the prediction. AlphaFold DB's OR51E2–Gαolf complex puts{' '}
+{p.or51e2.golf.predicted} Gαolf residues against the receptor, and{' '}
+{p.or51e2.golf.shared} of them are among those {p.or51e2.golf.experimental}: it
+finds {p.or51e2.golf.recall}% of the experimental surface, and{' '}
+{p.or51e2.golf.precision}% of what it predicts is on it. It misses only residue{' '}
+{p.or51e2.golf.missed.join(', ')}.
+
+ClinVar has {p.gnalVariants.length} variants of uncertain significance where
+AlphaFold DB puts Gαolf against an olfactory receptor. Three GNAL variants are
+worth placing:
+
+- **L380R**, at the tip of α5 like the Gαs variants above: L380 (Gαs L393)
+  touches OR51E2 in the structure and in the prediction. It is the one to look
+  at first.
+- **K376Q:** K376 is the residue the prediction misses. Its Gαs counterpart,
+  R389, is 2.8 Å from OR51E2 in 8F76; AlphaFold DB puts K376 against OR2A1 and
+  OR2J3 instead.
+- **D227N**, the dystonia 25 variant, is not a receptor contact. Its Gαs
+  counterpart, D240, is 11.6 Å from OR51E2 in 8F76 and 8.4 Å from DRD5 in{' '}
+  {p.drd5Golf.pdb}. AlphaFold DB has it against Gβ and the adenylyl cyclases
+  ADCY2, ADCY3 and ADCY4, and within 5 Å of DRD5 in its DRD5–Gαolf complex,
+  which {p.drd5Golf.pdb} does not bear out.
+
+GNAL's other predicted GPCR complexes use the same face. The other olfactory
+receptors ({p.or51e2.golf.olfactory.partners.join(', ')}) cover{' '}
+{p.or51e2.golf.olfactory.recall} of the 8F76 surface, with{' '}
+{p.or51e2.golf.olfactory.precision} of their predicted residues on it. The{' '}
+{p.or51e2.golf.others.partners.length} other GPCRs, DRD5 and the trace amine
+receptors among them, cover {p.or51e2.golf.others.recall} but predict larger
+interfaces, only {p.or51e2.golf.others.precision} of which is on it. DRD5's own
+Gs structure ({p.drd5Golf.pdb}) agrees: AlphaFold DB's DRD5–Gαolf complex covers{' '}
+{p.drd5Golf.recall}% of its Gαs contacts mapped onto Gαolf, and{' '}
+{p.drd5Golf.precision}% of the {p.drd5Golf.predicted} residues it predicts are
+among them.
+
+So on OR51E2, the Gαolf face AlphaFold DB predicts is the one a Gs mimic uses,
+despite an ipSAE just over the threshold. A Gαs structure cannot test the fifth
+of Gαolf that differs from Gαs. GNAL is a disease gene because of dystonia, not
+smell; see [GNAL's page](../../gene/GNAL/).
 
 ## For Project 9
 

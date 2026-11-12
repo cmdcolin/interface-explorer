@@ -6,6 +6,7 @@ import {
   axis,
   chainSequence,
   genericNumbers,
+  mappedResidues,
   residueMap,
   segmentPath,
   seq1,
@@ -40,6 +41,11 @@ describe('residueMap', () => {
     expect(pairs.get(5)).toBe(5)
     expect(identity).toBeCloseTo(0.9)
   })
+})
+
+test('mapped residues follow the alignment and drop unpaired ones', () => {
+  const { pairs } = residueMap('MKTAYIAKQR', 'GGMKTAYKQR')
+  expect(mappedResidues([1, 5, 7, 10], pairs)).toEqual([3, 7, 10])
 })
 
 describe('entity rows', () => {

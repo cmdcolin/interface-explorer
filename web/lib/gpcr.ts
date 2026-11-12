@@ -3,7 +3,7 @@ import { gpcr } from './data.ts'
 import { LABEL_KEYS, LABELS, clinvarHref, esc, residueCount } from './html.ts'
 import { pdbModel } from './scene.ts'
 import { JBROWSE } from './site.ts'
-import type { Agreement, Side, SideVariant } from './types.ts'
+import type { Agreement, Complex, Side, SideVariant } from './types.ts'
 
 function variantCounts(variants: SideVariant[]) {
   return LABEL_KEYS.map(
@@ -36,6 +36,12 @@ export function agreementText(afdb: Agreement | null, partial = false) {
   return afdb
     ? `${Math.round(afdb.recall * 100)}% <span class="muted">of these${partial ? '' : `; ${Math.round(afdb.precision * 100)}% of the ${afdb.predicted} AFDB residues`} (vs ${esc(afdb.partner)})</span>`
     : '<span class="muted" title="AlphaFold DB has no complex of this receptor with a Gα">—</span>'
+}
+
+export function gAlphaAgreementText({ gProteins, gAlphaAfdb }: Complex) {
+  return gAlphaAfdb
+    ? `<span class="tip" title="The ${esc(gProteins.map(g => g.gene).join('+'))} residues within 5 Å of the receptor, mapped onto ${esc(gAlphaAfdb.partner)} by sequence">${agreementText(gAlphaAfdb)}</span>`
+    : agreementText(null)
 }
 
 export function sideCell(side: Side) {

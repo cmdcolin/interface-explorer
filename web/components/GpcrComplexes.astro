@@ -1,6 +1,6 @@
 ---
 import { gpcr } from '../lib/data.ts'
-import { agreementText, gAlphaCell, receptorLinks, sideCell } from '../lib/gpcr.ts'
+import { agreementText, gAlphaAgreementText, gAlphaCell, receptorLinks, sideCell } from '../lib/gpcr.ts'
 
 const anchored = new Set<string>()
 const anchor = (gene: string) => {
@@ -15,7 +15,7 @@ const anchor = (gene: string) => {
     <thead>
       <tr>
         <th>Receptor</th><th>G protein</th><th>Structure</th><th>Receptor side</th><th>Gα side</th>
-        <th>AlphaFold DB covers, receptor side</th><th>Open</th>
+        <th>AlphaFold DB covers, receptor side</th><th>AlphaFold DB covers, Gα side</th><th>Open</th>
       </tr>
     </thead>
     <tbody>
@@ -40,6 +40,7 @@ const anchor = (gene: string) => {
               <td set:html={sideCell(r)} />
               <td set:html={gAlphaCell(c.gProteins)} />
               <td set:html={agreementText(r.afdb)} />
+              <td set:html={gAlphaAgreementText(c)} />
               <td class="nowrap" set:html={receptorLinks(r.gene, c.pdb, r.locus)} />
             </tr>
           )

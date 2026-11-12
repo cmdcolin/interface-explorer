@@ -538,6 +538,7 @@ async function predictedInterfaces(
     .filter(complex => isConfident(complex) && partners(complex))
     .map(complex => ({
       partner: complex.partner_gene || complex.partner || '',
+      accession: complex.partner ?? '',
       residues: new Set(confidentResidues(complex)),
     }))
 }
@@ -557,7 +558,7 @@ function agreement(
   }
 }
 
-async function receptorAgreement(
+async function receptorPrediction(
   atlas: Atlas,
   receptor: Side,
   gGenes: string[],
@@ -567,9 +568,47 @@ async function receptorAgreement(
     receptor.accession,
     complex => G_ALPHA.test(complex.partner_gene ?? ''),
   )
-  const best = candidates.find(c => gGenes.includes(c.partner)) ?? candidates[0]
-  return best && receptor.residues.length && best.residues.size
-    ? agreement(new Set(receptor.residues), best.residues, best.partner)
+  return candidates.find(c => gGenes.includes(c.partner)) ?? candidates[0]
+}
+
+export function mappedResidues(residues: number[], pairs: Map<number, number>) {
+  return residues.flatMap(r => {
+    const mapped = pairs.get(r)
+    return mapped === undefined ? [] : [mapped]
+  })
+}
+
+async function predictedGAlpha(
+  atlas: Atlas,
+  receptorAccession: string,
+  gProteins: Side[],
+  accession: string,
+) {
+  const { gene, sequence } = await uniprot(accession)
+  const mapped = await Promise.all(
+    gProteins.map(async g =>
+      mappedResidues(
+        g.residues,
+        residueMap((await uniprot(g.accession)).sequence, sequence).pairs,
+      ),
+    ),
+  )
+  const experimental = new Set(mapped.flat())
+  const gpcrs = await gpcrAccessions()
+  const predictions = await predictedInterfaces(atlas, accession, complex =>
+    gpcrs.has(complex.partner ?? ''),
+  )
+  const own = predictions.find(p => p.accession === receptorAccession)
+  return own && experimental.size && own.residues.size
+    ? {
+        ...agreement(experimental, own.residues, gene),
+        accession,
+        experimental: [...experimental].sort(byNumber),
+        predictedResidues: [...own.residues].sort(byNumber),
+        receptors: predictions.map(p =>
+          agreement(experimental, p.residues, p.partner),
+        ),
+      }
     : null
 }
 
@@ -787,6 +826,7 @@ async function interfaceRecord(
   const numbering = receptorAccession
     ? await gpcrdbNumbering(receptorAccession)
     : new Map<number, string>()
+  const prediction = await receptorPrediction(atlas, receptor, gGenes)
   return {
     ...complexFields(structure),
     receptorSide: {
@@ -797,9 +837,24 @@ async function interfaceRecord(
           return label ? [[position, label]] : []
         }),
       ),
-      afdb: await receptorAgreement(atlas, receptor, gGenes),
+      afdb:
+        prediction && receptor.residues.length && prediction.residues.size
+          ? agreement(
+              new Set(receptor.residues),
+              prediction.residues,
+              prediction.partner,
+            )
+          : null,
     },
     gProteins,
+    gAlphaAfdb: prediction
+      ? await predictedGAlpha(
+          atlas,
+          receptorAccession,
+          gProteins,
+          prediction.accession,
+        )
+      : null,
     axis,
   }
 }

@@ -16,9 +16,11 @@ one.
   across 100 vertebrates bears on it; three worked examples (VHL, GNAO1,
   APP695); and the receptor–G protein complexes BioHackathon Europe 2026
   Project 9 selected, in 3D, where every pathogenic variant at the interface is
-  on the G protein, with each complex's contacts and GPCRdb numbers; and which
-  human disease proteins a SARS-CoV-2 protein actually touches in the PDB, with
-  the ClinVar variants on the contact.
+  on the G protein, with each complex's contacts and GPCRdb numbers, and
+  AlphaFold DB's Gαolf–olfactory receptor complexes checked on both sides
+  against OR51E2's structure; and which human disease proteins a SARS-CoV-2
+  protein actually touches in the PDB, with the ClinVar variants on the
+  contact.
 - **Genes:** a searchable table of the 1,331 disease genes with a confident
   predicted partner. Each gene page opens on its predicted complex in 3D,
   starting with the partner whose interface carries the most pathogenic
@@ -184,6 +186,12 @@ one.
 - AlphaFold DB's OR51E2–Golf complex covers 86% of the receptor residues
   OR51E2 uses against mini-Gs, and 94% of the residues it predicts are among
   them, though its ipSAE is only 0.63.
+- On the Gα side, mapped onto Golf by sequence (80% identical to Gαs), the
+  same complex predicts 23 residues, all among the 24 mini-Gs uses; it misses
+  only K376 (Gαs R389). Golf's VUS L380R sits on that shared surface; the
+  dystonia variant D227N does not (its Gαs counterpart is 11.6 Å from
+  OR51E2). Golf's complexes with OR2A1, OR2J3 and OR2L13 cover 79–88% of the
+  same surface.
 - Gαs has no AlphaFold DB complex with a GPCR, but 9 experimental Gs complexes
   and the Gαs scaffold of 4 engineered chimeras put 47 of its residues against
   a receptor. 10 ClinVar pathogenic variants sit on them, most on the
@@ -308,7 +316,10 @@ one.
   receptor–Gα contacts are counted, not those with Gβγ. Receptor residues carry
   GPCRdb's generic number (e.g. 3.50x50), or their segment (e.g. ICL3) where it
   has none, taken from GPCRdb's residue table for the human receptor wherever
-  its residue matches UniProt's.
+  its residue matches UniProt's. Where AlphaFold DB pairs the receptor with a
+  different Gα than the structure's (Golf for Gs, Gα14 for Gi1), the
+  structure's Gα contacts are aligned onto the predicted Gα by sequence before
+  the two are compared.
 - **Isoforms:** each isoform's sequence is rebuilt from UniProt's
   alternative-sequence edits and must equal its AlphaFold DB model's sequence;
   that gives each isoform residue its canonical position. A replaced stretch
