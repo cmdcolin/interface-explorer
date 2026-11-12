@@ -89,8 +89,12 @@ const rows = gene.variants
     partnerStories.length > 0 && (
       <section class="structure-section">
         <div class="structure-head">
-          <h2>In 3D</h2>
-          <div class="partner-picks">
+          <h2>{gene.gene} with a partner, in 3D</h2>
+          <p class="picks-label">
+            {partnerStories.length > 1 ? `Pick one of its ${partnerStories.length} predicted partners.` : 'Its one predicted partner.'}
+            The red number counts the pathogenic variants at that interface.
+          </p>
+          <div class="partner-picks" role="group" aria-label="Partners">
             {partnerStories.map(s => (
               <button type="button" class="partner-pick" data-partner={s.gene} aria-pressed={s.gene === initial ? 'true' : 'false'}>
                 {s.gene}
