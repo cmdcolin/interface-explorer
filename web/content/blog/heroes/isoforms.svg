@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 760" font-family="Open Sans, Helvetica, Arial, sans-serif">
+<rect width="1600" height="760" fill="#fcfcfb"/>
+<text x="40" y="214" font-size="38" fill="#0b0b0b">Canonical</text>
+<line x1="250" y1="200" x2="1560" y2="200" stroke="#bdb8ab" stroke-width="4"/>
+<rect x="250" y="160" width="190" height="80" rx="14" fill="#bdb8ab"/>
+<rect x="480" y="160" width="200" height="80" rx="14" fill="#bdb8ab"/>
+<rect x="720" y="160" width="260" height="80" rx="14" fill="#2a78d6"/>
+<rect x="1020" y="160" width="200" height="80" rx="14" fill="#bdb8ab"/>
+<rect x="1260" y="160" width="300" height="80" rx="14" fill="#bdb8ab"/>
+<ellipse cx="850" cy="100" rx="110" ry="42" fill="#3f9b78"/>
+<line x1="850" y1="142" x2="850" y2="160" stroke="#3f9b78" stroke-width="10"/>
+<text x="40" y="444" font-size="38" fill="#0b0b0b">Isoform A</text>
+<line x1="250" y1="430" x2="1560" y2="430" stroke="#bdb8ab" stroke-width="4"/>
+<rect x="250" y="390" width="190" height="80" rx="14" fill="#bdb8ab"/>
+<rect x="480" y="390" width="200" height="80" rx="14" fill="#bdb8ab"/>
+<rect x="720" y="390" width="260" height="80" rx="14" fill="#fcfcfb" stroke="#7a7975" stroke-width="4" stroke-dasharray="14 10"/>
+<rect x="1020" y="390" width="200" height="80" rx="14" fill="#bdb8ab"/>
+<rect x="1260" y="390" width="300" height="80" rx="14" fill="#bdb8ab"/>
+<ellipse cx="850" cy="330" rx="110" ry="42" fill="none" stroke="#3f9b78" stroke-width="4" stroke-dasharray="14 10"/>
+<text x="40" y="674" font-size="38" fill="#0b0b0b">Isoform B</text>
+<line x1="250" y1="660" x2="1560" y2="660" stroke="#bdb8ab" stroke-width="4"/>
+<rect x="250" y="620" width="190" height="80" rx="14" fill="#bdb8ab"/>
+<rect x="480" y="620" width="200" height="80" rx="14" fill="#fcfcfb" stroke="#7a7975" stroke-width="4" stroke-dasharray="14 10"/>
+<rect x="720" y="620" width="260" height="80" rx="14" fill="#2a78d6"/>
+<rect x="1020" y="620" width="200" height="80" rx="14" fill="#bdb8ab"/>
+<rect x="1260" y="620" width="300" height="80" rx="14" fill="#bdb8ab"/>
+<ellipse cx="850" cy="560" rx="110" ry="42" fill="#3f9b78"/>
+<line x1="850" y1="602" x2="850" y2="620" stroke="#3f9b78" stroke-width="10"/>
+</svg>

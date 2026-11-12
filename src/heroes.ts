@@ -31,13 +31,6 @@ await screenshots(
       wait: 45,
     },
     {
-      name: 'isoforms',
-      url: local => `${local}isoforms/APP/`,
-      clip: '.map-wrap',
-      height: 800,
-      wait: 10,
-    },
-    {
       name: 'are-the-interfaces-real',
       url: local => `${local}gene/PRPH2/?partner=ROM1`,
       clip: '.structure-section',
