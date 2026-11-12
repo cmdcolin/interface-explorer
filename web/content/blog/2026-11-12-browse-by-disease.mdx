@@ -1,0 +1,112 @@
+---
+title: 'Browse by disease'
+date: '2026-11-12'
+order: 7
+description: 'Each disease now has a page with its genes and their interface variants. Where two predicted partners both cause the disease, the page lists the pair, which points to the interaction a variant might break.'
+hero: './heroes/browse-by-disease.jpg'
+heroAlt: "NDUFV1 and NDUFV2 of mitochondrial complex I in 3D, NDUFV1 grey and NDUFV2 green, with ClinVar variants marked where the two meet"
+---
+
+import { diseasePost } from '../../lib/diseasePost.ts'
+import { href } from '../../lib/site.ts'
+
+export const p = diseasePost()
+
+A missense variant can leave a protein folded and working but unable to bind
+one partner. Different variants in the same gene can then cause different
+diseases, depending on which interaction they break. The explorer shows which
+predicted interface a variant sits on, but on its own that says nothing about
+whether that interface matters for the disease. A useful clue is when the
+partner itself causes the same disease: if either protein's variants give the
+same illness, the interaction between them is a likely place for it to start.
+
+## A page per disease
+
+The new <a href={href('diseases/')}>Diseases</a> section has{' '}
+{p.diseases.toLocaleString()} pages. Each is a disease listed on a ClinVar
+missense variant classified pathogenic at a confident predicted interface. It
+lists the genes with variants for that disease, the variants themselves, and
+the predicted pairs whose two proteins both cause it.
+
+Diseases are matched through [MONDO](https://mondo.monarchinitiative.org/),
+which links ClinVar's conditions to the OMIM numbers UniProt gives each
+gene's diseases. Many diseases come in OMIM phenotypic series, the same
+phenotype caused by any of several genes, such as the subtypes of Noonan
+syndrome or Fanconi anemia. {p.series.toLocaleString()} of the pages are
+series.
+
+{p.withPairs.toLocaleString()} diseases have at least one pair of predicted
+partners that both cause it, {p.pairs.toLocaleString()} pairs in all, and{' '}
+{p.seriesPairs.toLocaleString()} of those pairs are on series pages: the two
+proteins of a complex usually cause different numbered subtypes of a disease,
+not the same one.
+
+## Three examples
+
+{p.complexI && (
+  <p>
+    <a href={p.complexI.href}>Mitochondrial complex I deficiency</a> is a series of{' '}
+    {p.complexI.seriesSize} diseases, one for each of the many genes whose loss
+    breaks the respiratory chain's first complex. {p.complexI.genes} of those
+    genes have variants at a predicted interface, and {p.complexI.pairs} of
+    their predicted pairings join two genes that both cause it.
+    {p.ndufv && (
+      <>
+        {' '}One is NDUFV2 with NDUFV1, in the hero image (ipSAE {p.ndufv.ipsae}),
+        with {p.ndufv.pathogenic} pathogenic and {p.ndufv.uncertain} uncertain
+        variants listing it on the two sides of their interface.{' '}
+        <a href={p.ndufv.href}>Open the pair in 3D</a>.
+      </>
+    )}
+  </p>
+)}
+
+{p.mismatch && (
+  <p>
+    MLH1 and PMS2 form MutLα, the heterodimer of DNA mismatch repair. Both cause
+    Lynch syndrome and its severe childhood form,{' '}
+    <a href={p.mismatch.diseaseHref}>{p.mismatch.disease}</a>, and AlphaFold DB
+    predicts them together with ipSAE {p.mismatch.ipsae}. Their interface holds{' '}
+    {p.mismatch.pathogenic} pathogenic and {p.mismatch.uncertain} uncertain
+    variants listing that disease. <a href={p.mismatch.href}>Open MLH1 with PMS2</a>.
+  </p>
+)}
+
+{p.noonan && (
+  <p>
+    <a href={p.noonan.diseaseHref}>Noonan syndrome</a> is a RASopathy: its genes
+    sit along the RAS–MAPK pathway. KRAS and SOS1, the exchange factor that
+    switches RAS on, are paired by AlphaFold DB with ipSAE {p.noonan.ipsae}, and
+    their interface holds {p.noonan.pathogenic} pathogenic and{' '}
+    {p.noonan.uncertain} uncertain variants listing a Noonan-series condition.
+    Many RAS variants work by staying switched on rather than by losing SOS1, so
+    the pair says where to look, not what the variant does.{' '}
+    <a href={p.noonan.href}>Open KRAS with SOS1</a>.
+  </p>
+)}
+
+## On gene pages
+
+Each gene page now marks, for each variant at an interface, whether the
+residue is at that gene's only interface or one shared by several partners,
+and which partner causes the same disease or one in its series. A filter shows
+only those variants, and the gene's disease pages are linked at the top.
+Leads, the uncertain variants at a residue where another change is
+pathogenic, now prefer a partner with such a disease link when they touch
+several.
+
+## What to keep in mind
+
+- **A series can be broad.** The series with pairs range from{' '}
+  {p.smallestSeries} to {p.largestSeries} diseases. A small series like
+  mismatch repair cancer syndrome points to a shared mechanism; a large one,
+  such as immunodeficiency or retinitis pigmentosa, shares a phenotype but not
+  necessarily a pathway. Each link shows the series' size.
+- **ClinVar lists conditions per variant, not per classification.** A variant
+  classified pathogenic for one condition may list others from different
+  submissions, so a listed condition is not always the one it was classified
+  for.
+- **Only diseases UniProt says a gene causes count.** Susceptibility and "may
+  be caused by" annotations are left out.
+- **The interfaces are predictions,** and a variant at one may still act
+  another way, by unfolding the protein or keeping it switched on.
