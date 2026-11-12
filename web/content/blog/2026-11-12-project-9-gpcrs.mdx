@@ -48,8 +48,10 @@ cavity. The receptor side has
 Bars: how many of the {p.gnas?.structures} Gαs structures put a receptor within
 5 Å of each residue. Marks above: ClinVar pathogenic (red) and uncertain
 (orange). The strip below the axis marks Gαs's helices and strands by the
-common Gα numbering (CGN; Flock et al., Nature 2015). The pathogenic α5 variants
-are {p.alpha5Pathogenic.join(', ')}.
+common Gα numbering (CGN; Flock et al., Nature 2015), whose labels name the
+same position in every Gα: G.H5.25 is the 25th residue of α5 in Gαs, Gαolf or
+Gαi alike. The pathogenic variants by CGN element are{' '}
+{p.gnasPathogenicByElement}.
 AlphaFold DB has no complex of Gαs with a GPCR, so this surface comes from
 experiment alone.
 
@@ -146,7 +148,8 @@ despite an ipSAE just over the threshold. A Gαs structure cannot test the{' '}
 
 ## All {p.all} complexes
 
-Hover a residue count for the residues and their GPCRdb numbers; "3D" opens the
+Hover a residue count for the residues with their GPCRdb numbers on the
+receptor side and their CGN labels on the Gα side; "3D" opens the
 structure beside the genome in JBrowse.
 
 <GpcrComplexes />

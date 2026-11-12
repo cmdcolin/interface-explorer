@@ -1,4 +1,5 @@
 import { gene, gpcr } from './data.ts'
+import { cgnName } from './maps.ts'
 import type { Agreement } from './types.ts'
 
 const OLFACTORY = /^OR\d/
@@ -113,6 +114,14 @@ export function project9() {
     alpha5Pathogenic: gnasPathogenic
       .filter(v => gnasCgn?.labels[v.position]?.startsWith(ALPHA5))
       .map(v => v.change),
+    gnasPathogenicByElement: Map.groupBy(
+      gnasPathogenic.map(v => ({ ...v, label: gnasCgn?.labels[v.position] ?? '' })),
+      v => cgnName(v.label.split('.')[1] ?? ''),
+    )
+      .entries()
+      .map(([element, variants]) => `${element}: ${variants.map(v => `${v.change} (${v.label})`).join(', ')}`)
+      .toArray()
+      .join('; '),
     golfCgn,
     gnasCounterpart,
     featured: {

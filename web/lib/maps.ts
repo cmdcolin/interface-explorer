@@ -378,6 +378,17 @@ export function isoformMap(record: IsoformRecord) {
     </div>`
 }
 
+function cgnPart(part: string) {
+  return `${part.toLowerCase().startsWith('h') ? 'α' : 'β'}${part.slice(1).toUpperCase()}`
+}
+
+export function cgnName(segment: string) {
+  const loop = /^([hs](?:\d+|[a-z]))([hs](?:\d+|[a-z]))$/.exec(segment)
+  return loop
+    ? `${cgnPart(loop[1] ?? '')}–${cgnPart(loop[2] ?? '')} loop`
+    : cgnPart(segment)
+}
+
 export function cgnElements(labels: Record<string, string>) {
   const elements = new Array<{ name: string; start: number; end: number }>()
   for (const [position, label] of Object.entries(labels)
@@ -409,6 +420,6 @@ export function surfaceMap(g: GAlpha, labels: Record<string, string> = {}) {
       ${g.counts.map(([r, n]) => `<rect x="${scale(r) - 1.25}" y="${46 - (30 * n) / most}" width="2.5" height="${(30 * n) / most}" fill="var(--interface)"><title>residue ${r}: contacts the receptor in ${n} of ${g.structures} structures</title></rect>`).join('')}
       <line class="axis" x1="20" x2="${width - 20}" y1="48" y2="48" />
       ${[1, Math.round(g.length / 4), Math.round(g.length / 2), Math.round((3 * g.length) / 4), g.length].map(x => `<text class="tick" x="${scale(x)}" y="66" text-anchor="middle">${x}</text>`).join('')}
-      ${elements.map(e => `<rect x="${scale(e.start) - 1}" y="74" width="${scale(e.end) - scale(e.start) + 2}" height="${e.name.startsWith('S') ? 4 : 8}" fill="var(--chain)"><title>${esc(e.name)} (CGN), residues ${e.start}–${e.end}</title></rect>${e.name.startsWith('H') && e.end - e.start >= 8 ? `<text class="tick" x="${(scale(e.start) + scale(e.end)) / 2}" y="94" text-anchor="middle">${e.name.replace('H', 'α')}</text>` : ''}`).join('')}
+      ${elements.map(e => `<rect x="${scale(e.start) - 1}" y="74" width="${scale(e.end) - scale(e.start) + 2}" height="${e.name.startsWith('S') ? 4 : 8}" fill="var(--chain)"><title>${esc(e.name)} (CGN), residues ${e.start}–${e.end}</title></rect>${e.name.startsWith('H') && e.end - e.start >= 8 ? `<text class="tick" x="${(scale(e.start) + scale(e.end)) / 2}" y="94" text-anchor="middle">${cgnName(e.name)}</text>` : ''}`).join('')}
     </svg></div>`
 }

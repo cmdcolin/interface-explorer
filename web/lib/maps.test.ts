@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { cgnElements, lanes, partnerGroups } from './maps.ts'
+import { cgnElements, cgnName, lanes, partnerGroups } from './maps.ts'
 
 test('overlapping features take the next free lane', () => {
   expect(
@@ -58,5 +58,16 @@ test('CGN labels group into helices and strands, skipping loops', () => {
     { name: 'S6', start: 1, end: 1 },
     { name: 'H5', start: 3, end: 4 },
     { name: 'H5', start: 6, end: 6 },
+  ])
+})
+
+test('CGN segments read as helices, strands and the loops between them', () => {
+  expect(['H5', 'HN', 'S6', 'h4s6', 'hgh4', 'h1ha'].map(cgnName)).toEqual([
+    'α5',
+    'αN',
+    'β6',
+    'α4–β6 loop',
+    'αG–α4 loop',
+    'α1–αA loop',
   ])
 })
