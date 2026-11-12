@@ -260,6 +260,7 @@
         {
           "type": "LinearMultiRowFeatureDisplay",
           "height": 240,
+          "tooltip": "jexl:split(get(feature,'origName'),' : ')[1]",
           "transform": [
             {
               "type": "formula",

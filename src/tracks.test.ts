@@ -93,6 +93,7 @@ test('the ClinVar track gains a display with a band of SNV rows and a band of lo
       {
         type: 'LinearMultiRowFeatureDisplay',
         height: 240,
+        tooltip: "jexl:split(get(feature,'origName'),' : ')[1]",
         transform: [
           {
             type: 'formula',

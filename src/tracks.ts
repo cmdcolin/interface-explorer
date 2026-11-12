@@ -103,6 +103,7 @@ const SPAN = "get(feature,'end') - get(feature,'start')"
 const LONGER = '+'
 const SNV_BAND = 'SNVs'
 const LONGER_BAND = '≥2 bp'
+const HGVS = "jexl:split(get(feature,'origName'),' : ')[1]"
 
 function translucent(color: string | undefined) {
   return color?.replace(/^rgb\((.*)\)$/, 'rgba($1,0.5)')
@@ -123,6 +124,7 @@ export function withSignificanceRows(track: Record<string, unknown>) {
   const rows = {
     type: 'LinearMultiRowFeatureDisplay',
     height: 240,
+    tooltip: HGVS,
     transform: [
       {
         type: 'formula',
