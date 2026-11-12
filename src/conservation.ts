@@ -12,6 +12,7 @@ import {
   CONTROLS,
   SURFACE,
   bands,
+  byMetric,
   enrichment,
   stratifiedEnrichment,
   tables,
@@ -202,7 +203,7 @@ export function matchedTables(
     const strata = QUARTERS.flatMap(index =>
       tables(
         [protein],
-        'ipsae',
+        byMetric('ipsae'),
         CONFIDENT_BAND,
         (context, v) => keep(context, v) && inQuarter(edges, v, index),
       ),
@@ -550,7 +551,7 @@ export async function main(workers = 4) {
         name,
         {
           unmatched: enrichment(
-            tables(withContext, 'ipsae', CONFIDENT_BAND, keep),
+            tables(withContext, byMetric('ipsae'), CONFIDENT_BAND, keep),
           ),
           matched: stratifiedEnrichment(
             matchedTables(withContext, keep, edges),

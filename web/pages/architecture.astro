@@ -31,7 +31,7 @@ const PITCH = 72
 const GAP = 22
 const BUS = 500
 const WIDTH = 1140
-const HEIGHT = TOP + 10 * PITCH + 8
+const HEIGHT = TOP + 11 * PITCH + 8
 
 const boxes: Box[] = [
   { id: 'uniprot', col: 0, row: 0, kind: 'source', title: 'UniProt', lines: [`${s.proteins.toLocaleString()} disease proteins`] },
@@ -40,10 +40,11 @@ const boxes: Box[] = [
   { id: 'clinvar', col: 0, row: 3, kind: 'source', title: 'ClinVar', lines: ['weekly variant_summary'] },
   { id: 'am', col: 0, row: 4, kind: 'source', title: 'AlphaMissense', lines: ['every substitution'] },
   { id: 'pdb', col: 0, row: 5, kind: 'source', title: 'RCSB PDB · PDBe SIFTS', lines: ['experimental complexes'] },
-  { id: 'ucsc', col: 0, row: 6, kind: 'source', title: 'UCSC phyloP 100-way', lines: ['hg38 bigWig'] },
-  { id: 'gnomadSource', col: 0, row: 7, kind: 'source', title: 'gnomAD v4.1 exomes', lines: ['hg38 bigBed'] },
-  { id: 'gpcrdb', col: 0, row: 8, kind: 'source', title: 'GPCRdb · PDBe', lines: ['receptor–G protein structures'] },
-  { id: 'afdbIso', col: 0, row: 9, kind: 'source', title: 'AlphaFold DB isoforms', lines: ['monomer models'] },
+  { id: 'ppi', col: 0, row: 6, kind: 'source', title: 'IntAct · BioGRID', lines: ['reported human pairs'] },
+  { id: 'ucsc', col: 0, row: 7, kind: 'source', title: 'UCSC phyloP 100-way', lines: ['hg38 bigWig'] },
+  { id: 'gnomadSource', col: 0, row: 8, kind: 'source', title: 'gnomAD v4.1 exomes', lines: ['hg38 bigBed'] },
+  { id: 'gpcrdb', col: 0, row: 9, kind: 'source', title: 'GPCRdb · PDBe', lines: ['receptor–G protein structures'] },
+  { id: 'afdbIso', col: 0, row: 10, kind: 'source', title: 'AlphaFold DB isoforms', lines: ['monomer models'] },
 
   {
     id: 'atlas',
@@ -58,10 +59,11 @@ const boxes: Box[] = [
   { id: 'clinvarStep', col: 1, row: 3, kind: 'step', title: 'clinvar.ts', lines: ['missense SNVs, canonical'] },
   { id: 'amStep', col: 1, row: 4, kind: 'step', title: 'alphamissense.ts', lines: ['score each variant'] },
   { id: 'exp', col: 1, row: 5, kind: 'step', title: 'experimental.ts', lines: ['predicted pair vs PDB'] },
-  { id: 'cons', col: 1, row: 6, kind: 'step', title: 'conservation.ts', chips: ['@gmod/bbi'], lines: ['per codon'] },
-  { id: 'gnomad', col: 1, row: 7, kind: 'step', title: 'gnomad.ts', chips: ['@gmod/bbi'], lines: ['variant counts'] },
-  { id: 'gpcr', col: 1, row: 8, kind: 'step', title: 'gpcr.ts', chips: ['p2s_mapper'], lines: ['chain → UniProt'] },
-  { id: 'iso', col: 1, row: 9, kind: 'step', title: 'isoforms.ts', lines: ['rebuild, compare folds'] },
+  { id: 'ppiStep', col: 1, row: 6, kind: 'step', title: 'interactions.ts', lines: ['direct or same complex'] },
+  { id: 'cons', col: 1, row: 7, kind: 'step', title: 'conservation.ts', chips: ['@gmod/bbi'], lines: ['per codon'] },
+  { id: 'gnomad', col: 1, row: 8, kind: 'step', title: 'gnomad.ts', chips: ['@gmod/bbi'], lines: ['variant counts'] },
+  { id: 'gpcr', col: 1, row: 9, kind: 'step', title: 'gpcr.ts', chips: ['p2s_mapper'], lines: ['chain → UniProt'] },
+  { id: 'iso', col: 1, row: 10, kind: 'step', title: 'isoforms.ts', lines: ['rebuild, compare folds'] },
 
   { id: 'tracks', col: 2, row: 0, span: 2, kind: 'step', title: 'tracks.ts', lines: ['BED → bigBed', 'JBrowse config'] },
   { id: 'analyze', col: 2, row: 2, span: 2, kind: 'step', title: 'analyze.ts', lines: ['Mantel–Haenszel odds', 'ratios, resampled CIs'] },
@@ -72,7 +74,7 @@ const boxes: Box[] = [
     id: 'data',
     col: 3,
     row: 2,
-    span: 8,
+    span: 9,
     kind: 'file',
     title: 'site/data/',
     lines: ['genes/*.json', 'genes.json', 'leads.json', 'summary.json', 'gpcr.json', 'isoforms/*.json'],
@@ -81,7 +83,7 @@ const boxes: Box[] = [
   { id: 'jbrowse', col: 4, row: 0, span: 2, kind: 'viewer', title: 'JBrowse 2', lines: ['Protein3d, MsaView', 'plugins'] },
   { id: 'astro', col: 4, row: 2, span: 3, kind: 'viewer', title: 'Astro site', lines: ['astro build → static', 'gene, leads, isoform', 'pages, blog'] },
   { id: 'prism', col: 4, row: 5, span: 2, kind: 'viewer', title: 'Prism 3D viewer', lines: ['Mol* v6 build,', 'site/prism/'] },
-  { id: 'live', col: 4, row: 7, span: 2, kind: 'live', title: 'Fetched live', lines: ['AlphaFold DB .cif', 'UCSC hg38 tracks'] },
+  { id: 'live', col: 4, row: 8, span: 2, kind: 'live', title: 'Fetched live', lines: ['AlphaFold DB .cif', 'UCSC hg38 tracks'] },
 ]
 
 function place(b: Box) {
@@ -121,7 +123,7 @@ function down(from: string, to: string) {
   return b.y > a.y ? `M${x} ${a.y + a.h}V${b.y - 4}` : `M${x} ${a.y}V${b.y + b.h + 4}`
 }
 
-const busIn = ['atlas', 'coords', 'clinvarStep', 'amStep', 'exp', 'cons', 'gnomad']
+const busIn = ['atlas', 'coords', 'clinvarStep', 'amStep', 'exp', 'ppiStep', 'cons', 'gnomad']
 const busOut = ['tracks', 'analyze', 'pages']
 const busTop = box('atlas').cy
 const busBottom = box('gnomad').cy
@@ -134,6 +136,7 @@ const arrows = [
     ['clinvar', 'clinvarStep'],
     ['am', 'amStep'],
     ['pdb', 'exp'],
+    ['ppi', 'ppiStep'],
     ['ucsc', 'cons'],
     ['gnomadSource', 'gnomad'],
     ['gpcrdb', 'gpcr'],
@@ -191,7 +194,7 @@ const laidOut = [...byId.values()].map(b => ({ ...b, ...chipLayout(b) }))
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         role="img"
-        aria-label="Architecture: UniProt, AlphaFold DB, EBI Proteins API, ClinVar, AlphaMissense, PDB, UCSC phyloP, gnomAD and GPCRdb feed Node scripts; their cached results in out/ are combined into bigBed tracks for JBrowse and per-gene JSON for the Astro site, which embeds the Prism 3D viewer."
+        aria-label="Architecture: UniProt, AlphaFold DB, EBI Proteins API, ClinVar, AlphaMissense, PDB, IntAct, BioGRID, UCSC phyloP, gnomAD and GPCRdb feed Node scripts; their cached results in out/ are combined into bigBed tracks for JBrowse and per-gene JSON for the Astro site, which embeds the Prism 3D viewer."
       >
         <defs>
           <marker id="arch-arrow" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">

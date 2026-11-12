@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { conservedCell, phylopCell } from './html.ts'
+import { conservedCell, phylopCell, pubmedHref, reportedCell } from './html.ts'
 
 test('a phyloP cell names the quarter of conservation', () => {
   expect(phylopCell(8.04, [1.54, 4.58, 7.61])).toContain(
@@ -18,4 +18,18 @@ test('a conserved cell gives the share of patches the interface beats', () => {
     '80% of those within 25 Å',
   )
   expect(conservedCell(undefined)).toContain('—')
+})
+
+test('a reported cell names the evidence and links its PubMed papers', () => {
+  const cell = reportedCell({
+    evidence: 'direct',
+    publications: ['32296183', 'doi:10.1/x'],
+    methods: ['Two-hybrid'],
+  })
+  expect(cell).toContain('>direct<')
+  expect(cell).toContain('>2 papers<')
+  expect(cell).toContain('32296183%5Buid%5D')
+  expect(cell).toContain('by Two-hybrid')
+  expect(reportedCell(undefined)).toContain('—')
+  expect(pubmedHref(['doi:10.1/x'])).toBeUndefined()
 })

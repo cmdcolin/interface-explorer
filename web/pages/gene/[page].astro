@@ -22,6 +22,7 @@ import {
   percent,
   reachNote,
   phylopCell,
+  reportedCell,
 } from '../../lib/html.ts'
 import { pathogenicAtSameResidue, proteinMap, variantData, partnerLabel } from '../../lib/maps.ts'
 import { initialPartner, partnerPicks, stories, structureData } from '../../lib/structure.ts'
@@ -162,6 +163,7 @@ const rows = gene.variants
           <th>Interface residues</th>
           <th class="num" title="ClinVar missense variants at this partner's interface">Variants</th>
           <th title="The PDB entry holding both proteins, and the share of its contact residues the prediction also found">Experiment</th>
+          <th title="Whether IntAct or BioGRID report the two proteins binding directly (two-hybrid, complementation, purified proteins, structures) or only in the same complex (affinity capture, co-fractionation)">Reported</th>
           <th class="num" title="The share of same-size patches on the rest of this protein's folded surface that the interface is more conserved than, across 100 vertebrates. A random patch would beat about half.">Conserved</th>
           <th>Complex</th>
         </tr>
@@ -223,6 +225,7 @@ const rows = gene.variants
                   <span class="muted" title="No PDB entry holding both proteins could be compared">—</span>
                 )}
               </td>
+              <td class="nowrap" set:html={reportedCell(p.reported)} />
               <td class="num" set:html={conservedCell(p.conserved)} />
               <td class="nowrap">
                 <a href={sessionUrl(complexSpec(gene.gene, p.entity, locus), JBROWSE)}>3D + genome</a> ·

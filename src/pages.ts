@@ -34,6 +34,8 @@ import {
 } from './constants.ts'
 import { codingPositions } from './coordinates.ts'
 import type { CodingPositions } from './coordinates.ts'
+import { pairKey, readInteractions, readSources } from './interactions.ts'
+import type { PairEvidence } from './interactions.ts'
 import { readJson, record, writeJson } from './json.ts'
 import { pythonRound } from './numeric.ts'
 import { OUT, SITE_DATA } from './paths.ts'
@@ -110,6 +112,7 @@ export function geneRecord(
   patchRanks = new Map<string, PatchRank>(),
   contexts = new Map<string, ProteinContext>(),
   sharedDiseases = (_variant: Variant, _partner: string): SharedDisease[] => [],
+  interactions = new Map<string, PairEvidence>(),
 ) {
   const atResidue = new Map<number, string[]>()
   const partners = protein.interfaces
@@ -135,6 +138,9 @@ export function geneRecord(
         residues: residues.length,
         runs: runs(residues),
         experiment: experimentOf(experiments.get(complex.entity)),
+        reported: complex.partner
+          ? interactions.get(pairKey(protein.accession, complex.partner))
+          : undefined,
         conserved: patchRanks.get(complex.entity),
         homodimer: isHomodimer(protein, complex),
         ...pairCaution(
@@ -386,6 +392,7 @@ async function main() {
   const contexts = await humanContexts()
   const ontology = await readOntology()
   const diseases = await humanDiseases()
+  const interactions = readInteractions()
   const comparisons = readComparisons()
   const experiments = Map.groupBy(comparisons, pair => pair.accession)
   const analysis = record(readJson(join(OUT, 'analysis.json')))
@@ -442,6 +449,7 @@ async function main() {
             contexts,
             (variant, partner) =>
               ontology.shared(variant.diseases, diseases.get(partner) ?? []),
+            interactions,
           ),
         ]
       : []
@@ -516,6 +524,9 @@ async function main() {
         genes,
         p => p.paralogs && !p.experiment,
       ),
+      all: distinctPairs(genes, () => true),
+      direct: distinctPairs(genes, p => p.reported?.evidence === 'direct'),
+      complex: distinctPairs(genes, p => p.reported?.evidence === 'complex'),
     },
     alphaMissense: {
       calls: alphaMissenseCalls(genes.flatMap(g => g.variants)),
@@ -527,6 +538,7 @@ async function main() {
       byConfidenceBand: analysis.by_confidence_band,
       byAlphaMissenseClass: analysis.by_alphamissense_class,
       byKind: analysis.by_kind,
+      byPairEvidence: analysis.by_pair_evidence,
     },
     conservation: {
       variants: conservation.variants,
@@ -538,7 +550,7 @@ async function main() {
     },
     validation: validation(comparisons),
     thresholds: { ipsae: CONFIDENT, plddt: MIN_PLDDT, contact: CONTACT },
-    provenance: { clinvarDownloaded: downloaded() },
+    provenance: { clinvarDownloaded: downloaded(), ...readSources() },
   }
   writeJson(join(SITE_DATA, 'genes.json'), index)
   writeJson(join(SITE_DATA, 'leads.json'), shortlist)

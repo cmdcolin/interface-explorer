@@ -3,6 +3,8 @@ import { describe, expect, test } from 'vitest'
 import {
   ALPHAMISSENSE_CLASSES,
   bands,
+  byEvidence,
+  byMetric,
   interfaceScore,
   mantelHaenszel,
   tables,
@@ -89,13 +91,13 @@ const PROTEIN: ProteinVariants = {
 }
 
 test('interface score keeps the best score among confident residues', () => {
-  expect(interfaceScore(PROTEIN, 'iptm')).toEqual(
+  expect(interfaceScore(PROTEIN, byMetric('iptm'))).toEqual(
     new Map([
       [1, 0.8],
       [3, 0.6],
     ]),
   )
-  expect(interfaceScore(PROTEIN, 'ipsae')).toEqual(
+  expect(interfaceScore(PROTEIN, byMetric('ipsae'))).toEqual(
     new Map([
       [1, 0.7],
       [3, 0],
@@ -111,18 +113,26 @@ test('bands pair consecutive edges', () => {
 })
 
 test('tables compare a confidence band with residues at no interface', () => {
-  expect(tables([PROTEIN], 'iptm', [0.6, Infinity])).toEqual([[1, 1, 1, 1]])
-  expect(tables([PROTEIN], 'iptm', [0.6, 0.7])).toEqual([[0, 1, 1, 1]])
-  expect(tables([PROTEIN], 'iptm', [0.7, Infinity])).toEqual([[1, 1, 0, 1]])
+  expect(tables([PROTEIN], byMetric('iptm'), [0.6, Infinity])).toEqual([
+    [1, 1, 1, 1],
+  ])
+  expect(tables([PROTEIN], byMetric('iptm'), [0.6, 0.7])).toEqual([
+    [0, 1, 1, 1],
+  ])
+  expect(tables([PROTEIN], byMetric('iptm'), [0.7, Infinity])).toEqual([
+    [1, 1, 0, 1],
+  ])
   expect(
     tables(
       [PROTEIN],
-      'iptm',
+      byMetric('iptm'),
       [0.6, Infinity],
       context => context !== undefined,
     ),
   ).toEqual([[1, 0, 1, 0]])
-  expect(tables([PROTEIN], 'iptm', [0.6, Infinity], () => false)).toEqual([])
+  expect(
+    tables([PROTEIN], byMetric('iptm'), [0.6, Infinity], () => false),
+  ).toEqual([])
 })
 
 test('tables can be restricted to an AlphaMissense class', () => {
@@ -136,9 +146,36 @@ test('tables can be restricted to an AlphaMissense class', () => {
   expect(
     tables(
       [scored],
-      'iptm',
+      byMetric('iptm'),
       [0.6, Infinity],
       ALPHAMISSENSE_CLASSES['AlphaMissense PP3 (≥ 0.792)'],
     ),
   ).toEqual([[1, 0, 1, 1]])
+})
+
+test('evidence bands rank each residue by its best-supported confident partner', () => {
+  const interactions = new Map([
+    [
+      'P1 P2',
+      { evidence: 'direct' as const, publications: ['1'], methods: [] },
+    ],
+  ])
+  expect(interfaceScore(PROTEIN, byEvidence(interactions))).toEqual(
+    new Map([
+      [1, 2],
+      [3, -1],
+    ]),
+  )
+  expect(interfaceScore(PROTEIN, byEvidence(new Map()))).toEqual(
+    new Map([
+      [1, 0],
+      [3, -1],
+    ]),
+  )
+  expect(tables([PROTEIN], byEvidence(interactions), [2, 3])).toEqual([
+    [1, 1, 0, 1],
+  ])
+  expect(tables([PROTEIN], byEvidence(interactions), [0, 1])).toEqual([
+    [0, 1, 0, 1],
+  ])
 })

@@ -89,7 +89,14 @@ export interface Summary {
   partners: number
   variantsAtInterface: Record<Label, number>
   leads: { variants: number; genes: number; sameChange: number; apart: number }
-  pairs: { apart: number; paralogs: number; paralogsWithoutStructure: number }
+  pairs: {
+    apart: number
+    paralogs: number
+    paralogsWithoutStructure: number
+    all: number
+    direct: number
+    complex: number
+  }
   alphaMissense: {
     calls: Record<Label, { scored: number; pp3: number; bp4: number }>
   }
@@ -100,6 +107,7 @@ export interface Summary {
     byConfidenceBand: Record<string, Enrichment>
     byAlphaMissenseClass: Record<string, Enrichment>
     byKind: Record<string, Record<string, Enrichment>>
+    byPairEvidence: Record<string, Enrichment>
   }
   conservation: {
     variants: {
@@ -117,7 +125,11 @@ export interface Summary {
   }
   validation: { cutoff: string; all: Validation; unseen: Validation }
   thresholds: { ipsae: number; plddt: number; contact: number }
-  provenance: { clinvarDownloaded: string }
+  provenance: {
+    clinvarDownloaded: string
+    intactDownloaded: string
+    biogridRelease: string
+  }
 }
 
 export interface IsoformRow {

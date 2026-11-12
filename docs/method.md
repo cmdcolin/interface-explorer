@@ -14,6 +14,20 @@
   no PDB entry holds together are marked "paralogs, no structure of both".
   Proteins without a UniProt location are never marked. Neither mark removes a
   pair from the analysis.
+- **Reported pairs:** IntAct's human PSI-MITAB and BioGRID's human physical
+  interactions, joined to each predicted pair by UniProt accession (isoforms
+  and chains taken to their canonical entry). A pair is "direct" when any
+  report is: in IntAct, an interaction type under direct interaction or a
+  detection method under protein complementation (two-hybrid included),
+  biophysical or display; in BioGRID, Two-hybrid, PCA, Reconstituted Complex,
+  Co-crystal Structure, FRET, Far Western, Biochemical Activity,
+  Protein-peptide or Surface Display. Otherwise it is "same complex": IntAct
+  associations by other methods, or BioGRID affinity capture, co-fractionation,
+  co-purification or cross-linking. Proximity labelling, co-localisation,
+  negative results and non-human proteins are left out. The enrichment by
+  reported evidence ranks each residue by the best-supported confident pair it
+  touches, as the confidence bands rank it by the best ipSAE, and leaves
+  residues of other classes out of both sides.
 - **Variants:** NCBI ClinVar `variant_summary` single-nucleotide missense
   variants classified pathogenic, likely pathogenic, uncertain, likely benign
   or benign; conflicting classifications are left out. Each keeps the condition

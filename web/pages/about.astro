@@ -85,6 +85,22 @@ const references = [
       </details>
     </li>
     <li>
+      <strong>Reported pairs:</strong> {s.pairs.direct.toLocaleString()} of the {s.pairs.all.toLocaleString()} pairs are
+      reported binding directly in <a href="https://www.ebi.ac.uk/intact/">IntAct</a> or
+      <a href="https://thebiogrid.org/">BioGRID</a>, {s.pairs.complex.toLocaleString()} only in the same complex, and
+      {(s.pairs.all - s.pairs.direct - s.pairs.complex).toLocaleString()} by neither.
+      <details class="more">
+        <summary>Details</summary>
+        <p>
+          Direct: two-hybrid and other complementation assays, purified proteins, structures and other biophysical
+          methods, or an IntAct curator's "direct interaction". Same complex: affinity capture, co-fractionation,
+          co-purification and cross-linking. Proximity labelling and co-localisation are left out. Both proteins must be
+          human. IntAct downloaded {s.provenance.intactDownloaded}; BioGRID release {s.provenance.biogridRelease}. Gene
+          pages link each pair's papers in PubMed.
+        </p>
+      </details>
+    </li>
+    <li>
       <strong>Interface residues:</strong> any heavy atom within {t.contact} Å of the partner, residue pLDDT ≥ {t.plddt}, mapped to hg38 codons with EBI Proteins API coordinates.
     </li>
     <li>
@@ -137,6 +153,13 @@ const references = [
       <Fragment set:html={oddsText(s.conservation.enrichment.orderedSurface.matched)} />
     </li>
     {
+      Object.entries(s.enrichment.byPairEvidence).map(([name, e]) => (
+        <li>
+          Only interfaces of pairs {name}: <Fragment set:html={oddsText(e)} />
+        </li>
+      ))
+    }
+    {
       Object.entries(s.enrichment.byAlphaMissenseClass).map(([name, e]) => (
         <li>
           Only variants in the class "{name}": <Fragment set:html={oddsText(e)} />
@@ -159,6 +182,10 @@ const references = [
       </li>
       <li>The conservation line shows that conservation explains only part of it.</li>
       <li>Each confidence band of ipSAE, compared with residues at no interface, gives about the same odds ratio.</li>
+      <li>
+        The lines by reported evidence compare the interfaces of pairs an experiment has shown with those only the
+        prediction supports; a residue at several interfaces counts with its best-supported pair.
+      </li>
     </ul>
   </details>
   <h2>Leads</h2>

@@ -12,8 +12,13 @@
 - `pnpm alphamissense`: downloads AlphaMissense's 1.2 GB
   `AlphaMissense_aa_substitutions.tsv.gz` and writes `out/alphamissense.json`,
   a score for each variant in `out/clinvar.ndjson`.
-- `pnpm analyze`: the enrichment, overall, by confidence band and by
-  AlphaMissense evidence band, in `out/analysis.json`.
+- `pnpm interactions`: downloads IntAct's human MITAB, BioGRID's organism
+  release and the PSI-MI ontology, and writes `out/interactions.json`: each
+  predicted pair either database reports, as direct or same-complex, with its
+  publications and methods.
+- `pnpm analyze`: the enrichment, overall, by confidence band, by
+  AlphaMissense evidence band and by the pair's reported evidence, in
+  `out/analysis.json`.
 - `pnpm experimental [workers]`: each predicted pair against a PDB entry
   holding both proteins, in `out/experimental.json`.
 - `pnpm conservation [workers]`: reads phyloP for every codon from UCSC's
@@ -70,5 +75,5 @@
   `interface-explorer-summary.pdf` with LuaLaTeX, and `make screenshots` retakes
   its screenshots with headless Chrome.
 
-Requires Node 24 or later, pnpm, and UCSC's `bedToBigBed`.
+Requires Node 24 or later, pnpm, `unzip`, and UCSC's `bedToBigBed`.
 

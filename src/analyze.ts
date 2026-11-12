@@ -2,7 +2,7 @@ import { join } from 'node:path'
 
 import { readScores } from './alphamissense.ts'
 import { isHomodimer, readAtlas } from './atlasData.ts'
-import type { AtlasProtein } from './atlasData.ts'
+import type { AtlasProtein, Interface } from './atlasData.ts'
 import {
   BP4_SUPPORTING,
   CONFIDENT,
@@ -11,6 +11,8 @@ import {
   alphaMissenseEvidence,
 } from './constants.ts'
 import type { Label } from './constants.ts'
+import { pairKey, readInteractions } from './interactions.ts'
+import type { PairEvidence } from './interactions.ts'
 import { writeJson } from './json.ts'
 import {
   nanPercentile,
@@ -34,6 +36,7 @@ const EXAMPLES = 25
 const SUMMARY_LABELS: Label[] = ['pathogenic', 'benign', 'uncertain']
 
 type Metric = (typeof METRIC)[keyof typeof METRIC]
+export type Score = (complex: Interface, protein: AtlasProtein) => number
 type Context = [number, number] | undefined
 export type Keep = (context: Context, variant: ScoredVariant) => boolean
 export type Band = [number, number]
@@ -48,14 +51,42 @@ export interface ProteinVariants extends AtlasProtein {
   variants: ScoredVariant[]
 }
 
-export function interfaceScore(protein: AtlasProtein, metric: Metric) {
+export function byMetric(metric: Metric): Score {
+  return complex => complex[metric] || 0
+}
+
+export const EVIDENCE_BANDS = {
+  'neither IntAct nor BioGRID reports': [0, 1],
+  'IntAct or BioGRID report only in the same complex': [1, 2],
+  'IntAct or BioGRID report binding directly': [2, 3],
+} satisfies Record<string, Band>
+
+export function byEvidence(interactions: Map<string, PairEvidence>): Score {
+  return (complex, protein) => {
+    const evidence = complex.partner
+      ? interactions.get(pairKey(protein.accession, complex.partner))?.evidence
+      : undefined
+    return (complex.ipsae || 0) < CONFIDENT
+      ? -1
+      : evidence === 'direct'
+        ? 2
+        : evidence === 'complex'
+          ? 1
+          : 0
+  }
+}
+
+export function interfaceScore(protein: AtlasProtein, score: Score) {
   const best = new Map<number, number>()
   for (const complex of protein.interfaces) {
     for (const [position, plddt] of Object.entries(complex.residues)) {
       if (plddt >= MIN_PLDDT) {
         best.set(
           Number(position),
-          Math.max(best.get(Number(position)) ?? 0, complex[metric] || 0),
+          Math.max(
+            best.get(Number(position)) ?? -Infinity,
+            score(complex, protein),
+          ),
         )
       }
     }
@@ -101,12 +132,12 @@ function bandName(name: string, [low, high]: Band) {
 
 export function tables(
   proteins: ProteinVariants[],
-  metric: Metric,
+  score: Score,
   [low, high]: Band,
   keep: Keep = () => true,
 ) {
   return proteins.flatMap(protein => {
-    const best = interfaceScore(protein, metric)
+    const best = interfaceScore(protein, score)
     const inBand = (v: Variant) => {
       const score = best.get(v.position)
       return score !== undefined && score >= low && score < high
@@ -197,7 +228,7 @@ function confidentPartners(protein: AtlasProtein, position: number) {
 function uncertainAtInterfaces(proteins: ProteinVariants[]) {
   return proteins
     .flatMap(protein => {
-      const best = interfaceScore(protein, 'ipsae')
+      const best = interfaceScore(protein, byMetric('ipsae'))
       return protein.variants
         .filter(
           v =>
@@ -221,6 +252,7 @@ export async function main() {
   const accessions = new Set(atlas.map(p => p.accession))
   const variants = await readVariants(accession => accessions.has(accession))
   const scores = readScores()
+  const interactions = readInteractions()
   const proteins: ProteinVariants[] = atlas.map(protein => ({
     ...protein,
     variants: (variants.get(protein.accession) ?? []).map(v => ({
@@ -252,7 +284,9 @@ export async function main() {
     controlled_for_order_and_surface: Object.fromEntries(
       Object.entries(CONTROLS).map(([name, keep]) => [
         name,
-        enrichment(tables(withContext, 'ipsae', CONFIDENT_BAND, keep)),
+        enrichment(
+          tables(withContext, byMetric('ipsae'), CONFIDENT_BAND, keep),
+        ),
       ]),
     ),
     by_kind: Object.fromEntries(
@@ -269,7 +303,7 @@ export async function main() {
                     c => isHomodimer(p, c) === homodimer,
                   ),
                 })),
-                'ipsae',
+                byMetric('ipsae'),
                 CONFIDENT_BAND,
                 keep,
               ),
@@ -278,10 +312,18 @@ export async function main() {
         ),
       ]),
     ),
+    by_pair_evidence: Object.fromEntries(
+      Object.entries(EVIDENCE_BANDS).map(([name, band]) => [
+        name,
+        enrichment(tables(withComplex, byEvidence(interactions), band)),
+      ]),
+    ),
     by_alphamissense_class: Object.fromEntries(
       Object.entries(ALPHAMISSENSE_CLASSES).map(([name, keep]) => [
         name,
-        enrichment(tables(withComplex, 'ipsae', CONFIDENT_BAND, keep)),
+        enrichment(
+          tables(withComplex, byMetric('ipsae'), CONFIDENT_BAND, keep),
+        ),
       ]),
     ),
     by_confidence_band: Object.fromEntries(
@@ -291,7 +333,7 @@ export async function main() {
           enrichment(
             tables(
               withComplex,
-              name === 'ipTM' ? METRIC.ipTM : METRIC.ipSAE,
+              byMetric(name === 'ipTM' ? METRIC.ipTM : METRIC.ipSAE),
               band,
             ),
           ),

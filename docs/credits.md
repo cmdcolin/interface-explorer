@@ -15,6 +15,9 @@ assistance.
   isoforms, domains, regions and diseases, and RefSeq cross-references.
 - [MONDO](https://mondo.monarchinitiative.org/) (CC-BY 4.0): disease terms and
   OMIM phenotypic series, to match conditions across genes.
+- [IntAct](https://www.ebi.ac.uk/intact/) (EMBL-EBI, CC-BY 4.0) and
+  [BioGRID](https://thebiogrid.org/) (MIT) reported interactions, classified
+  with the [PSI-MI](https://github.com/HUPO-PSI/psi-mi-CV) ontology.
 - [Mol\*](https://molstar.org/) (MIT): the 3D view.
 - [EBI Proteins API](https://www.ebi.ac.uk/proteins/api/doc/) protein → genome
   coordinates.

@@ -360,6 +360,7 @@ test('a pair flagged from both of its genes counts once', () => {
     runs: '1',
     experiment: undefined,
     conserved: undefined,
+    reported: undefined,
     apart,
     paralogs: false,
     homodimer: false,

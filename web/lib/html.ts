@@ -1,4 +1,5 @@
 import type { PatchRank } from '../../src/conservation.ts'
+import type { PairEvidence } from '../../src/interactions.ts'
 import {
   ALPHAMISSENSE_EVIDENCE,
   BP4_SUPPORTING,
@@ -57,6 +58,21 @@ export function conservedCell(rank: PatchRank | undefined) {
   return rank?.anywhere === undefined
     ? '<span class="muted" title="Too little other folded surface on this protein to compare with">—</span>'
     : `<span title="Across 100 vertebrates, this interface is more conserved than ${share(rank.anywhere)} of patches of the same size on the rest of the protein's folded surface${rank.nearby === undefined ? '' : `, and ${share(rank.nearby)} of those within 25 Å of it`}. A random patch would beat about half.">${share(rank.anywhere)}</span>`
+}
+
+export function pubmedHref(publications: string[]) {
+  const ids = publications.filter(p => /^\d+$/.test(p))
+  return ids.length
+    ? `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(ids.map(id => `${id}[uid]`).join(' OR '))}`
+    : undefined
+}
+
+export function reportedCell(reported: PairEvidence | undefined) {
+  const papers = (n: number) => `${n} paper${n === 1 ? '' : 's'}`
+  const link = reported && pubmedHref(reported.publications)
+  return reported
+    ? `<span title="${esc(`IntAct or BioGRID report this pair ${reported.evidence === 'direct' ? 'binding directly' : 'only in the same complex'}, by ${reported.methods.join(', ')}`)}">${reported.evidence === 'direct' ? 'direct' : 'same complex'}</span> <span class="muted">${link ? `<a href="${esc(link)}">${papers(reported.publications.length)}</a>` : papers(reported.publications.length)}</span>`
+    : '<span class="muted" title="Neither IntAct nor BioGRID reports this pair: the prediction is the only evidence">—</span>'
 }
 
 export function conditionCell(conditions: string[]) {

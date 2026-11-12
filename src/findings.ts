@@ -167,6 +167,11 @@ Across all ${int(s.proteins)} UniProt disease proteins.
   copies share gives ${homo ? odds(homo) : '—'}.
 - The signal does not depend on confidence. Against residues at no interface:
 ${bands.map(([name, band]) => `  ${name}, ${odds(band)}`).join(';\n')}.
+- Not every pair has an experiment behind it. IntAct or BioGRID report
+  ${int(s.pairs.direct)} of the ${int(s.pairs.all)} pairs binding directly and ${int(s.pairs.complex)} only in the same
+  complex; for the other ${int(s.pairs.all - s.pairs.direct - s.pairs.complex)} the prediction is the only evidence.
+  Against residues at no interface, the interfaces of pairs that
+${Object.entries(e.byPairEvidence).map(([name, band]) => `  ${name}, ${odds(band)}`).join(';\n')}.
 - The interface adds little beyond AlphaMissense. Within AlphaMissense's
   evidence bands, as calibrated for clinical use by Bergquist et al. 2025
   ([Genet Med 27:101402](https://doi.org/10.1016/j.gim.2025.101402)):
