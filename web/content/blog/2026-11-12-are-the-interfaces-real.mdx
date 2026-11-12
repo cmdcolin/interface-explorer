@@ -29,9 +29,9 @@ export const rom1 = prph2.partners.find(p => p.gene === 'ROM1')
 export const rom1Variants = prph2.variants.filter(v => v.partners.includes('ROM1'))
 export const count = label => rom1Variants.filter(v => v.label === label).length
 
-Every interface in the explorer is a prediction. Two checks say most of them are
-real: experimental structures, where they exist, and evolution, which has kept
-the predicted surfaces more conserved than the rest.
+Every interface in the explorer is a prediction. Two checks indicate that most of them are real:
+they match experimental structures where those exist, and the predicted
+surfaces are more conserved than the rest.
 
 ## Against experiment
 
@@ -104,7 +104,7 @@ beats 95% of its patches in
 <Html html={shareBars(patchRows(s), 'var(--interface)')} />
 
 The share rises with ipSAE, as it would if the more confident predictions are
-more often right. It is not just conserved domains: ranked only among patches
+more often right. Conserved domains do not explain it: ranked only among patches
 centred within 25 Å of its middle, the interface beats the median one in
 {percent(near['above the median patch'].interface, near.complexes)} of
 {near.complexes.toLocaleString()} complexes, against

@@ -2,7 +2,7 @@
 title: 'SLC35A2 has no partner to map, so we mapped its moving parts'
 date: '2026-11-12'
 order: 5
-description: 'Molecular dynamics of the Golgi UDP-galactose transporter picks out the residues that switch between its two open states. They are more conserved than residues buried as deeply, and carry eight variants of uncertain significance.'
+description: 'Molecular dynamics of the Golgi UDP-galactose transporter picks out the residues that switch between its two open states. They are more conserved than residues buried as deeply, and have eight variants of uncertain significance.'
 hero: './heroes/slc35a2-switch.jpg'
 heroAlt: "SLC35A2's AlphaFold model side-on, with the residues that switch between its lumen-open and cytosol-open states in blue and their ClinVar variants marked"
 ---
@@ -18,9 +18,9 @@ The explorer places ClinVar variants on the surfaces two proteins share.
 SLC35A2, the Golgi transporter that carries UDP-galactose in for
 glycosylation, has {m.pathogenicTotal} pathogenic missense variants in ClinVar
 (SLC35A2-CDG), but AlphaFold DB predicts no complex for it, so it has no
-gene page here. A transporter's work is done by switching between states,
-though, and the residues that move when it switches are a surface of their
-own: one the protein makes with itself, in one state and not the other.
+gene page here. A transporter works by switching between states,
+though, and the residues that move when it switches form a surface the protein
+makes with itself, present in one state and absent in the other.
 
 Jindrich Lnenicka, on the BioHackathon Europe 2026 team, simulated SLC35A2 in
 GROMACS in both of its open states, lumen-open and cytosol-open, three
@@ -38,7 +38,7 @@ conformer to {m.top?.c2} nm in the other.
   variants.
 </ComplexView>
 
-## What the explorer's data says about them
+## Conservation, AlphaMissense and ClinVar at the switch residues
 
 We took StarMD's {m.pairCount} top-ranked pairs and {m.localCount} top 3Di
 residues and asked of them what the explorer asks of an interface. The
@@ -53,15 +53,15 @@ pass the pLDDT cut.
   {m.burialBackground}).
 - **AlphaMissense** does not single them out: {m.alphaMissense} against{' '}
   {m.alphaMissenseBackground} (p {m.alphaMissenseP}). It scores most of the
-  transmembrane core high already, and it sees one structure, not the switch.
+  transmembrane core high already, and it works from one structure, which cannot show the switch.
 - **ClinVar:** {m.pathogenicOn} of the {m.pathogenicTotal} pathogenic variants
   sits on a switch residue (<Html html={m.pathogenicLinks} />; p {m.pathogenicP}), and{' '}
   {m.pathogenicNearby} within one residue of one (p {m.pathogenicNearbyP}). The
   switch residues hold {m.uncertainOn} residues with an uncertain variant
   (p {m.uncertainP}).
 
-So evolution has kept the residues that move, more than their burial explains,
-and ClinVar has mostly not been told what happens when they change.
+The residues that move are more conserved than their burial explains, and
+ClinVar has little evidence about what changing them does.
 
 ## The variants worth a look
 

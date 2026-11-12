@@ -26,11 +26,11 @@ From 24 experimental complexes.
   experimental Gi1 complexes use (68% of its residues are among them), its
   RHO–Gαo complex covers 88% of 5-HT1B–Gαo's, and its DRD5–Golf complex covers
   87% of the receptor residues DRD5 uses against Gs. Its GPCR complexes of Gαq
-  cover all 11 α5 residues the three mini-Gq chimeras carry.
+  cover all 11 α5 residues the three mini-Gq chimeras contain.
 - Every receptor is looked up in AlphaFold DB, disease protein or not. Only
   DRD5 and OR51E2 (with Golf) and HRH4 (with Gα14, covering 66% of the residues
   HRH4 uses against Gi1) have a predicted complex with a Gα.
 - On the receptor side, 82 ClinVar variants of uncertain significance and 2
   benign ones contact the G protein; none is classified pathogenic. Every
-  receptor contact carries its GPCRdb generic number.
+  receptor contact is labelled with its GPCRdb generic number.
 

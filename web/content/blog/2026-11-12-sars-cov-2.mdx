@@ -83,7 +83,7 @@ variants in ISG15 are all reported for ISG15 deficiency, a Mendelian
 susceptibility to mycobacterial disease, and{' '}
 {v.byGene('ISG15')?.variants.length} of them sit on that surface. They are
 variants in the protein the virus removes, not in anything the virus is known to
-select; what the structure adds is that the residues are the ones PLpro grips.
+select; what the structure adds is that the residues are the ones PLpro contacts.
 
 <Html html={surfaceMap(contactSurface(v.byGene('ISG15')))} />
 
@@ -98,8 +98,7 @@ the structure of the protease with the NEMO peptide holds residues{' '}
 {runs(v.byGene('IKBKG')?.residues ?? [])} in its cleft. L227P, pathogenic in
 ClinVar, is one of them. The three nsp5–substrate structures here — NEMO, PTBP1
 and TRMT1 — share <span title={runs(v.proteaseSites)}>{v.proteaseSites.length}{' '}
-protease residues</span>, the substrate cleft around the catalytic H41 and C145:
-three independent entries read as the same site.
+protease residues</span>, the substrate cleft around the catalytic H41 and C145, so three independent entries show the same site.
 
 **14-3-3ζ and the nucleoprotein.** The N protein binds 14-3-3 when
 phosphorylated, and in {v.byGene('YWHAZ')?.pdb} the peptide lies in the 14-3-3ζ
@@ -107,8 +106,8 @@ groove. On its residues sit{' '}
 {v.byGene('YWHAZ')?.variants.filter(x => x.label === 'pathogenic').length}{' '}
 variants ClinVar calls pathogenic, among them K49N and R127H for Popov–Chang
 syndrome. That groove is where 14-3-3 binds its
-hundreds of human phosphopeptide partners, so a variant there is about 14-3-3's
-own job first.
+hundreds of human phosphopeptide partners, so a variant there first affects 14-3-3's binding to
+those human partners.
 
 ## What does not touch
 
@@ -125,8 +124,7 @@ find by co-occurrence alone:
 - **B2M with the viral peptides.** B2M shares entries with the spike, N and
   nsp13 epitopes, but it is the HLA-B heavy chain that holds the peptide in its
   groove, and HLA-B is in the table above.
-- **ETV6 and nsp14.** Its four shared entries are crystallisation fusions, one
-  chain carrying both sequences, so there is no interface to measure.
+- **ETV6 and nsp14.** Its four shared entries are crystallisation fusions, one chain containing both sequences, so there is no interface to measure.
 
 ## How it is counted
 
@@ -138,7 +136,7 @@ find by co-occurrence alone:
   pair, fewest chains first, and the one with the most contacts is reported. A
   residue is in contact when a heavy atom is within 5 Å of the partner, the same
   rule as the rest of the explorer.
-- A chain carrying both sequences is a fusion construct, not a complex, and is
+- A chain containing both sequences is a fusion construct, not a complex, and is
   left out. So are three human proteins present as structural reagents
   ({listed(v.reagents.map(r => r.gene))}): a nanodisc scaffold or a
   trimerisation domain touching the viral protein is not biology.

@@ -51,7 +51,7 @@
   protein (nsp1 … nsp16) whose span holds it, from UniProt's chain features.
   SIFTS gives the entries holding both proteins; up to four per pair are
   measured, fewest chains first, and the entry with the most contacts is kept.
-  A chain carrying both sequences is a fusion construct, so both proteins'
+  A chain containing both sequences is a fusion construct, so both proteins'
   atoms in that entity are left out. The human chain must match its UniProt
   sequence at 90% of its mapped residues, as in the experimental check above.
 - **AlphaMissense:** the published pathogenicity of every substitution in the
@@ -69,8 +69,8 @@
   engineered chimeric Gα chains map to no gene: each is split into segments by
   the human Gα it matches best, favouring the Gα the structure is annotated
   with, so a mini-Gq gives its α5 helix to GNAQ and its scaffold to GNAS. Only
-  receptor–Gα contacts are counted, not those with Gβγ. Receptor residues carry
-  GPCRdb's generic number (e.g. 3.50x50), or their segment (e.g. ICL3) where it
+  receptor–Gα contacts are counted, not those with Gβγ. Receptor residues are
+  labelled with GPCRdb's generic number (e.g. 3.50x50), or their segment (e.g. ICL3) where it
   has none, taken from GPCRdb's residue table for the human receptor wherever
   its residue matches UniProt's. Where AlphaFold DB pairs the receptor with a
   different Gα than the structure's (Golf for Gs, Gα14 for Gi1), the

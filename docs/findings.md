@@ -58,7 +58,7 @@ Across all 5,350 UniProt disease proteins.
   (35%) at least supporting evidence of pathogenicity (PP3) and 5,466 (24%)
   evidence of benignity (BP4), against PP3 for 80% of the pathogenic and 10% of
   the benign variants at an interface. Its developers' 0.564 "likely
-  pathogenic" cut-off does not reach supporting evidence. It sees one protein at a time, not the partner.
+  pathogenic" cut-off does not reach supporting evidence. It scores each protein without its partner.
 - 675 of the uncertain variants, in 245 genes, change an interface residue
   where a substitution is already classified pathogenic (the same amino-acid
   change for 18, ACMG PS1; a different one for 657, PM5); AlphaMissense gives
