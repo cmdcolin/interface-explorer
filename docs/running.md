@@ -1,0 +1,62 @@
+# Running the pipeline and site
+
+- `pnpm install`, then `pnpm all` runs every step below in order; `pnpm test`
+  runs the unit tests and `pnpm typecheck` the type check.
+- `pnpm atlas [workers]`: fetches the complexes, models and monomer context for
+  every disease protein, into `out/atlas.json`. Downloads are cached in
+  `data/`; keep workers at 3–4, since AlphaFold DB rate-limits. Proteins that
+  fail are listed in `out/atlas_failures.json`.
+- `pnpm clinvar`: downloads ClinVar's `variant_summary.txt.gz` and writes
+  `out/clinvar.ndjson` for every reviewed human protein.
+- `pnpm alphamissense`: downloads AlphaMissense's 1.2 GB
+  `AlphaMissense_aa_substitutions.tsv.gz` and writes `out/alphamissense.json`,
+  a score for each variant in `out/clinvar.ndjson`.
+- `pnpm analyze`: the enrichment, overall, by confidence band and by
+  AlphaMissense evidence band, in `out/analysis.json`.
+- `pnpm experimental [workers]`: each predicted pair against a PDB entry
+  holding both proteins, in `out/experimental.json`.
+- `pnpm conservation [workers]`: reads phyloP for every codon from UCSC's
+  bigWig by range requests, and writes the conservation-matched odds ratios
+  and the interface comparison to `out/conservation.json`.
+- `pnpm gpcr`: the experimental GPCR–G protein interfaces, as
+  `site/jbrowse/gpcr_interfaces.bb`, `gpcr_interface_variants.bb` and
+  `site/data/gpcr.json`.
+- `pnpm viral [workers]`: the SARS-CoV-2 contacts, in `out/viral.json` and
+  `site/data/viral.json`.
+- `pnpm tracks`: `site/jbrowse/config.json`, `interfaces.bb` and
+  `interface_variants.bb`.
+- `pnpm pages`: `site/data/summary.json`, `genes.json`, `leads.json` and
+  `genes/<GENE>.json`, with each disease protein's UniProt domains and regions
+  (one UniProt download, cached in `data/uniprot_disease_features.json`) and
+  which chain of each AlphaFold DB complex is the gene's.
+- `pnpm isoforms [workers]`: `site/data/isoforms.json` and
+  `isoforms/<GENE>.json`.
+- The pipeline is TypeScript in `src/`, run directly by Node with no build
+  step. Genome ↔ protein positions come from
+  [g2p_mapper](https://github.com/GMOD/g2p_mapper) and sequence alignment from
+  [p2s_mapper](https://github.com/GMOD/p2s_mapper), the libraries behind the
+  JBrowse protein3d plugin.
+- The site is an [Astro](https://astro.build/) site in `web/`, prebuilt from
+  the JSON in `site/data/`: a page per gene and per isoform set, and Markdown
+  (MDX) blog posts in `web/content/blog/` whose numbers and charts are drawn
+  from the same data. `site/` is its public folder, so the data and JBrowse
+  tracks are served as they are. `pnpm dev` serves it, `pnpm build` writes
+  `dist/`. The JBrowse session links are built in `src/links.ts`, shared with
+  the pipeline. They open the hosted JBrowse at
+  [jbrowse.org/code/jb2/main](https://jbrowse.org/code/jb2/main/) with
+  `?config=` pointing at the deployed `jbrowse/config.json`, whose tracks it
+  reads across origins from Pages. On push, GitHub Actions builds and deploys
+  `dist/` to Pages. Links from the old single-page site (`#/gene/VHL`) redirect to the
+  new pages.
+- The 3D view is the [Mol\*](https://molstar.org/) v6 Prism viewer, not yet on
+  npm: `site/prism/prism-viewer.js` is its single-file build
+  (`apps/prism-viewer/build/prism-viewer.js` after `pnpm build:apps`) from
+  molstar `master` at dabbf29f9. Each gene page loads it on demand, writes a
+  MolViewSpec for the chosen complex in `web/lib/scene.ts`, and reads the
+  complex from AlphaFold DB.
+- A summary deck is in `slides/`: `make` there builds
+  `interface-explorer-summary.pdf` with LuaLaTeX, and `make screenshots` retakes
+  its screenshots with headless Chrome.
+
+Requires Node 24 or later, pnpm, and UCSC's `bedToBigBed`.
+
