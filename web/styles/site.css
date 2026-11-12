@@ -1180,12 +1180,6 @@ h3 {
   background: var(--interface);
 }
 
-.arch-swatch.dashed {
-  height: 0;
-  border-radius: 0;
-  border-top: 1.5px dashed var(--text-2);
-}
-
 .comparison {
   margin: 20px 0 8px;
 }

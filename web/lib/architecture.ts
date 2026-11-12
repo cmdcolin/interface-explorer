@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process'
 
-type Kind = 'source' | 'step' | 'file' | 'viewer' | 'live'
+type Kind = 'source' | 'step' | 'file' | 'viewer'
 
 interface Node {
   id: string
@@ -14,7 +14,6 @@ interface Edge {
   from: string
   to: string
   label?: string
-  dashed?: boolean
 }
 
 interface Numbers {
@@ -245,7 +244,11 @@ export function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
       id: 'jbrowse',
       kind: 'viewer',
       title: 'JBrowse 2',
-      lines: ['Protein3d, MsaView', 'plugins, opened at', 'a variant'],
+      lines: [
+        'Protein3d, MsaView,',
+        'opens at a variant;',
+        'UCSC tracks fetched live',
+      ],
     },
     {
       id: 'astro',
@@ -257,13 +260,11 @@ export function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
       id: 'prism',
       kind: 'viewer',
       title: 'Prism 3D viewer',
-      lines: ['Mol* v6 build,', 'embedded in', 'gene pages'],
-    },
-    {
-      id: 'live',
-      kind: 'live',
-      title: 'Fetched live',
-      lines: ['AlphaFold DB .cif', 'UCSC hg38 tracks'],
+      lines: [
+        'Mol* v6 build in gene',
+        'pages; AlphaFold DB',
+        'structures fetched live',
+      ],
     },
   ]
 }
@@ -302,9 +303,6 @@ export const edges: Edge[] = [
   { from: 'jbFiles', to: 'jbrowse' },
   { from: 'data', to: 'astro' },
   { from: 'astro', to: 'prism' },
-  { from: 'astro', to: 'jbrowse' },
-  { from: 'live', to: 'prism', dashed: true },
-  { from: 'live', to: 'jbrowse', dashed: true },
 ]
 
 export const columns = [
@@ -336,7 +334,7 @@ export const columns = [
   ],
   ['out'],
   ['tracks', 'analyze', 'pages'],
-  ['jbFiles', 'data', 'live'],
+  ['jbFiles', 'data'],
   ['jbrowse', 'astro', 'prism'],
 ]
 
@@ -374,19 +372,17 @@ function nodeSize(node: Node) {
 }
 
 function nodeStyle(node: Node) {
-  return node.kind === 'live'
-    ? `style="rounded,dashed" color="${color('text2')}"`
-    : node.kind === 'viewer'
-      ? `style="rounded,filled" fillcolor="${color('surface2')}" color="${color('partner')}" penwidth=1.5`
-      : node.kind === 'file'
-        ? `style="rounded,filled" fillcolor="${color('surface2')}" color="${color('border')}" penwidth=1.5`
-        : node.kind === 'source'
-          ? `style="rounded,filled" fillcolor="${color('surface')}" color="${color('border')}"`
-          : `style="rounded,filled" fillcolor="${color('surface2')}" color="${color('border')}"`
+  return node.kind === 'viewer'
+    ? `style="rounded,filled" fillcolor="${color('surface2')}" color="${color('partner')}" penwidth=1.5`
+    : node.kind === 'file'
+      ? `style="rounded,filled" fillcolor="${color('surface2')}" color="${color('border')}" penwidth=1.5`
+      : node.kind === 'source'
+        ? `style="rounded,filled" fillcolor="${color('surface')}" color="${color('border')}"`
+        : `style="rounded,filled" fillcolor="${color('surface2')}" color="${color('border')}"`
 }
 
 function edgeStyle(edge: Edge) {
-  return `${edge.dashed ? 'style=dashed ' : ''}${edge.label ? `xlabel=<<FONT FACE="${SANS}" POINT-SIZE="10" COLOR="${color('text2')}">${escape(edge.label)}</FONT>> ` : ''}`
+  return `${edge.label ? `xlabel=<<FONT FACE="${SANS}" POINT-SIZE="10" COLOR="${color('text2')}">${escape(edge.label)}</FONT>> ` : ''}`
 }
 
 function headings() {
