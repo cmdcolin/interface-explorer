@@ -123,6 +123,19 @@ export function project9() {
       .toArray()
       .join('; '),
     golfCgn,
+    otherPathogenic: data.complexes
+      .flatMap(c =>
+        c.gProteins
+          .filter(g => g.gene !== 'GNAS')
+          .flatMap(g =>
+            pathogenic(g.variants).map(v => {
+              const label = data.cgn[g.gene]?.labels[v.position] ?? ''
+              const shared = gnasPathogenic.find(s => gnasCgn?.labels[s.position] === label)
+              return `${v.change} in ${g.gene} (${c.pdb}, with ${c.receptorSide.gene}) at ${label}${shared ? `, the position of Gαs ${shared.change}` : ''}`
+            }),
+          ),
+      )
+      .join('; '),
     gnasCounterpart,
     featured: {
       ...FEATURED,
