@@ -74,7 +74,7 @@ test('relative file names in the hg38 config become absolute URLs', () => {
   })
 })
 
-test('the ClinVar track gains a display with one row per significance', () => {
+test('the ClinVar track gains a display with a band of SNV rows and a band of longer-variant rows by significance', () => {
   const basic = {
     type: 'LinearBasicDisplay',
     encoding: {
@@ -92,15 +92,33 @@ test('the ClinVar track gains a display with one row per significance', () => {
       basic,
       {
         type: 'LinearMultiRowFeatureDisplay',
+        height: 240,
+        transform: [
+          {
+            type: 'formula',
+            expr: "jexl:get(feature,'end') - get(feature,'start') > 1 ? get(feature,'sig') + '+' : get(feature,'sig')",
+            as: 'significanceRow',
+          },
+        ],
         marks: [
           {
-            mark: { type: 'rect', height: { band: 0.35 } },
+            mark: 'rect',
             transform: [
               {
                 type: 'filter',
                 expr: "jexl:get(feature,'end') - get(feature,'start') > 1",
               },
             ],
+            encoding: {
+              color: {
+                field: 'sig',
+                scale: {
+                  type: 'ordinal',
+                  domain: ['PG', 'VUS'],
+                  range: ['rgba(210,0,0,0.5)', 'rgba(0,0,128,0.5)'],
+                },
+              },
+            },
           },
           {
             mark: 'rect',
@@ -113,11 +131,26 @@ test('the ClinVar track gains a display with one row per significance', () => {
           },
         ],
         rows: {
-          field: 'sig',
-          sort: ['PG', 'VUS'],
-          labels: { PG: 'Pathogenic', VUS: 'Uncertain' },
-          colors: { PG: 'rgb(210,0,0)', VUS: 'rgb(0,0,128)' },
+          field: 'significanceRow',
+          sort: ['PG', 'VUS', 'PG+', 'VUS+'],
+          labels: {
+            PG: 'Pathogenic',
+            VUS: 'Uncertain',
+            'PG+': 'Pathogenic',
+            'VUS+': 'Uncertain',
+          },
+          colors: {
+            PG: 'rgb(210,0,0)',
+            'PG+': 'rgb(210,0,0)',
+            VUS: 'rgb(0,0,128)',
+            'VUS+': 'rgb(0,0,128)',
+          },
+          groups: [
+            { match: '\\+$', group: '≥2 bp' },
+            { match: '^[^+]+$', group: 'SNVs' },
+          ],
         },
+        facet: { field: 'group', sort: ['SNVs', '≥2 bp'] },
         legend: { show: false },
       },
     ],

@@ -100,21 +100,52 @@ export function absolute(node: unknown): unknown {
 }
 
 const SPAN = "get(feature,'end') - get(feature,'start')"
+const LONGER = '+'
+const SNV_BAND = 'SNVs'
+const LONGER_BAND = '≥2 bp'
+
+function translucent(color: string | undefined) {
+  return color?.replace(/^rgb\((.*)\)$/, 'rgba($1,0.5)')
+}
 
 export function withSignificanceRows(track: Record<string, unknown>) {
   const basic = records(track.displays).find(
     display => display.type === 'LinearBasicDisplay',
   )
   const color = record(record(basic?.encoding).color)
+  const field = text(color.field) ?? ''
   const scale = record(color.scale)
   const codes = list(scale.domain).map(code => text(code) ?? '')
   const names = list(scale.names)
+  const labels = codes
+    .slice(0, names.length)
+    .map((code, i): [string, unknown] => [code, names[i]])
   const rows = {
     type: 'LinearMultiRowFeatureDisplay',
+    height: 240,
+    transform: [
+      {
+        type: 'formula',
+        expr: `jexl:${SPAN} > 1 ? get(feature,'${field}') + '${LONGER}' : get(feature,'${field}')`,
+        as: 'significanceRow',
+      },
+    ],
     marks: [
       {
-        mark: { type: 'rect', height: { band: 0.35 } },
+        mark: 'rect',
         transform: [{ type: 'filter', expr: `jexl:${SPAN} > 1` }],
+        encoding: {
+          color: {
+            field,
+            scale: {
+              type: 'ordinal',
+              domain: codes,
+              range: codes.map(code =>
+                translucent(SIGNIFICANCE_COLORS.get(code)),
+              ),
+            },
+          },
+        },
       },
       {
         mark: 'rect',
@@ -122,15 +153,24 @@ export function withSignificanceRows(track: Record<string, unknown>) {
       },
     ],
     rows: {
-      field: color.field,
-      sort: codes,
-      labels: Object.fromEntries(
-        codes.slice(0, names.length).map((code, i) => [code, names[i]]),
-      ),
+      field: 'significanceRow',
+      sort: [...codes, ...codes.map(code => `${code}${LONGER}`)],
+      labels: Object.fromEntries([
+        ...labels,
+        ...labels.map(([code, name]) => [`${code}${LONGER}`, name]),
+      ]),
       colors: Object.fromEntries(
-        codes.map(code => [code, SIGNIFICANCE_COLORS.get(code)]),
+        codes.flatMap(code => [
+          [code, SIGNIFICANCE_COLORS.get(code)],
+          [`${code}${LONGER}`, SIGNIFICANCE_COLORS.get(code)],
+        ]),
       ),
+      groups: [
+        { match: '\\+$', group: LONGER_BAND },
+        { match: '^[^+]+$', group: SNV_BAND },
+      ],
     },
+    facet: { field: 'group', sort: [SNV_BAND, LONGER_BAND] },
     legend: { show: false },
   }
   return { ...track, displays: [...list(track.displays), rows] }
