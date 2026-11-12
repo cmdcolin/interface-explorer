@@ -2,7 +2,7 @@
 import Layout from '../layouts/Layout.astro'
 import { oddsText } from '../lib/charts.ts'
 import { summary } from '../lib/data.ts'
-import { href } from '../lib/site.ts'
+import { JBROWSE, href } from '../lib/site.ts'
 
 const s = summary()
 const t = s.thresholds
@@ -202,7 +202,7 @@ const amClasses = Object.entries(s.enrichment.byAlphaMissenseClass)
   <ul>
     <li>
       <strong>Interfaces on the genome.</strong> We found no other resource that publishes predicted-complex interfaces as
-      genome tracks. Here they are hg38 bigBed tracks beside ClinVar, RefSeq and phyloP in <a href={href('jbrowse/')}
+      genome tracks. Here they are hg38 bigBed tracks beside ClinVar, RefSeq and phyloP in <a href={JBROWSE}
         >JBrowse 2</a
       >, and any variant opens inside its complex next to the genome. ProtVar takes genomic input but answers in protein
       coordinates; Genomics 2 Proteins links out to genome browsers.

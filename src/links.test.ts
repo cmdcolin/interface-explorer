@@ -30,8 +30,20 @@ describe('links', () => {
     expect(sessionUrl({ views: [] }, jbrowse)).toBe(
       `${jbrowse}&session=spec-%7B%22views%22%3A%5B%5D%7D`,
     )
-    expect(genomeUrl('1', 10, 20, jbrowse)).toMatch(
-      /&assembly=hg38&loc=chr1:10-20&tracks=/,
-    )
+    const genome = new URL(genomeUrl('1', 10, 20, jbrowse)).searchParams
+    expect(JSON.parse((genome.get('session') ?? '').slice(5))).toMatchObject({
+      views: [
+        {
+          type: 'LinearGenomeView',
+          loc: 'chr1:10-20',
+          tracks: expect.arrayContaining([
+            {
+              trackId: 'hg38-clinvarMain',
+              displaySnapshot: { type: 'LinearMultiRowFeatureDisplay' },
+            },
+          ]),
+        },
+      ],
+    })
   })
 })

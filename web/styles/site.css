@@ -309,7 +309,6 @@ tr:hover td {
   color: #fff;
 }
 
-a.button[href*="/jbrowse/"]::after,
 a.button[href^="http"]::after {
   content: "";
   display: inline-block;

@@ -15,14 +15,16 @@ export const GPCR_TRACKS = [
   CLINVAR_TRACK,
 ]
 
-const CONNECTED_TRACKS = INTERFACE_TRACKS.map(trackId =>
-  trackId === CLINVAR_TRACK
-    ? {
-        trackId,
-        displaySnapshot: { type: 'LinearMultiRowFeatureDisplay' },
-      }
-    : trackId,
-)
+function trackEntries(tracks: string[]) {
+  return tracks.map(trackId =>
+    trackId === CLINVAR_TRACK
+      ? {
+          trackId,
+          displaySnapshot: { type: 'LinearMultiRowFeatureDisplay' },
+        }
+      : trackId,
+  )
+}
 
 export interface Partner {
   gene: string
@@ -49,7 +51,11 @@ export function complexSpec(
         gene,
         alphaFoldComplexId: entity,
         ...(variant ? { variant } : {}),
-        connectedView: { assembly: 'hg38', loc, tracks: CONNECTED_TRACKS },
+        connectedView: {
+          assembly: 'hg38',
+          loc,
+          tracks: trackEntries(INTERFACE_TRACKS),
+        },
       },
     ],
   }
@@ -95,7 +101,7 @@ export function pdbSpec(
         connectedView: {
           assembly: 'hg38',
           ...(locus ? { loc: locus } : {}),
-          tracks,
+          tracks: trackEntries(tracks),
         },
       },
     ],
@@ -117,7 +123,7 @@ export function isoformSpec(
         connectedView: {
           assembly: 'hg38',
           ...(record.locus ? { loc: record.locus } : {}),
-          tracks: ISOFORM_TRACKS,
+          tracks: trackEntries(ISOFORM_TRACKS),
         },
       },
     ],
@@ -133,7 +139,19 @@ export function sessionUrl(spec: object, jbrowse: string) {
 }
 
 export function locusUrl(loc: string, tracks: string[], jbrowse: string) {
-  return `${jbrowse}&assembly=hg38&loc=${loc}&tracks=${tracks.join(',')}`
+  return sessionUrl(
+    {
+      views: [
+        {
+          type: 'LinearGenomeView',
+          assembly: 'hg38',
+          loc,
+          tracks: trackEntries(tracks),
+        },
+      ],
+    },
+    jbrowse,
+  )
 }
 
 export function genomeUrl(
