@@ -364,8 +364,8 @@ async function home() {
       <p class="lede">
         We mapped every confident <a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a> predicted
         complex of a human disease protein back to the genome, codon by codon, and asked which
-        ClinVar missense variants land on an interface. A pathogenic variant has
-        <strong>${e.all[ODDS].toFixed(1)}×</strong> the odds of sitting at one that a benign variant in the same protein has.
+        ClinVar missense variants land on an interface. Within the same protein, the odds of landing on one are
+        <strong>${e.all[ODDS].toFixed(1)}×</strong> as high for a pathogenic variant as for a benign one.
       </p>
       <div class="actions">
         <a class="button primary" href="${variantLink(vhl, shown)}">See ${esc(vhl.gene)} ${esc(shown.change)} in 3D beside the genome</a>
@@ -572,7 +572,7 @@ function proteinMap(gene, variants = gene.variants) {
   const rowHeight = 13
   const axisY = top + tracks.length * rowHeight + 4
   return `
-    <svg class="map" viewBox="0 0 ${width} ${axisY + 22}" role="img" aria-label="Protein map of ${esc(gene.gene)}: variants and each partner's interface residues along ${gene.length} residues">
+    <div class="map-wrap"><svg class="map" viewBox="0 0 ${width} ${axisY + 22}" role="img" aria-label="Protein map of ${esc(gene.gene)}: variants and each partner's interface residues along ${gene.length} residues">
       ${Object.entries(rows)
         .map(
           ([label, y]) =>
@@ -592,7 +592,7 @@ function proteinMap(gene, variants = gene.variants) {
         .join('')}
       <line class="axis" x1="${scale(1)}" x2="${scale(gene.length)}" y1="${axisY}" y2="${axisY}" />
       ${[1, ...labels, gene.length].map(x => `<text class="tick" x="${scale(x)}" y="${axisY + 16}" text-anchor="middle">${x}</text>`).join('')}
-    </svg>
+    </svg></div>
     <div class="legend">
       <span><span class="swatch" style="background:var(--interface)"></span>interface residue, one row per partner</span>
       ${Object.keys(LABELS).map(label => `<span><span class="swatch" style="background:var(--${label})"></span>${LABELS[label].toLowerCase()} variant</span>`).join('')}
@@ -781,7 +781,7 @@ function isoformMap(record) {
     labels.push(x)
   }
   return `
-    <svg class="map" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(record.gene)} isoforms aligned to the canonical protein, colored by AlphaFold pLDDT">
+    <div class="map-wrap"><svg class="map" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(record.gene)} isoforms aligned to the canonical protein, colored by AlphaFold pLDDT">
       ${marks.map((m, index) => `<text class="row-label" x="0" y="${index * 17 + 9}">${m.label}</text>${ticks(m.positions, index * 17, m.color, m.title)}`).join('')}
       ${rows
         .map((row, index) => {
@@ -793,7 +793,7 @@ function isoformMap(record) {
         .join('')}
       <line class="axis" x1="${scale(1)}" x2="${scale(record.length)}" y1="${axisY}" y2="${axisY}" />
       ${[1, ...labels, record.length].map(x => `<text class="tick" x="${scale(x)}" y="${axisY + 16}" text-anchor="middle">${x}</text>`).join('')}
-    </svg>
+    </svg></div>
     <div class="legend">
       ${PLDDT_BANDS.map(([, color, label]) => `<span><span class="swatch" style="background:${color}"></span>pLDDT ${label}</span>`).join('')}
       <span><span class="swatch replaced-swatch"></span>replaced in the isoform</span>
@@ -949,12 +949,12 @@ function surfaceMap(g) {
   const most = Math.max(...g.counts.map(([, n]) => n))
   const marks = g.variants.filter(v => v.label !== 'benign')
   return `
-    <svg class="map" viewBox="0 0 ${width} 76" role="img" aria-label="${esc(g.gene)} residues contacting a receptor, by number of structures">
+    <div class="map-wrap"><svg class="map" viewBox="0 0 ${width} 76" role="img" aria-label="${esc(g.gene)} residues contacting a receptor, by number of structures">
       ${marks.map(v => `<rect x="${scale(v.position) - 1.5}" y="0" width="3" height="9" fill="var(--${v.label})"><title>${esc(v.change)} ${LABELS[v.label]}</title></rect>`).join('')}
       ${g.counts.map(([r, n]) => `<rect x="${scale(r) - 1.25}" y="${46 - (30 * n) / most}" width="2.5" height="${(30 * n) / most}" fill="var(--interface)"><title>residue ${r}: contacts the receptor in ${n} of ${g.structures} structures</title></rect>`).join('')}
       <line class="axis" x1="20" x2="${width - 20}" y1="48" y2="48" />
       ${[1, Math.round(length / 4), Math.round(length / 2), Math.round((3 * length) / 4), length].map(x => `<text class="tick" x="${scale(x)}" y="66" text-anchor="middle">${x}</text>`).join('')}
-    </svg>`
+    </svg></div>`
 }
 
 async function gpcrPage() {
@@ -1120,6 +1120,7 @@ async function route(event) {
   }
   window.scrollTo(0, 0)
   const heading = app.querySelector('h1')
+  document.title = page && heading ? `${heading.textContent} · Interface atlas` : 'Interface atlas'
   if (event && heading) {
     heading.tabIndex = -1
     heading.focus({ preventScroll: true })

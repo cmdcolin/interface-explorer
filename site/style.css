@@ -263,8 +263,13 @@ tr:hover td {
   font-size: 14px;
 }
 
+.map-wrap {
+  overflow-x: auto;
+}
+
 .map {
   width: 100%;
+  min-width: 760px;
   height: auto;
   margin: 8px 0 4px;
 }
@@ -281,7 +286,7 @@ tr:hover td {
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 4px 14px;
   font-size: 13px;
   color: var(--text-2);
 }
@@ -301,7 +306,7 @@ tr:hover td {
 
 .site-footer {
   border-top: 1px solid var(--border);
-  padding: 16px;
+  padding: 16px max(16px, calc((100% - 1048px) / 2));
   color: var(--text-2);
   font-size: 13px;
   text-align: center;
@@ -426,26 +431,27 @@ h3 {
 
 .forest-track {
   position: relative;
-  height: 24px;
+  align-self: stretch;
+  min-height: 24px;
 }
 
 .forest-null {
   position: absolute;
   top: -8px;
-  bottom: -8px;
+  bottom: -9px;
   border-left: 1px dashed var(--text-2);
 }
 
 .forest-ci {
   position: absolute;
-  top: 11px;
+  top: calc(50% - 1px);
   height: 2px;
   background: var(--interface);
 }
 
 .forest-dot {
   position: absolute;
-  top: 6px;
+  top: calc(50% - 6px);
   width: 12px;
   height: 12px;
   margin-left: -6px;
