@@ -33,7 +33,7 @@ describe('architecture graph', () => {
 
   it('writes every node into the DOT source', () => {
     const dot = architectureDot(numbers)
-    expect(ids.filter(id => !dot.includes(`${id} [label=`))).toEqual([])
+    expect(ids.filter(id => !dot.includes(`${id} [`))).toEqual([])
   })
 
   it('renders a themed SVG with no leftover placeholder colours', () => {

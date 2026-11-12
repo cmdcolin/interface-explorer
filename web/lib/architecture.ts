@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process'
 
-type Kind = 'source' | 'step' | 'file' | 'viewer' | 'live'
+type Kind = 'source' | 'step' | 'file' | 'viewer' | 'live' | 'junction'
 
 interface Node {
   id: string
@@ -43,7 +43,7 @@ const MONO = 'Courier'
 export const COLUMNS = [
   'Sources',
   'Fetch and compute',
-  'Cache',
+  '\u00a0',
   'Combine',
   'Published files',
   'In the browser',
@@ -61,14 +61,11 @@ export function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
     {
       id: 'uniprot',
       kind: 'source',
-      title: 'UniProt',
-      lines: [`${proteins.toLocaleString()} disease proteins`],
-    },
-    {
-      id: 'afdb',
-      kind: 'source',
-      title: 'AlphaFold DB',
-      lines: ['heterodimer and homodimer models'],
+      title: 'UniProt · AlphaFold DB',
+      lines: [
+        `${proteins.toLocaleString()} disease proteins`,
+        'heterodimer and homodimer models',
+      ],
     },
     {
       id: 'ebi',
@@ -134,7 +131,7 @@ export function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
     {
       id: 'atlas',
       kind: 'step',
-      title: 'atlas.ts',
+      title: 'Find interface residues',
       lines: [
         `contacts ≤ ${contact} Å, ipSAE ≥ ${ipsae}`,
         `pLDDT ≥ ${plddt}, solvent exposure`,
@@ -143,87 +140,87 @@ export function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
     {
       id: 'coords',
       kind: 'step',
-      title: 'coordinates.ts',
+      title: 'Map residues to codons',
       chips: ['g2p_mapper'],
       lines: ['residue → codon'],
     },
     {
       id: 'clinvarStep',
       kind: 'step',
-      title: 'clinvar.ts',
+      title: 'Pathogenic variants',
       lines: ['missense SNVs, canonical'],
     },
     {
       id: 'amStep',
       kind: 'step',
-      title: 'alphamissense.ts',
-      lines: ['score each variant'],
+      title: 'Pathogenicity scores',
+      lines: ['AlphaMissense per variant'],
     },
     {
       id: 'exp',
       kind: 'step',
-      title: 'experimental.ts',
+      title: 'Check against PDB',
       lines: ['predicted pair vs PDB'],
     },
     {
       id: 'ppiStep',
       kind: 'step',
-      title: 'interactions.ts',
+      title: 'Reported interactions',
       lines: ['direct or same complex'],
     },
     {
       id: 'crossStep',
       kind: 'step',
-      title: 'crossrefs.ts',
-      lines: ['links for each pair'],
+      title: 'Cross-references',
+      lines: ['IDs and links for each pair'],
     },
     {
       id: 'cons',
       kind: 'step',
-      title: 'conservation.ts',
+      title: 'Conservation',
       chips: ['@gmod/bbi'],
       lines: ['per codon'],
     },
     {
       id: 'gnomad',
       kind: 'step',
-      title: 'gnomad.ts',
+      title: 'Population variants',
       chips: ['@gmod/bbi'],
       lines: ['variant counts'],
     },
     {
       id: 'gpcr',
       kind: 'step',
-      title: 'gpcr.ts',
+      title: 'GPCR complexes',
       chips: ['p2s_mapper'],
       lines: ['chain → UniProt'],
     },
     {
       id: 'iso',
       kind: 'step',
-      title: 'isoforms.ts',
+      title: 'Isoform differences',
       lines: ['rebuild, compare folds'],
     },
 
-    { id: 'out', kind: 'file', title: 'out/', lines: ['cached results'] },
+    { id: 'out', kind: 'junction', title: '' },
     {
       id: 'tracks',
       kind: 'step',
-      title: 'tracks.ts',
+      title: 'Genome tracks',
       lines: ['BED → bigBed', 'JBrowse config'],
     },
     {
       id: 'analyze',
       kind: 'step',
-      title: 'analyze.ts',
+      title: 'Enrichment statistics',
       lines: ['Mantel–Haenszel odds', 'ratios, resampled CIs'],
     },
     {
       id: 'pages',
       kind: 'step',
-      title: 'pages.ts',
+      title: 'Gene page data',
       chips: ['p2s_mapper'],
-      lines: ['per-gene JSON'],
+      lines: ['one JSON file per gene'],
     },
 
     {
@@ -273,7 +270,6 @@ export function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
 
 export const edges: Edge[] = [
   { from: 'uniprot', to: 'atlas' },
-  { from: 'afdb', to: 'atlas' },
   { from: 'ebi', to: 'coords' },
   { from: 'clinvar', to: 'clinvarStep' },
   { from: 'am', to: 'amStep' },
@@ -314,7 +310,6 @@ export const edges: Edge[] = [
 export const columns = [
   [
     'uniprot',
-    'afdb',
     'ebi',
     'clinvar',
     'am',
@@ -352,7 +347,7 @@ function nodeWidth(node: Node) {
 }
 
 function label(node: Node) {
-  const face = node.kind === 'step' || node.kind === 'file' ? MONO : SANS
+  const face = node.kind === 'file' ? MONO : SANS
   const chips = (node.chips ?? [])
     .map(
       chip =>
@@ -401,6 +396,12 @@ function headings() {
   )
 }
 
+function nodeSource(node: Node) {
+  return node.kind === 'junction'
+    ? `${node.id} [shape=point width=0.1 color="${color('text2')}"];`
+    : `${node.id} [label=${label(node)} ${nodeSize(node)} ${nodeStyle(node)}];`
+}
+
 export function architectureDot(numbers: Numbers) {
   const all = nodes(numbers)
   const order = columns.map(
@@ -418,7 +419,7 @@ export function architectureDot(numbers: Numbers) {
   node [shape=box margin="0.12,0.07" fontname="${SANS}"]
   edge [color="${color('text2')}" arrowsize=0.6 penwidth=1.25]
   ${headings().join('\n  ')}
-  ${all.map(n => `${n.id} [label=${label(n)} ${nodeSize(n)} ${nodeStyle(n)}];`).join('\n  ')}
+  ${all.map(nodeSource).join('\n  ')}
   ${edges.map(e => `${e.from} -> ${e.to} [${edgeStyle(e)}];`).join('\n  ')}
   ${ranked.join('\n  ')}
   ${order.join('\n  ')}
