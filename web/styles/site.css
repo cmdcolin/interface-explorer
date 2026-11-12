@@ -1238,3 +1238,21 @@ h3 {
 .references a {
   overflow-wrap: anywhere;
 }
+
+.shot {
+  margin: 16px 0;
+}
+
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.shot figcaption {
+  color: var(--text-2);
+  font-size: 14px;
+  margin-top: 8px;
+}
