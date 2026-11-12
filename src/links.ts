@@ -124,19 +124,23 @@ export function isoformSpec(
   }
 }
 
-export function sessionUrl(spec: object, jbrowse = 'jbrowse/') {
-  return `${jbrowse}?session=spec-${encodeURIComponent(JSON.stringify(spec))}`
+export function jbrowseUrl(config: string) {
+  return `https://jbrowse.org/code/jb2/main/?config=${encodeURIComponent(config)}`
 }
 
-export function locusUrl(loc: string, tracks: string[], jbrowse = 'jbrowse/') {
-  return `${jbrowse}?assembly=hg38&loc=${loc}&tracks=${tracks.join(',')}`
+export function sessionUrl(spec: object, jbrowse: string) {
+  return `${jbrowse}&session=spec-${encodeURIComponent(JSON.stringify(spec))}`
+}
+
+export function locusUrl(loc: string, tracks: string[], jbrowse: string) {
+  return `${jbrowse}&assembly=hg38&loc=${loc}&tracks=${tracks.join(',')}`
 }
 
 export function genomeUrl(
   chrom: string,
   start: number,
   end: number,
-  jbrowse = 'jbrowse/',
+  jbrowse: string,
 ) {
   return locusUrl(`chr${chrom}:${start}-${end}`, INTERFACE_TRACKS, jbrowse)
 }

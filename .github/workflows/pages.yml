@@ -42,11 +42,6 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Add JBrowse Web under our own config and tracks
-        run: |
-          curl -sSL -o jbrowse.zip https://github.com/GMOD/jbrowse-components/releases/download/v5.0.0-beta.21/jbrowse-web-v5.0.0-beta.21.zip
-          unzip -q -n jbrowse.zip -d site/jbrowse
-          rm -rf site/jbrowse/test_data
       - run: pnpm build
       - run: pnpm check-links
       - uses: actions/configure-pages@v5

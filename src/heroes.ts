@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { sessionUrl, variantSpec } from './links.ts'
+import { jbrowseUrl, sessionUrl, variantSpec } from './links.ts'
 import type { GenePage } from './pages.ts'
 import { ROOT, SITE_DATA } from './paths.ts'
 import { LIVE, screenshots } from './screenshots.ts'
 
-const jbrowse = `${LIVE}jbrowse/`
+const jbrowse = jbrowseUrl(`${LIVE}jbrowse/config.json`)
 
 function gene(name: string): GenePage {
   return JSON.parse(

@@ -1,7 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import { summary } from '../lib/data.ts'
-import { href } from '../lib/site.ts'
+import { JBROWSE } from '../lib/site.ts'
 
 const s = summary()
 const t = s.thresholds
@@ -274,7 +274,7 @@ const laidOut = [...byId.values()].map(b => ({ ...b, ...chipLayout(b) }))
       from AlphaFold DB and colours it from the page's JSON.
     </li>
     <li>
-      <a href={href('jbrowse/')}>JBrowse 2</a> shows the atlas's bigBed tracks beside UCSC's hg38 ClinVar, RefSeq and phyloP
+      <a href={JBROWSE}>JBrowse 2</a> shows the atlas's bigBed tracks beside UCSC's hg38 ClinVar, RefSeq and phyloP
       tracks, and its Protein3d plugin opens a variant inside its complex next to the genome.
     </li>
   </ul>

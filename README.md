@@ -48,7 +48,8 @@ one.
   its predicted fold, and which pathogenic sites and partner interfaces it
   lacks. Each isoform opens superposed on the canonical model, linked to its own
   transcript.
-- **JBrowse** at `/jbrowse/`, with the tracks below.
+- **JBrowse**, hosted at jbrowse.org on the atlas's config, with the tracks
+  below.
 
 ## Tracks
 
@@ -291,9 +292,11 @@ one.
   from the same data. `site/` is its public folder, so the data and JBrowse
   tracks are served as they are. `pnpm dev` serves it, `pnpm build` writes
   `dist/`. The JBrowse session links are built in `src/links.ts`, shared with
-  the pipeline. On push, GitHub Actions unzips JBrowse Web 5.0.0-beta.21 into
-  `site/jbrowse/` beside our config and tracks, builds, and deploys `dist/` to
-  Pages. Links from the old single-page site (`#/gene/VHL`) redirect to the
+  the pipeline. They open the hosted JBrowse at
+  [jbrowse.org/code/jb2/main](https://jbrowse.org/code/jb2/main/) with
+  `?config=` pointing at the deployed `jbrowse/config.json`, whose tracks it
+  reads across origins from Pages. On push, GitHub Actions builds and deploys
+  `dist/` to Pages. Links from the old single-page site (`#/gene/VHL`) redirect to the
   new pages.
 - The 3D view is the [Mol\*](https://molstar.org/) v6 Prism viewer, not yet on
   npm: `site/prism/prism-viewer.js` is its single-file build

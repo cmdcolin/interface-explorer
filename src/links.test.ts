@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 
-import { genomeUrl, sessionUrl, variantSpec } from './links.ts'
+import { genomeUrl, jbrowseUrl, sessionUrl, variantSpec } from './links.ts'
 
 describe('links', () => {
   test('a variant opens its complex with the first partner it touches', () => {
@@ -22,12 +22,16 @@ describe('links', () => {
     })
   })
 
-  test('urls carry the session spec and the JBrowse prefix', () => {
-    expect(sessionUrl({ views: [] }, '/atlas/jbrowse/')).toBe(
-      '/atlas/jbrowse/?session=spec-%7B%22views%22%3A%5B%5D%7D',
+  test('urls open the hosted JBrowse on our config', () => {
+    const jbrowse = jbrowseUrl('https://x.io/atlas/jbrowse/config.json')
+    expect(jbrowse).toBe(
+      'https://jbrowse.org/code/jb2/main/?config=https%3A%2F%2Fx.io%2Fatlas%2Fjbrowse%2Fconfig.json',
     )
-    expect(genomeUrl('1', 10, 20)).toMatch(
-      /^jbrowse\/\?assembly=hg38&loc=chr1:10-20&tracks=/,
+    expect(sessionUrl({ views: [] }, jbrowse)).toBe(
+      `${jbrowse}&session=spec-%7B%22views%22%3A%5B%5D%7D`,
+    )
+    expect(genomeUrl('1', 10, 20, jbrowse)).toMatch(
+      /&assembly=hg38&loc=chr1:10-20&tracks=/,
     )
   })
 })
