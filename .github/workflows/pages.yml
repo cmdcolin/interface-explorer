@@ -48,6 +48,7 @@ jobs:
           unzip -q -n jbrowse.zip -d site/jbrowse
           rm -rf site/jbrowse/test_data
       - run: pnpm build
+      - run: pnpm check-links
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

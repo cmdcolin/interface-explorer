@@ -23,7 +23,8 @@
     "all": "pnpm atlas && pnpm clinvar && pnpm alphamissense && pnpm analyze && pnpm experimental && pnpm conservation && pnpm gpcr && pnpm tracks && pnpm pages && pnpm isoforms",
     "test": "vitest run",
     "typecheck": "tsc --noEmit && astro check --tsconfig web/tsconfig.json",
-    "format": "prettier --write src"
+    "format": "prettier --write src",
+    "check-links": "node src/checkLinks.ts dist"
   },
   "dependencies": {
     "@gmod/bbi": "^12.2.0",
