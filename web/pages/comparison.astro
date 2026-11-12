@@ -30,7 +30,7 @@ const resources: Resource[] = [
     year: '2026',
     paper: { label: 'Method', url: href('about/') },
     site: { label: 'this site', url: href() },
-    structures: `AlphaFold DB's 2026 heterodimers of ${s.proteins.toLocaleString()} disease proteins, ipSAE ≥ ${t.ipsae}`,
+    structures: `AlphaFold DB's 2026 heterodimers of ${s.proteins.toLocaleString()} disease proteins: AlphaFold DB's high-confidence set, ipSAE ≥ ${t.ipsae} both ways`,
     variants:
       'ClinVar missense and AlphaMissense; odds ratios within proteins, controlled for folded surface, AlphaMissense class and conservation',
     genome: 'Interface codons as hg38 bigBed tracks in JBrowse 2; a variant opens in its complex beside the genome',
@@ -181,6 +181,8 @@ const amClasses = Object.entries(s.enrichment.byAlphaMissenseClass)
       showed it on experimental and homology-modelled interfaces, and <a href="https://doi.org/10.1016/j.cell.2015.04.013"
         >Sahni et al. (2015)</a
       > in the lab: two-thirds of disease alleles perturb an interaction, half of them only some partners.
+      <a href="https://doi.org/10.1016/j.jmb.2015.07.004">David and Sternberg (2015)</a> placed them in the interface core
+      rather than its rim, where polymorphisms sit like the rest of the surface.
     </li>
     <li>
       On AlphaFold complexes, <a href="https://doi.org/10.1038/s41594-022-00910-8">Burke et al. (2023)</a> found pathogenic

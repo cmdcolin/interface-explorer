@@ -1164,3 +1164,12 @@ h3 {
   margin-top: 2px;
   font-size: 13px;
 }
+
+.references {
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+.references a {
+  overflow-wrap: anywhere;
+}

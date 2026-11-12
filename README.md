@@ -50,6 +50,12 @@ one.
   transcript.
 - **JBrowse**, hosted at jbrowse.org on the explorer's config, with the tracks
   below.
+- **How it works:** a diagram of the data sources, the pipeline scripts and the
+  libraries they use (`g2p_mapper`, `p2s_mapper`, `@gmod/bbi`), and the viewers.
+- **Comparison:** how the explorer sits among other resources for disease
+  variants at protein interfaces (Interactome INSIDER, Burke et al. 2023,
+  Jänes et al. 2024 and ProtVar, PIONEER, Genomics 2 Proteins and others), what
+  it confirms and what it adds, each linked to its paper.
 
 ## Tracks
 
@@ -68,11 +74,21 @@ one.
 
 ## What we found (all 5,350 UniProt disease proteins)
 
-- 1,344 (25%) have an AlphaFold DB heterodimer; all of AlphaFold DB's
-  heterodimers have ipSAE ≥ 0.6, its "tentatively high-confidence" threshold.
+- 1,344 (25%) have an AlphaFold DB heterodimer. AlphaFold DB publishes only
+  heterodimers it calls "tentatively high-confidence": ipSAE ≥ 0.6 in both
+  directions (the lower of chain A → B and B → A), mean pLDDT ≥ 70 and at most
+  10 backbone clashes ([Han et al. 2026](https://research.nvidia.com/labs/dbr/assets/data/manuscripts/afdb.html);
+  ipSAE: [Dunbrack 2025](https://doi.org/10.1101/2025.02.10.637595)).
 - Within each protein, pathogenic missense variants sit at a predicted
   interface 2.4× as often as benign ones (Mantel–Haenszel odds ratio, 95% CI
-  2.0–2.8, 906 proteins with both). Counting only folded, surface-exposed
+  2.0–2.8, 906 proteins with both). This confirms earlier work rather than
+  being new: [Burke et al. 2023](https://doi.org/10.1038/s41594-022-00910-8)
+  found 2.3-fold on AlphaFold2 models of HuRI and hu.MAP pairs, and
+  [Wang et al. 2012](https://doi.org/10.1038/nbt.2106),
+  [Sahni et al. 2015](https://doi.org/10.1016/j.cell.2015.04.013) and
+  [David & Sternberg 2015](https://doi.org/10.1016/j.jmb.2015.07.004) showed it
+  on experimental interfaces and in the lab. The controls below are what this
+  adds. Counting only folded, surface-exposed
   residues, it is 3.2× (2.7–4.0), so the effect is not just "folded vs
   disordered".
 - Folded residues alone give 1.7× (1.4–2.0): the buried core is rich in

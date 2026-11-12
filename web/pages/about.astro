@@ -10,6 +10,25 @@ const data = gpcr()
 const chimeras = data.complexes.filter(c => c.gProteins.some(g => g.chimera)).length
 const t = s.thresholds
 const uncertain = s.alphaMissense.calls.uncertain
+const HAN = 'https://research.nvidia.com/labs/dbr/assets/data/manuscripts/afdb.html'
+
+const references = [
+  ['Han, Tsenkov, Venanzi et al. 2026. AlphaFold Database expands to proteome-scale quaternary structures. Preprint.', HAN],
+  ['Evans et al. 2021. Protein complex prediction with AlphaFold-Multimer. bioRxiv.', 'https://doi.org/10.1101/2021.10.04.463034'],
+  ["Dunbrack 2025. Rēs ipSAE loquuntur: what's wrong with AlphaFold's ipTM score and how to fix it. bioRxiv.", 'https://doi.org/10.1101/2025.02.10.637595'],
+  ['Varadi et al. 2024. AlphaFold Protein Structure Database in 2024. Nucleic Acids Res.', 'https://doi.org/10.1093/nar/gkad1011'],
+  ['Szklarczyk et al. 2023. The STRING database in 2023. Nucleic Acids Res.', 'https://doi.org/10.1093/nar/gkac1000'],
+  ['The UniProt Consortium 2025. UniProt: the Universal Protein Knowledgebase in 2025. Nucleic Acids Res.', 'https://doi.org/10.1093/nar/gkae1010'],
+  ['Landrum et al. 2018. ClinVar: improving access to variant interpretations and supporting evidence. Nucleic Acids Res.', 'https://doi.org/10.1093/nar/gkx1153'],
+  ['Cheng et al. 2023. Accurate proteome-wide missense variant effect prediction with AlphaMissense. Science.', 'https://doi.org/10.1126/science.adg7492'],
+  ['Nightingale et al. 2017. The Proteins API: accessing key integrated protein and genome information. Nucleic Acids Res.', 'https://doi.org/10.1093/nar/gkx237'],
+  ['Pollard et al. 2010. Detection of nonneutral substitution rates on mammalian phylogenies. Genome Res.', 'https://doi.org/10.1101/gr.097857.109'],
+  ['Dana et al. 2019. SIFTS: updated Structure Integration with Function, Taxonomy and Sequences resource. Nucleic Acids Res.', 'https://doi.org/10.1093/nar/gky1114'],
+  ['Pándy-Szekeres et al. 2023. GPCRdb in 2023. Nucleic Acids Res.', 'https://doi.org/10.1093/nar/gkac1013'],
+  ['Mantel & Haenszel 1959. Statistical aspects of the analysis of data from retrospective studies of disease. J Natl Cancer Inst.', 'https://doi.org/10.1093/jnci/22.4.719'],
+  ['Sehnal et al. 2021. Mol* Viewer: modern web app for 3D visualization and analysis of large biomolecular structures. Nucleic Acids Res.', 'https://doi.org/10.1093/nar/gkab314'],
+  ['Diesh et al. 2023. JBrowse 2: a modular genome browser with views of synteny and structural variation. Genome Biol.', 'https://doi.org/10.1186/s13059-023-02914-z'],
+] as const
 ---
 
 <Layout title="About" nav="about">
@@ -21,8 +40,11 @@ const uncertain = s.alphaMissense.calls.uncertain
   <ul>
     <li>All {s.proteins.toLocaleString()} reviewed human proteins with a UniProt disease annotation.</li>
     <li>
-      Their heterodimers from AlphaFold DB's 2026 complex release (AlphaFold-Multimer), kept at ipSAE ≥ {t.ipsae}, the
-      AlphaFold DB team's threshold. Where AlphaFold DB modelled the partner with another species' protein, the partner is
+      Their heterodimers from <a href={HAN}>AlphaFold DB's 2026 complex release</a>, predicted with
+      <a href="https://doi.org/10.1101/2021.10.04.463034">AlphaFold-Multimer</a> for STRING physical-interaction pairs.
+      AlphaFold DB publishes only those it calls tentatively high-confidence: <a
+        href="https://doi.org/10.1101/2025.02.10.637595">ipSAE</a
+      > ≥ {t.ipsae} in both directions (the lower of chain A → B and B → A), mean pLDDT ≥ 70 and at most 10 backbone clashes. Where AlphaFold DB modelled the partner with another species' protein, the partner is
       named as the human protein of identical sequence; where a partner was modelled twice, the more confident complex is kept.
     </li>
     <li>
@@ -122,11 +144,28 @@ const uncertain = s.alphaMissense.calls.uncertain
       Coverage: {percent(s.withPartner, s.proteins)} of disease proteins have any predicted partner. AlphaFold DB modelled
       STRING physical-interaction pairs only; TP53 has none and KRAS has no RAF.
     </li>
-    <li>The complexes are predictions, and ipSAE ≥ {t.ipsae} is "tentatively high-confidence".</li>
+    <li>
+      The complexes are predictions. AlphaFold DB calls ipSAE 0.6–0.7 low confidence, 0.7–0.8 confident and ≥ 0.8 very
+      high confidence, and the enrichment is about the same in each band.
+    </li>
+    <li>
+      The enrichment itself is not new; the <a href={href('comparison/')}>comparison</a> lists who showed it first and what
+      this explorer adds.
+    </li>
     <li>An interface variant is a lead, not a mechanism: the residue may matter for folding or for another partner.</li>
     <li>
       Experimental interfaces from the PDB are shown in the
       <a href="https://genomes.jbrowse.org/protein-browser/">protein browser</a>; this explorer adds predicted ones.
     </li>
+  </ul>
+  <h2>References</h2>
+  <ul class="references">
+    {
+      references.map(([text, url]) => (
+        <li>
+          {text} <a href={url}>{url.replace('https://', '')}</a>
+        </li>
+      ))
+    }
   </ul>
 </Layout>
