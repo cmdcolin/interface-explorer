@@ -71,6 +71,13 @@ const tiles = [
   </section>
 
   <section>
+    <h2>A tour in 80 seconds</h2>
+    <video class="tour" controls preload="none" poster={href('tour.jpg')} width="1280" height="720">
+      <source src={href('tour.mp4')} type="video/mp4" />
+    </video>
+  </section>
+
+  <section>
     <h2>Read more</h2>
     <div class="post-cards">
       {
@@ -103,3 +110,14 @@ const tiles = [
 <script>
   import '../scripts/home.ts'
 </script>
+
+<style>
+  .tour {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+</style>

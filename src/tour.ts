@@ -5,13 +5,15 @@ import { join } from 'node:path'
 import { startRecording } from 'chrome-capture'
 import { chromium, type Page } from 'playwright-core'
 
-import { OUT } from './paths.ts'
+import { OUT, SITE } from './paths.ts'
 import { LIVE } from './screenshots.ts'
 
 const base = process.env.TOUR_BASE ?? LIVE
 const dir = join(OUT, 'tour')
 const clipDir = join(dir, 'clips')
-const video = join(dir, 'interface-explorer-tour.mp4')
+const video = join(SITE, 'tour.mp4')
+const poster = join(SITE, 'tour.jpg')
+const posterAt = 24
 const width = 1280
 const height = 720
 const fade = 0.5
@@ -382,7 +384,7 @@ async function assemble() {
     .sort()
     .map(f => join(clipDir, f))
   const prepare = clips.map(
-    (_, i) => `[${i}:v]fps=60,format=yuv420p,setpts=PTS-STARTPTS[v${i}]`,
+    (_, i) => `[${i}:v]fps=30,format=yuv420p,setpts=PTS-STARTPTS[v${i}]`,
   )
   const durations = clips.slice(0, -1).map(duration)
   const fades = durations.map((_, i) => {
@@ -406,16 +408,35 @@ async function assemble() {
       '-c:v',
       'libx264',
       '-crf',
-      '18',
+      '30',
       '-preset',
       'slow',
       '-movflags',
       '+faststart',
+      '-an',
       video,
     ],
     { stdio: ['ignore', 'inherit', 'inherit'] },
   )
-  console.log(video)
+  execFileSync(
+    'ffmpeg',
+    [
+      '-y',
+      '-v',
+      'error',
+      '-i',
+      video,
+      '-ss',
+      String(posterAt),
+      '-frames:v',
+      '1',
+      '-q:v',
+      '3',
+      poster,
+    ],
+    { stdio: ['ignore', 'inherit', 'inherit'] },
+  )
+  console.log(video, poster)
 }
 
 const args = process.argv.slice(2)
