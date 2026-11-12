@@ -1,6 +1,12 @@
 import { LABEL_KEYS, LABELS, esc, percent } from './html.ts'
 import { geneHref } from './site.ts'
-import type { Enrichment, GeneRow, Label, Summary } from './types.ts'
+import type {
+  Enrichment,
+  GeneRow,
+  Label,
+  Summary,
+  Validation,
+} from './types.ts'
 
 const ODDS = 'Mantel–Haenszel odds ratio'
 const INTERVAL = '95% CI (bootstrap over proteins)'
@@ -183,4 +189,44 @@ export function geneScatter(genes: GeneRow[]) {
       </svg>
     </div>
     <div class="tooltip" id="scatter-tip" hidden></div>`
+}
+
+export function recallHistogram(
+  series: { label: string; colour: string; v: Validation }[],
+) {
+  const width = 1000
+  const height = 300
+  const left = 54
+  const bottom = 44
+  const bins = series[0]?.v.histogram.length ?? 0
+  const shares = series.map(s => s.v.histogram.map(n => n / s.v.touching))
+  const most = Math.ceil(10 * Math.max(...shares.flat())) / 10
+  const slot = (width - left - 20) / bins
+  const bar = (slot - 10) / series.length
+  const y = (share: number) =>
+    height - bottom - (share / most) * (height - bottom - 24)
+  const ticks = Array.from(
+    { length: Math.round(most * 10) + 1 },
+    (_, tick) => tick / 10,
+  )
+  return `
+    <svg class="map" viewBox="0 0 ${width} ${height}" role="img" aria-label="Share of predicted pairs by the share of their experimental interface that the prediction covers">
+      ${ticks.map(n => `<line class="baseline" x1="${left}" x2="${width - 20}" y1="${y(n)}" y2="${y(n)}" /><text class="tick" x="${left - 8}" y="${y(n) + 4}" text-anchor="end">${Math.round(100 * n)}%</text>`).join('')}
+      ${series
+        .map((s, index) =>
+          s.v.histogram
+            .map(
+              (n, bin) =>
+                `<rect x="${left + bin * slot + 5 + index * bar}" y="${y(shares[index]?.[bin] ?? 0)}" width="${bar - 1}" height="${height - bottom - y(shares[index]?.[bin] ?? 0)}" fill="${s.colour}"><title>${n} ${esc(s.label)}: ${bin * (100 / bins)}–${(bin + 1) * (100 / bins)}% of the experimental interface predicted</title></rect>`,
+            )
+            .join(''),
+        )
+        .join('')}
+      <line class="axis" x1="${left}" x2="${width - 20}" y1="${height - bottom}" y2="${height - bottom}" />
+      ${Array.from({ length: bins + 1 }, (_, bin) => `<text class="tick" x="${left + bin * slot}" y="${height - bottom + 16}" text-anchor="middle">${bin * (100 / bins)}%</text>`).join('')}
+      <text class="tick" x="${(left + width - 20) / 2}" y="${height - 6}" text-anchor="middle">Share of the experimental interface that the prediction covers</text>
+    </svg>
+    <div class="legend">
+      ${series.map(s => `<span><span class="swatch" style="background:${s.colour}"></span>${esc(s.label)} (${s.v.touching.toLocaleString()} pairs)</span>`).join('')}
+    </div>`
 }

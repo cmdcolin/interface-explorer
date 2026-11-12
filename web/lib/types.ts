@@ -28,6 +28,15 @@ export interface Enrichment {
   '95% CI (bootstrap over proteins)': [number, number]
 }
 
+export interface Validation {
+  pairs: number
+  touching: number
+  recall: number
+  precision: number
+  recovered: number
+  histogram: number[]
+}
+
 export interface Summary {
   proteins: number
   withPartner: number
@@ -48,6 +57,7 @@ export interface Summary {
     byConfidenceBand: Record<string, Enrichment>
     byAlphaMissenseClass: Record<string, Enrichment>
   }
+  validation: { cutoff: string; all: Validation; unseen: Validation }
   thresholds: { ipsae: number; plddt: number; contact: number }
   provenance: { clinvarDownloaded: string }
 }

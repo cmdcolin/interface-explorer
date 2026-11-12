@@ -12,7 +12,7 @@ import {
 import { download } from './cache.ts'
 import { CONTACT } from './constants.ts'
 import { withinDistance } from './contacts.ts'
-import { writeJson } from './json.ts'
+import { number, readJson, record, records, text, writeJson } from './json.ts'
 import { nanPercentile, pythonRound } from './numeric.ts'
 import { DATA, OUT } from './paths.ts'
 import { atoms, mmcif } from './pdbe.ts'
@@ -29,6 +29,7 @@ export const TRAINING_CUTOFF = '2021-09-30'
 const NEAR_BEST = 0.9
 const MAX_CHAINS = 60
 const RECOVERED = 0.5
+const BINS = 10
 const PROGRESS_EVERY = 100
 
 type Coverage = Map<string, number>
@@ -117,29 +118,82 @@ export function interfaceAgreement(
   }
 }
 
-type Compared = Awaited<ReturnType<typeof compareEntry>>[number]
+export interface Comparison {
+  accession: string
+  entity: string
+  pdb: string
+  firstDeposited: string
+  experimental: number
+  predicted: number
+  shared: number
+}
 
 function median(values: number[]) {
   return pythonRound(nanPercentile(values, 50), 2)
 }
 
 export function summarise(
-  compared: Pick<Compared, 'experimental' | 'predicted' | 'shared'>[],
+  compared: Pick<Comparison, 'experimental' | 'predicted' | 'shared'>[],
 ) {
   const touching = compared.filter(pair => pair.experimental > 0)
   const recall = touching.map(pair => pair.shared / pair.experimental)
   return {
     pairs: compared.length,
     touching: touching.length,
-    'median share of the experimental interface predicted': median(recall),
-    'median share of the predicted interface seen in the structure': median(
+    recall: median(recall),
+    precision: median(
       touching
         .filter(pair => pair.predicted > 0)
         .map(pair => pair.shared / pair.predicted),
     ),
-    [`pairs with at least ${RECOVERED * 100}% of the experimental interface predicted`]:
-      recall.filter(share => share >= RECOVERED).length,
+    recovered: recall.filter(share => share >= RECOVERED).length,
+    histogram: Array.from(
+      { length: BINS },
+      (_, bin) =>
+        recall.filter(
+          share => Math.min(Math.floor(share * BINS), BINS - 1) === bin,
+        ).length,
+    ),
   }
+}
+
+export function validation(compared: Comparison[]) {
+  return {
+    cutoff: TRAINING_CUTOFF,
+    all: summarise(compared),
+    unseen: summarise(
+      compared.filter(pair => pair.firstDeposited > TRAINING_CUTOFF),
+    ),
+  }
+}
+
+export function readComparisons() {
+  return records(record(readJson(EXPERIMENTAL)).pairs).flatMap(pair => {
+    const accession = text(pair.accession)
+    const entity = text(pair.entity)
+    const pdb = text(pair.pdb)
+    const experimental = number(pair.experimental)
+    const predicted = number(pair.predicted)
+    const shared = number(pair.shared)
+    return accession !== undefined &&
+      entity !== undefined &&
+      pdb !== undefined &&
+      experimental !== undefined &&
+      predicted !== undefined &&
+      shared !== undefined
+      ? [
+          {
+            accession,
+            entity,
+            pdb,
+            firstDeposited: text(pair.firstDeposited) ?? '',
+            experimental,
+            predicted,
+            shared,
+          } satisfies Comparison,
+        ]
+      : []
+  })
 }
 
 export function depositionDates(index: string) {
@@ -237,10 +291,7 @@ export async function main(workers = 4) {
       .length,
     [`only in entries of more than ${MAX_CHAINS} chains, left out`]:
       located.filter(l => l.shared > 0 && !l.pdb).length,
-    all: summarise(compared),
-    [`no structure of the pair deposited by ${TRAINING_CUTOFF}`]: summarise(
-      compared.filter(pair => pair.firstDeposited > TRAINING_CUTOFF),
-    ),
+    ...validation(compared),
     failed: results.flatMap(result => ('error' in result ? [result] : [])),
   }
   writeJson(EXPERIMENTAL, { summary, pairs: compared }, 2)

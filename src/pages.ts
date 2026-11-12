@@ -16,6 +16,8 @@ import {
 } from './atlasData.ts'
 import type { AtlasProtein } from './atlasData.ts'
 import { downloaded } from './clinvar.ts'
+import { readComparisons, validation } from './experimental.ts'
+import type { Comparison } from './experimental.ts'
 import { CONFIDENT, CONTACT, LABELS, MIN_PLDDT } from './constants.ts'
 import { codingPositions } from './coordinates.ts'
 import type { CodingPositions } from './coordinates.ts'
@@ -62,11 +64,23 @@ export function alphaMissenseCalls(
   )
 }
 
+function experimentOf(comparison: Comparison | undefined) {
+  return comparison
+    ? {
+        pdb: comparison.pdb,
+        experimental: comparison.experimental,
+        predicted: comparison.predicted,
+        shared: comparison.shared,
+      }
+    : undefined
+}
+
 export function geneRecord(
   protein: AtlasProtein,
   variants: Variant[],
   coding: Pick<CodingPositions, 'chrom' | 'strand' | 'start' | 'end'>,
   scores = new Map<string, number>(),
+  experiments = new Map<string, Comparison>(),
 ) {
   const atResidue = new Map<number, string[]>()
   const partners = protein.interfaces
@@ -89,6 +103,7 @@ export function geneRecord(
         entity: complex.entity,
         residues: residues.length,
         runs: runs(residues),
+        experiment: experimentOf(experiments.get(complex.entity)),
       }
     })
   const atInterface = variants.flatMap(variant => {
@@ -179,6 +194,8 @@ async function main() {
   const accessions = new Set(proteins.map(p => p.accession))
   const variants = await readVariants(accession => accessions.has(accession))
   const scores = readScores()
+  const comparisons = readComparisons()
+  const experiments = Map.groupBy(comparisons, pair => pair.accession)
   const analysis = record(readJson(join(OUT, 'analysis.json')))
   const mapped = await Promise.all(
     proteins.map(async protein => ({
@@ -194,6 +211,11 @@ async function main() {
             variants.get(protein.accession) ?? [],
             coding,
             scores.get(protein.accession),
+            new Map(
+              experiments
+                .get(protein.accession)
+                ?.map(pair => [pair.entity, pair]),
+            ),
           ),
         ]
       : [],
@@ -251,6 +273,7 @@ async function main() {
       byConfidenceBand: analysis.by_confidence_band,
       byAlphaMissenseClass: analysis.by_alphamissense_class,
     },
+    validation: validation(comparisons),
     thresholds: { ipsae: CONFIDENT, plddt: MIN_PLDDT, contact: CONTACT },
     provenance: { clinvarDownloaded: downloaded() },
   }

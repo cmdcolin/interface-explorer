@@ -9,7 +9,7 @@ import {
 } from '../../../src/links.ts'
 import Layout from '../../layouts/Layout.astro'
 import { gene as readGene, geneRows, isoformIndex, summary } from '../../lib/data.ts'
-import { LABEL_KEYS, amCell, chip, clinvarHref, conditionCell, esc } from '../../lib/html.ts'
+import { LABEL_KEYS, amCell, chip, clinvarHref, conditionCell, esc, percent } from '../../lib/html.ts'
 import { proteinMap, variantData } from '../../lib/maps.ts'
 import { JBROWSE, href, isoformHref } from '../../lib/site.ts'
 
@@ -65,7 +65,7 @@ const rows = gene.variants
       <thead>
         <tr>
           <th>Partner</th><th class="num">ipSAE</th><th class="num">ipTM</th>
-          <th class="num">Residues</th><th>Interface residues</th><th class="num">Variants</th><th>Complex</th>
+          <th class="num">Residues</th><th>Interface residues</th><th class="num">Variants</th><th>Experiment</th><th>Complex</th>
         </tr>
       </thead>
       <tbody>
@@ -78,6 +78,21 @@ const rows = gene.variants
               <td class="num">{p.residues}</td>
               <td class="muted">{p.runs}</td>
               <td class="num">{p.variants}</td>
+              <td class="nowrap">
+                {p.experiment ? (
+                  <>
+                    <a href={`https://www.rcsb.org/structure/${p.experiment.pdb}`}>{p.experiment.pdb.toUpperCase()}</a>{' '}
+                    <span
+                      class="muted"
+                      title={`${p.experiment.shared} of the ${p.experiment.experimental} residues within 5 Å of ${p.gene} in the structure are in the predicted interface`}
+                    >
+                      {p.experiment.experimental ? `${percent(p.experiment.shared, p.experiment.experimental)} recovered` : 'no contact'}
+                    </span>
+                  </>
+                ) : (
+                  <span class="muted">—</span>
+                )}
+              </td>
               <td class="nowrap">
                 <a href={sessionUrl(complexSpec(gene.gene, p.entity, locus), JBROWSE)}>3D + genome</a> ·
                 <a href={`https://alphafold.ebi.ac.uk/entry/${p.entity}`}>AFDB</a>

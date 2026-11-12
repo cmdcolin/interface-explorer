@@ -111,8 +111,9 @@ test('the summary takes medians over pairs that touch', () => {
   ).toEqual({
     pairs: 3,
     touching: 2,
-    'median share of the experimental interface predicted': 0.5,
-    'median share of the predicted interface seen in the structure': 0.6,
-    'pairs with at least 50% of the experimental interface predicted': 1,
+    recall: 0.5,
+    precision: 0.6,
+    recovered: 1,
+    histogram: [0, 0, 1, 0, 0, 0, 0, 0, 1, 0],
   })
 })
