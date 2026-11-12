@@ -450,6 +450,11 @@ td.wide {
   color: var(--benign);
 }
 
+.count.indeterminate {
+  color: var(--text-2);
+  font-weight: 400;
+}
+
 section {
   margin: 0 0 56px;
 }

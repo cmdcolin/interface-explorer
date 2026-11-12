@@ -92,9 +92,7 @@ export function confidenceRows(summary: Summary) {
 export function alphaMissenseRows(summary: Summary) {
   return Object.entries(summary.enrichment.byAlphaMissenseClass).map(
     ([label, e]) => ({
-      label: label
-        .replace('AlphaMissense l', 'L')
-        .replace('AlphaMissense a', 'A'),
+      label: label.replace('AlphaMissense ', ''),
       e,
     }),
   )
@@ -112,16 +110,16 @@ export function compositionBar(counts: Record<Label, number>) {
 }
 
 export function callBars(
-  calls: Record<Label, { scored: number; likelyPathogenic: number }>,
+  calls: Record<Label, { scored: number; pp3: number }>,
 ) {
   return `
     <div class="bars">
       ${LABEL_KEYS.map(label => {
-        const { scored, likelyPathogenic } = calls[label]
-        return `<div class="bar-row" title="${likelyPathogenic.toLocaleString()} of ${scored.toLocaleString()} scored">
+        const { scored, pp3 } = calls[label]
+        return `<div class="bar-row" title="${pp3.toLocaleString()} of ${scored.toLocaleString()} scored">
             <div>ClinVar ${LABELS[label].toLowerCase()}</div>
-            <div class="bar-track"><span style="width:${(100 * likelyPathogenic) / scored}%;background:var(--${label})"></span></div>
-            <div class="bar-value">${percent(likelyPathogenic, scored)}</div>
+            <div class="bar-track"><span style="width:${(100 * pp3) / scored}%;background:var(--${label})"></span></div>
+            <div class="bar-value">${percent(pp3, scored)}</div>
           </div>`
       }).join('')}
     </div>`

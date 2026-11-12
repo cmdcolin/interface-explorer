@@ -10,8 +10,9 @@ one.
 - **Start page:** the headline share of variants at an interface, a gene
   search, every gene as a dot, and links to the blog.
 - **Blog:** the findings as charts (the pathogenic-versus-benign odds ratio
-  under each control, by confidence band and within each AlphaMissense class,
-  and how AlphaMissense calls the variants at an interface); how conservation
+  under each control, by confidence band and within each calibrated
+  AlphaMissense evidence band, and how many variants at an interface reach
+  AlphaMissense's pathogenic evidence); how conservation
   across 100 vertebrates bears on it; three worked examples (VHL, GNAO1,
   APP695); and the receptor–G protein complexes BioHackathon Europe 2026
   Project 9 selected, in 3D, where every pathogenic variant at the interface is
@@ -41,9 +42,10 @@ one.
   interface and ClinVar tracks, or a variant inside its complex beside the
   genome with the variant marked.
 - **Leads:** the 675 variants of uncertain significance that change an
-  interface residue where a different substitution is already classified
-  pathogenic, ranked by AlphaMissense score, with the phyloP of each changed
-  base. Each opens on its gene page in 3D,
+  interface residue where a substitution is already classified pathogenic,
+  split into the 18 with the same amino-acid change (ACMG PS1) and the rest
+  (PM5), ranked by AlphaMissense score, with the phyloP of each changed base.
+  Each opens on its gene page in 3D,
   zoomed to the residue.
 - **Isoforms:** for disease genes with AlphaFold DB isoform models, where each
   isoform differs from the canonical protein, whether the part they share keeps
@@ -99,11 +101,13 @@ one.
 - The signal does not depend on confidence. Against residues at no interface,
   the odds ratio is 2.5 for ipSAE 0.6–0.7, 2.7 for 0.7–0.8, 2.1 for 0.8–0.9
   and 2.4 (1.4–4.8) at 0.9 and above.
-- The interface adds to AlphaMissense, modestly. Among variants AlphaMissense
-  calls likely benign, the pathogenic ones still sit at an interface 1.4× as
-  often as the benign ones (1.1–1.9, 442 proteins); among those it calls
-  likely pathogenic, 1.4× (1.0–2.0, 309 proteins). Too few are ambiguous to
-  say (0.7×, 0.4–1.2, 128 proteins).
+- The interface adds little beyond AlphaMissense. Within AlphaMissense's
+  evidence bands, as calibrated for clinical use by Bergquist et al. 2025, the
+  pathogenic variants sit at an interface 1.7× as often as the benign ones
+  among variants it gives pathogenic evidence (PP3, ≥ 0.792; 1.1–2.7, 195
+  proteins), 1.3× among those it gives benign evidence (BP4, ≤ 0.169;
+  0.9–2.0, 277 proteins) and 1.1× where it is indeterminate (0.8–1.4, 428
+  proteins).
 - Conservation explains only part of it. Pathogenic variants favour conserved
   bases: of the variants classified pathogenic or benign, 87% are pathogenic in
   the top quarter of 100-way vertebrate phyloP, against 16% in the bottom
@@ -126,12 +130,15 @@ one.
   pathogenic, 23,233 of uncertain significance and 822 benign. Examples:
   VHL's 48 pathogenic variants at the elongin C interface, and GNAO1's at the
   Gβ (L13P, I19M, L23F) and RGS (T182I, Q205P, R206) interfaces.
-- AlphaMissense scores 23,068 of the 23,233 uncertain ones and calls 10,756
-  (47%) likely pathogenic, against 88% of the pathogenic and 17% of the benign
-  variants at an interface. It sees one protein at a time, not the partner.
+- AlphaMissense scores 23,068 of the 23,233 uncertain ones and gives 7,968
+  (35%) at least supporting evidence of pathogenicity (PP3) and 5,466 (24%)
+  evidence of benignity (BP4), against PP3 for 80% of the pathogenic and 10% of
+  the benign variants at an interface. Its developers' 0.564 "likely
+  pathogenic" cut-off does not reach supporting evidence. It sees one protein at a time, not the partner.
 - 675 of the uncertain variants, in 245 genes, change an interface residue
-  where a different substitution is already classified pathogenic; AlphaMissense
-  calls 523 of them likely pathogenic. Examples: GNB1 W99R and D118V at the Gα
+  where a substitution is already classified pathogenic (the same amino-acid
+  change for 18, ACMG PS1; a different one for 657, PM5); AlphaMissense gives
+  442 of them pathogenic evidence. Examples: GNB1 W99R and D118V at the Gα
   interface, HRAS G60R, and BAP1 C91W and C91Y at the ubiquitin interface.
 - Conditions can separate by interface. All 14 pathogenic KRAS variants ClinVar
   lists for non-small cell lung carcinoma sit at a RasGAP interface (G12, G13,
@@ -283,7 +290,11 @@ one.
   sequence at 90% of its mapped residues, as in the experimental check above.
 - **AlphaMissense:** the published pathogenicity of every substitution in the
   canonical proteins, joined to each variant by UniProt accession and change.
-  Above 0.564 is likely pathogenic and below 0.34 likely benign.
+  Scores are read as ACMG PP3/BP4 evidence with the ClinGen calibration of
+  Bergquist et al. 2025 (Genet Med 27:101402): PP3 supporting from 0.792,
+  moderate from 0.906, strong from 0.990; BP4 supporting at 0.169 and below,
+  moderate at 0.099 and below. The developers' 0.564 and 0.34 cut-offs do not
+  reach supporting evidence and are not used.
 - **GPCRs:** PDBe's updated mmCIF gives each atom's UniProt position (SIFTS).
   The receptor chain is GPCRdb's preferred chain, aligned to its UniProt
   sequence where SIFTS does not map it; Gα chains are found by SIFTS gene or
@@ -316,7 +327,7 @@ one.
   `AlphaMissense_aa_substitutions.tsv.gz` and writes `out/alphamissense.json`,
   a score for each variant in `out/clinvar.ndjson`.
 - `pnpm analyze`: the enrichment, overall, by confidence band and by
-  AlphaMissense class, in `out/analysis.json`.
+  AlphaMissense evidence band, in `out/analysis.json`.
 - `pnpm experimental [workers]`: each predicted pair against a PDB entry
   holding both proteins, in `out/experimental.json`.
 - `pnpm conservation [workers]`: reads phyloP for every codon from UCSC's

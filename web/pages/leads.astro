@@ -2,12 +2,11 @@
 import { complexSpec, genomeUrl, sessionUrl } from '../../src/links.ts'
 import Layout from '../layouts/Layout.astro'
 import { leadRows, summary } from '../lib/data.ts'
-import { amCell, clinvarHref, conditionCell, esc, phylopCell } from '../lib/html.ts'
+import { alphaMissenseNote, amCell, clinvarHref, conditionCell, esc, phylopCell } from '../lib/html.ts'
 import { JBROWSE, geneHref, href } from '../lib/site.ts'
 import { sortableTable } from '../lib/table.ts'
 
 const s = summary()
-const am = s.alphaMissense
 const leads = leadRows()
 const table = sortableTable({
   id: 'leads',
@@ -28,7 +27,15 @@ const table = sortableTable({
       cell: lead => conditionCell(lead.knownConditions),
       sort: lead => lead.knownConditions[0] ?? '',
     },
-    { label: 'AlphaMissense', num: true, cell: lead => amCell(lead.alphaMissense, am), sort: lead => lead.alphaMissense ?? -1 },
+    { label: 'AlphaMissense', num: true, cell: lead => amCell(lead.alphaMissense), sort: lead => lead.alphaMissense ?? -1 },
+    {
+      label: 'Evidence',
+      cell: lead =>
+        lead.evidence === 'PS1'
+          ? '<span class="nowrap" title="The same amino-acid change, from a different nucleotide change, is classified pathogenic">PS1 same change</span>'
+          : '<span class="nowrap" title="A different substitution at this residue is classified pathogenic">PM5 same residue</span>',
+      sort: lead => lead.evidence,
+    },
     {
       label: 'phyloP',
       num: true,
@@ -65,16 +72,20 @@ const table = sortableTable({
   <h1>Leads</h1>
   <p class="lede">
     {leads.length.toLocaleString()} ClinVar variants of uncertain significance, in {s.leads.genes.toLocaleString()} genes,
-    that change a residue at a confident predicted interface where a different substitution is already classified pathogenic.
+    that change a residue at a confident predicted interface where a substitution is already classified pathogenic. For
+    {s.leads.sameChange.toLocaleString()} it is the same amino-acid change from a different nucleotide change (ACMG PS1,
+    strong); for the other {(leads.length - s.leads.sameChange).toLocaleString()} a different change at that residue (PM5,
+    moderate).
   </p>
   <p class="note">
-    A pathogenic substitution at the same residue is evidence clinical guidelines already count towards pathogenicity; the
-    interface adds a hypothesis for why the residue matters. These are leads, not classifications: a milder substitution at
-    the same residue can be harmless. AlphaMissense above {am.likelyPathogenic} is likely pathogenic; phyloP is the
-    conservation of the changed base across 100 vertebrates, the most conserved quarter above
-    {s.conservation.variants.edges[2]}. See
-    <a href={href('about/')}>About</a>.
+    These are leads, not classifications. PS1 and PM5 need the pathogenic variant to be well established, and PS1 also
+    needs an effect on splicing ruled out; ClinVar's classification may itself already count these codes, and a milder
+    substitution at the same residue can be harmless. The interface carries no ACMG code here: it adds a hypothesis
+    for why the residue matters. phyloP is the conservation of the changed base across 100 vertebrates, the most
+    conserved quarter above {s.conservation.variants.edges[2]}; it is shown, not counted, since AlphaMissense already
+    draws on conservation. See <a href={href('about/')}>About</a>.
   </p>
+  <p class="muted" set:html={alphaMissenseNote()} />
   <Fragment set:html={table} />
 </Layout>
 

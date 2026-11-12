@@ -1,13 +1,15 @@
 import { join } from 'node:path'
 
-import {
-  LIKELY_BENIGN,
-  LIKELY_PATHOGENIC,
-  readScores,
-} from './alphamissense.ts'
+import { readScores } from './alphamissense.ts'
 import { readAtlas } from './atlasData.ts'
 import type { AtlasProtein } from './atlasData.ts'
-import { CONFIDENT, MIN_PLDDT } from './constants.ts'
+import {
+  BP4_SUPPORTING,
+  CONFIDENT,
+  MIN_PLDDT,
+  PP3_SUPPORTING,
+  alphaMissenseEvidence,
+} from './constants.ts'
 import type { Label } from './constants.ts'
 import { writeJson } from './json.ts'
 import {
@@ -70,14 +72,15 @@ export const CONTROLS: Record<string, Keep> = {
 }
 
 export const ALPHAMISSENSE_CLASSES: Record<string, Keep> = {
-  'AlphaMissense likely benign': (_, v) =>
-    v.alphaMissense !== undefined && v.alphaMissense < LIKELY_BENIGN,
-  'AlphaMissense ambiguous': (_, v) =>
+  [`AlphaMissense BP4 (≤ ${BP4_SUPPORTING})`]: (_, v) =>
     v.alphaMissense !== undefined &&
-    v.alphaMissense >= LIKELY_BENIGN &&
-    v.alphaMissense <= LIKELY_PATHOGENIC,
-  'AlphaMissense likely pathogenic': (_, v) =>
-    v.alphaMissense !== undefined && v.alphaMissense > LIKELY_PATHOGENIC,
+    alphaMissenseEvidence(v.alphaMissense).points < 0,
+  'AlphaMissense indeterminate': (_, v) =>
+    v.alphaMissense !== undefined &&
+    alphaMissenseEvidence(v.alphaMissense).points === 0,
+  [`AlphaMissense PP3 (≥ ${PP3_SUPPORTING})`]: (_, v) =>
+    v.alphaMissense !== undefined &&
+    alphaMissenseEvidence(v.alphaMissense).points > 0,
 }
 
 export function bands(edges: number[]) {

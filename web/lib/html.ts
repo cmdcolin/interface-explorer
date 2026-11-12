@@ -1,4 +1,10 @@
 import type { PatchRank } from '../../src/conservation.ts'
+import {
+  ALPHAMISSENSE_EVIDENCE,
+  BP4_SUPPORTING,
+  PP3_SUPPORTING,
+  alphaMissenseEvidence,
+} from '../../src/constants.ts'
 import type { Label } from './types.ts'
 
 export const LABELS: Record<Label, string> = {
@@ -24,30 +30,16 @@ export function residueCount(n: number) {
   return `${n} residue${n === 1 ? '' : 's'}`
 }
 
-export function amClass(
-  score: number,
-  thresholds: { likelyPathogenic: number; likelyBenign: number },
-): Label {
-  return score > thresholds.likelyPathogenic
-    ? 'pathogenic'
-    : score < thresholds.likelyBenign
-      ? 'benign'
-      : 'uncertain'
+export function evidenceText(score: number) {
+  const band = alphaMissenseEvidence(score)
+  return band.code ? `${band.code} ${band.strength}` : band.strength
 }
 
-export const AM_TITLE: Record<Label, string> = {
-  pathogenic: 'likely pathogenic',
-  uncertain: 'ambiguous',
-  benign: 'likely benign',
-}
-
-export function amCell(
-  score: number | undefined,
-  thresholds: { likelyPathogenic: number; likelyBenign: number },
-) {
+export function amCell(score: number | undefined) {
+  const points = score === undefined ? 0 : alphaMissenseEvidence(score).points
   return score === undefined
     ? '<span class="muted" title="AlphaMissense has no score for this substitution">—</span>'
-    : `<span class="count ${amClass(score, thresholds)}" title="AlphaMissense: ${AM_TITLE[amClass(score, thresholds)]}">${score.toFixed(2)}</span>`
+    : `<span class="count ${points > 0 ? 'pathogenic' : points < 0 ? 'benign' : 'indeterminate'}" title="AlphaMissense ${score}: ${evidenceText(score)} (ClinGen calibration, Bergquist et al. 2025)">${score.toFixed(2)}</span>`
 }
 
 const QUARTERS = ['least', 'second least', 'second most', 'most']
@@ -90,4 +82,31 @@ export function axisLabels(length: number) {
     ),
     length,
   ]
+}
+
+const BERGQUIST = 'https://doi.org/10.1016/j.gim.2025.101402'
+
+export function alphaMissenseNote() {
+  const from = (points: number) =>
+    ALPHAMISSENSE_EVIDENCE.find(band => band.points === points)?.from
+  return `<a href="https://doi.org/10.1126/science.adg7492">AlphaMissense</a> scores a substitution from 0 to 1.
+    Calibrated against ClinVar for clinical use (<a href="${BERGQUIST}">Bergquist et al. 2025</a>), ${PP3_SUPPORTING} and
+    above is supporting evidence of pathogenicity (ACMG PP3), ${from(2)} moderate and ${from(4)} strong; ${BP4_SUPPORTING}
+    and below is supporting evidence of benignity (BP4); between is indeterminate. Its developers' "likely pathogenic"
+    cut-off of 0.564 does not reach even supporting evidence. It sees the sequence and the single-protein structure, not the
+    partner.`
+}
+
+export function leadNote(change: string, pathogenicHere: string[]) {
+  const others = pathogenicHere.filter(c => c !== change)
+  return [
+    pathogenicHere.includes(change)
+      ? '<span title="The same amino-acid change, from a different nucleotide change, is classified pathogenic (ACMG PS1)">same change pathogenic · PS1</span>'
+      : '',
+    others.length
+      ? `<span title="A different substitution at this residue is classified pathogenic (ACMG PM5)">pathogenic ${others.map(esc).join(', ')} here · PM5</span>`
+      : '',
+  ]
+    .filter(Boolean)
+    .join('<br />')
 }

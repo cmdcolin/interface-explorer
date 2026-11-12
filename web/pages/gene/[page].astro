@@ -10,12 +10,14 @@ import Layout from '../../layouts/Layout.astro'
 import { gene as readGene, geneRows, isoformIndex, summary } from '../../lib/data.ts'
 import {
   LABEL_KEYS,
+  alphaMissenseNote,
   amCell,
   chip,
   clinvarHref,
   conditionCell,
   conservedCell,
   esc,
+  leadNote,
   percent,
   phylopCell,
 } from '../../lib/html.ts'
@@ -28,7 +30,7 @@ export function getStaticPaths() {
 }
 
 const gene = readGene(Astro.params.page ?? '')
-const { alphaMissense: am, thresholds, conservation } = summary()
+const { thresholds, conservation } = summary()
 const edges = conservation.variants.edges
 const pages = new Map(geneRows().map(row => [row.accession, row.page]))
 const sameResidue = pathogenicAtSameResidue(gene)
@@ -56,10 +58,10 @@ const rows = gene.variants
     const partnerLinks = (shown: typeof partners) =>
       shown.map(p => `<a href="${sessionUrl(variantSpec(gene, v, p), JBROWSE)}">${esc(p.gene)}</a>`).join(', ')
     return `<tr ${variantData(v, same)} data-position="${v.position}" data-partners="${esc(partners.map(p => p.gene).join(','))}" data-am="${v.alphaMissense ?? -1}" data-phylop="${v.phylop ?? -99}">
-      <td>${esc(v.change)}${same.length ? `<div class="cell-note" title="A pathogenic substitution at the same residue">pathogenic ${same.map(esc).join(', ')} here</div>` : ''}</td>
+      <td>${esc(v.change)}${same.length ? `<div class="cell-note">${leadNote(v.change, same)}</div>` : ''}</td>
       <td class="nowrap">${chip(v.label)} <a href="${clinvarHref(v.variation)}" title="${esc(v.review)}">VCV${String(v.variation).padStart(9, '0')}</a></td>
       <td>${conditionCell(v.conditions)}</td>
-      <td class="num">${amCell(v.alphaMissense, am)}</td>
+      <td class="num">${amCell(v.alphaMissense)}</td>
       <td class="num">${phylopCell(v.phylop, edges)}</td>
       <td class="nowrap">${partnerLinks(partners.slice(0, SHOWN_PARTNERS))}${partners.length > SHOWN_PARTNERS ? `<details class="more"><summary>+${partners.length - SHOWN_PARTNERS} more</summary>${partnerLinks(partners.slice(SHOWN_PARTNERS))}</details>` : ''}</td>
       <td class="nowrap"><a href="${genomeUrl(v.chrom, v.pos - 30, v.pos + 30, JBROWSE)}">chr${esc(v.chrom)}:${v.pos.toLocaleString()}</a></td>
@@ -227,11 +229,10 @@ const rows = gene.variants
     </label>
   </div>
   <p class="muted">
-    <a href="https://doi.org/10.1126/science.adg7492">AlphaMissense</a> predicts how likely a substitution is to be
-    pathogenic, from 0 to 1: above {am.likelyPathogenic} is likely pathogenic, below {am.likelyBenign} likely benign. It is
-    a prediction from sequence and the single-protein structure, and does not see the partner. phyloP is the conservation
-    of the changed base across 100 vertebrates: above {edges[2]} is the most conserved quarter of these variants, below
-    {edges[0]} the least. See <a href={href('blog/2026-11-12-disease-variants-cluster/#conservation-explains-only-part-of-it')}>how conservation bears on the interface finding</a>.
+    <Fragment set:html={alphaMissenseNote()} /> phyloP is the conservation of the changed base across 100 vertebrates: above
+    {edges[2]} is the most conserved quarter of these variants, below {edges[0]} the least. AlphaMissense already draws on
+    conservation, so phyloP is shown, not counted as separate evidence. See
+    <a href={href('blog/2026-11-12-disease-variants-cluster/#conservation-explains-only-part-of-it')}>how conservation bears on the interface finding</a>.
   </p>
   <div class="table-wrap">
     <table id="variants">

@@ -12,8 +12,6 @@ const SUBSTITUTIONS_URL =
   'https://zenodo.org/records/10813168/files/AlphaMissense_aa_substitutions.tsv.gz?download=1'
 const SUBSTITUTIONS = join(DATA, 'AlphaMissense_aa_substitutions.tsv.gz')
 const SCORES = join(OUT, 'alphamissense.json')
-export const LIKELY_BENIGN = 0.34
-export const LIKELY_PATHOGENIC = 0.564
 
 export function parseScore(line: string) {
   const [accession, change, score] = line.split('\t')
@@ -21,10 +19,6 @@ export function parseScore(line: string) {
   return accession && change && score && Number.isFinite(pathogenicity)
     ? { accession, change, pathogenicity }
     : undefined
-}
-
-export function isLikelyPathogenic(score: number | undefined) {
-  return score !== undefined && score > LIKELY_PATHOGENIC
 }
 
 function changeScores(scores: unknown) {

@@ -73,11 +73,9 @@ export interface Summary {
   unmapped: number
   partners: number
   variantsAtInterface: Record<Label, number>
-  leads: { variants: number; genes: number }
+  leads: { variants: number; genes: number; sameChange: number }
   alphaMissense: {
-    calls: Record<Label, { scored: number; likelyPathogenic: number }>
-    likelyBenign: number
-    likelyPathogenic: number
+    calls: Record<Label, { scored: number; pp3: number; bp4: number }>
   }
   enrichment: {
     all: Enrichment

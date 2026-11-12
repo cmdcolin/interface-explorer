@@ -21,7 +21,8 @@ import {
   shareFigure,
 } from '../../lib/charts.ts'
 import { gene, leadRows, summary } from '../../lib/data.ts'
-import { percent } from '../../lib/html.ts'
+import { evidenceText, percent } from '../../lib/html.ts'
+import { BP4_SUPPORTING, PP3_SUPPORTING } from '../../../src/constants.ts'
 
 export const s = summary()
 export const e = s.enrichment
@@ -65,10 +66,14 @@ interface.
 
 <Html html={forestPlot(confidenceRows(s))} />
 
-### It adds modestly to AlphaMissense
+### It adds little beyond AlphaMissense
 
-The same comparison among variants AlphaMissense puts in one class. It sees one
-protein at a time, not the partner.
+The same comparison among variants in one of AlphaMissense's evidence bands,
+calibrated for clinical use by [Bergquist et al. 2025](https://doi.org/10.1016/j.gim.2025.101402).
+AlphaMissense sees one protein at a time, not the partner, yet the interface
+adds a clear signal only among variants it already gives pathogenic evidence
+(PP3, score ≥ {PP3_SUPPORTING}); where its score is indeterminate, the interface
+makes no difference.
 
 <Html html={forestPlot(alphaMissenseRows(s))} />
 
@@ -109,25 +114,29 @@ structural hypothesis: the partner it may disturb.
 
 <Html html={compositionBar(v)} />
 
-### How many does AlphaMissense call likely pathogenic?
+### How many reach AlphaMissense's pathogenic evidence?
 
 <Html html={callBars(am)} />
 
-Share of scored variants at an interface with AlphaMissense above
-{s.alphaMissense.likelyPathogenic}. The uncertain ones fall between the known
-pathogenic and benign: {am.uncertain.likelyPathogenic.toLocaleString()} of them
-score likely pathogenic.
+Share of scored variants at an interface whose AlphaMissense score is at least
+supporting evidence of pathogenicity in ACMG terms (PP3, ≥ {PP3_SUPPORTING}).
+The uncertain ones fall between the known pathogenic and benign:
+{am.uncertain.pp3.toLocaleString()} of them reach it, and
+{am.uncertain.bp4.toLocaleString()} reach evidence of benignity (BP4, ≤ {BP4_SUPPORTING}).
+The developers' own 0.564 "likely pathogenic" cut-off does not reach even
+supporting evidence, so the site does not use it.
 
 ### The strongest leads
 
 {s.leads.variants.toLocaleString()} of the uncertain variants, in
 {s.leads.genes.toLocaleString()} genes, change an interface residue where a
-different substitution is already classified pathogenic. They are on the
+substitution is already classified pathogenic: the same amino-acid change for
+{s.leads.sameChange} of them (ACMG PS1), a different one for the rest (PM5). They are on the
 [Leads](../../leads/) page. The best of them sit on interfaces that
 experiment confirms. PSEN1 {psen1.change}, for instance, is uncertain, but
 {psen1.sameResidue.join(' and ')} at the same residue is a pathogenic cause of
 early-onset Alzheimer disease, and AlphaMissense scores {psen1.change}
-{psen1.alphaMissense.toFixed(2)}. Residue {psen1.position} is on presenilin's
+{psen1.alphaMissense.toFixed(2)}, {evidenceText(psen1.alphaMissense)} on the calibrated scale. Residue {psen1.position} is on presenilin's
 predicted interface with APH1A. The γ-secretase structure
 {aph1a.experiment.pdb.toUpperCase()} puts {aph1a.experiment.experimental}
 residues of presenilin against APH1A, and the prediction has

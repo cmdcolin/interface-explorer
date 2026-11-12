@@ -125,13 +125,13 @@ test('AlphaMissense calls are counted per ClinVar label, over scored variants', 
       { label: 'benign', alphaMissense: 0.1 },
     ]),
   ).toEqual({
-    pathogenic: { scored: 0, likelyPathogenic: 0 },
-    uncertain: { scored: 2, likelyPathogenic: 1 },
-    benign: { scored: 1, likelyPathogenic: 0 },
+    pathogenic: { scored: 0, pp3: 0, bp4: 0 },
+    uncertain: { scored: 2, pp3: 1, bp4: 0 },
+    benign: { scored: 1, pp3: 0, bp4: 1 },
   })
 })
 
-test('a lead is an uncertain variant where another substitution is pathogenic', () => {
+test('a lead is an uncertain variant where the same or another substitution is pathogenic', () => {
   const variant = (
     position: number,
     change: string,
@@ -172,6 +172,7 @@ test('a lead is an uncertain variant where another substitution is pathogenic', 
       variant(10, 'A10V', 'uncertain'),
       variant(10, 'A10D', 'pathogenic'),
       variant(11, 'L11P', 'pathogenic'),
+      variant(11, 'L11P', 'uncertain'),
       variant(12, 'G12S', 'uncertain'),
       variant(50, 'R50C', 'pathogenic'),
     ],
@@ -180,13 +181,17 @@ test('a lead is an uncertain variant where another substitution is pathogenic', 
   expect(
     leads(record).map(lead => [
       lead.change,
+      lead.evidence,
       lead.sameResidue,
       lead.knownConditions,
       lead.pathogenicResidues,
       lead.partner,
       lead.entity,
     ]),
-  ).toEqual([['A10V', ['A10D'], ['Disease'], 1, 'PARTNER', 'AF-1']])
+  ).toEqual([
+    ['A10V', 'PM5', ['A10D'], ['Disease'], 1, 'PARTNER', 'AF-1'],
+    ['L11P', 'PS1', ['L11P'], ['Disease'], 1, 'PARTNER', 'AF-1'],
+  ])
 })
 
 test('a gene record carries its complex chain and UniProt features', () => {

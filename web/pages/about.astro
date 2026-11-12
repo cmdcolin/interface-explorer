@@ -1,4 +1,5 @@
 ---
+import { BP4_SUPPORTING, PP3_SUPPORTING } from '../../src/constants.ts'
 import Layout from '../layouts/Layout.astro'
 import { oddsText } from '../lib/charts.ts'
 import { gpcr, summary } from '../lib/data.ts'
@@ -21,6 +22,8 @@ const references = [
   ['The UniProt Consortium 2025. UniProt: the Universal Protein Knowledgebase in 2025. Nucleic Acids Res.', 'https://doi.org/10.1093/nar/gkae1010'],
   ['Landrum et al. 2018. ClinVar: improving access to variant interpretations and supporting evidence. Nucleic Acids Res.', 'https://doi.org/10.1093/nar/gkx1153'],
   ['Cheng et al. 2023. Accurate proteome-wide missense variant effect prediction with AlphaMissense. Science.', 'https://doi.org/10.1126/science.adg7492'],
+  ['Bergquist et al. 2025. Calibration of additional computational tools expands ClinGen recommendation options for variant classification with PP3/BP4 criteria. Genet Med.', 'https://doi.org/10.1016/j.gim.2025.101402'],
+  ['Richards et al. 2015. Standards and guidelines for the interpretation of sequence variants. Genet Med.', 'https://doi.org/10.1038/gim.2015.30'],
   ['Nightingale et al. 2017. The Proteins API: accessing key integrated protein and genome information. Nucleic Acids Res.', 'https://doi.org/10.1093/nar/gkx237'],
   ['Pollard et al. 2010. Detection of nonneutral substitution rates on mammalian phylogenies. Genome Res.', 'https://doi.org/10.1101/gr.097857.109'],
   ['Dana et al. 2019. SIFTS: updated Structure Integration with Function, Taxonomy and Sequences resource. Nucleic Acids Res.', 'https://doi.org/10.1093/nar/gky1114'],
@@ -60,8 +63,12 @@ const references = [
     <li>
       Each variant's <a href="https://doi.org/10.1126/science.adg7492">AlphaMissense</a> pathogenicity, from the published
       table of every substitution in the canonical proteins. Of the {s.variantsAtInterface.uncertain.toLocaleString()}
-      variants of uncertain significance at an interface, it scores {uncertain.scored.toLocaleString()} and calls
-      {uncertain.likelyPathogenic.toLocaleString()} ({percent(uncertain.likelyPathogenic, uncertain.scored)}) likely pathogenic.
+      variants of uncertain significance at an interface, it scores {uncertain.scored.toLocaleString()}. Read with the ClinGen
+      calibration of <a href="https://doi.org/10.1016/j.gim.2025.101402">Bergquist et al. 2025</a>, it gives
+      {uncertain.pp3.toLocaleString()} ({percent(uncertain.pp3, uncertain.scored)}) at least supporting evidence of
+      pathogenicity (ACMG PP3, score ≥ {PP3_SUPPORTING}) and {uncertain.bp4.toLocaleString()}
+      ({percent(uncertain.bp4, uncertain.scored)}) evidence of benignity (BP4, ≤ {BP4_SUPPORTING}). The developers'
+      0.564 "likely pathogenic" cut-off does not reach supporting evidence, so the site does not use it.
     </li>
     <li>
       Conservation: the phyloP score of each coding base in UCSC's 100-way vertebrate alignment to hg38 (multiz100way), read
@@ -91,8 +98,8 @@ const references = [
   </ul>
   <p>
     Mantel–Haenszel odds ratios across proteins, with intervals from resampling proteins. The surface line rules out "folded
-    vs disordered" as the explanation, the AlphaMissense lines show the interface adds a little to a predictor that never
-    sees the partner, and the conservation line that conservation explains only part of it. Each confidence band of
+    vs disordered" as the explanation, the AlphaMissense lines show the interface adds little to a predictor that never sees
+    the partner, and only among variants it already gives pathogenic evidence, and the conservation line that conservation explains only part of it. Each confidence band of
     ipSAE, compared with residues at no interface, gives about the same odds ratio. The
     <a href={href('blog/2026-11-12-disease-variants-cluster/')}>findings post</a> draws these as charts, and
     <a href={href('blog/2026-11-12-are-the-interfaces-real/')}>another</a> checks the predicted interfaces against

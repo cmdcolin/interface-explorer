@@ -2,12 +2,7 @@ import { join } from 'node:path'
 
 import { positionRuns } from 'p2s_mapper'
 
-import {
-  isLikelyPathogenic,
-  LIKELY_BENIGN,
-  LIKELY_PATHOGENIC,
-  readScores,
-} from './alphamissense.ts'
+import { readScores } from './alphamissense.ts'
 import {
   confidentResidues,
   isConfident,
@@ -27,7 +22,13 @@ import type { PatchRank } from './conservation.ts'
 import { readComparisons, validation } from './experimental.ts'
 import type { Comparison } from './experimental.ts'
 import type { ScoredVariant } from './analyze.ts'
-import { CONFIDENT, CONTACT, LABELS, MIN_PLDDT } from './constants.ts'
+import {
+  CONFIDENT,
+  CONTACT,
+  LABELS,
+  MIN_PLDDT,
+  alphaMissenseEvidence,
+} from './constants.ts'
 import { codingPositions } from './coordinates.ts'
 import type { CodingPositions } from './coordinates.ts'
 import { readJson, record, writeJson } from './json.ts'
@@ -61,16 +62,17 @@ export function alphaMissenseCalls(
 ) {
   return Object.fromEntries(
     LABELS.map(label => {
-      const scored = variants.filter(
-        v => v.label === label && v.alphaMissense !== undefined,
+      const points = variants.flatMap(v =>
+        v.label === label && v.alphaMissense !== undefined
+          ? [alphaMissenseEvidence(v.alphaMissense).points]
+          : [],
       )
       return [
         label,
         {
-          scored: scored.length,
-          likelyPathogenic: scored.filter(v =>
-            isLikelyPathogenic(v.alphaMissense),
-          ).length,
+          scored: points.length,
+          pp3: points.filter(n => n > 0).length,
+          bp4: points.filter(n => n < 0).length,
         },
       ]
     }),
@@ -196,6 +198,7 @@ export function leads(gene: ReturnType<typeof geneRecord>) {
               ...variant,
               gene: gene.gene,
               sameResidue,
+              evidence: sameResidue.includes(variant.change) ? 'PS1' : 'PM5',
               knownConditions: [...new Set(known.flatMap(p => p.conditions))],
               pathogenicResidues: new Set(
                 pathogenic
@@ -320,11 +323,10 @@ async function main() {
     leads: {
       variants: shortlist.length,
       genes: new Set(shortlist.map(lead => lead.page)).size,
+      sameChange: shortlist.filter(lead => lead.evidence === 'PS1').length,
     },
     alphaMissense: {
       calls: alphaMissenseCalls(genes.flatMap(g => g.variants)),
-      likelyBenign: LIKELY_BENIGN,
-      likelyPathogenic: LIKELY_PATHOGENIC,
     },
     enrichment: {
       all: controlled['all residues'],

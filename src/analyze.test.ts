@@ -128,7 +128,7 @@ test('tables can be restricted to an AlphaMissense class', () => {
     ...PROTEIN,
     variants: PROTEIN.variants.map((v, i) => ({
       ...v,
-      alphaMissense: [0.9, 0.2, 0.8, 0.7][i],
+      alphaMissense: [0.95, 0.2, 0.85, 0.8][i],
     })),
   }
   expect(
@@ -136,7 +136,7 @@ test('tables can be restricted to an AlphaMissense class', () => {
       [scored],
       'iptm',
       [0.6, Infinity],
-      ALPHAMISSENSE_CLASSES['AlphaMissense likely pathogenic'],
+      ALPHAMISSENSE_CLASSES['AlphaMissense PP3 (≥ 0.792)'],
     ),
   ).toEqual([[1, 0, 1, 1]])
 })
