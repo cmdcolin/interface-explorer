@@ -209,8 +209,7 @@ h2 {
   background: var(--surface-2);
 }
 
-a.tile:hover,
-.hero-shot:hover img {
+a.tile:hover {
   border-color: var(--interface);
 }
 
@@ -783,20 +782,20 @@ h3 {
   border-radius: 0 4px 4px 0;
 }
 
-.hero-shot {
-  display: block;
+.tour {
+  margin: 0;
   color: var(--text-2);
   font-size: 14px;
-  text-decoration: none;
 }
 
-.hero-shot img {
+.tour video {
   display: block;
   width: 100%;
   height: auto;
   margin-bottom: 8px;
   border: 1px solid var(--border);
   border-radius: 8px;
+  background: var(--surface);
 }
 
 .post-cards {

@@ -1,21 +1,16 @@
 ---
 import { Image } from 'astro:assets'
 
-import { sessionUrl, variantSpec } from '../../src/links.ts'
 import Layout from '../layouts/Layout.astro'
 import { geneScatter, odds, shareFigure } from '../lib/charts.ts'
-import { gene, geneRows, summary } from '../lib/data.ts'
+import { geneRows, summary } from '../lib/data.ts'
 import { interfaceDiagram } from '../lib/interface-diagram.ts'
 import { percent } from '../lib/html.ts'
 import { posts } from '../lib/posts.ts'
-import { JBROWSE, href } from '../lib/site.ts'
+import { href } from '../lib/site.ts'
 
 const s = summary()
 const genes = geneRows()
-const vhl = gene('VHL')
-const shown = vhl.variants.find(v => v.label === 'pathogenic')
-const shownPartner = shown && vhl.partners.find(p => shown.partners.includes(p.gene))
-const heroLink = shown ? sessionUrl(variantSpec(vhl, shown), JBROWSE) : JBROWSE
 const all = await posts()
 const tiles = [
   [s.withPartner, 'disease genes with a confident predicted partner', href('genes/')],
@@ -55,26 +50,15 @@ const tiles = [
         ))
       }
     </div>
-    <a class="hero-shot" href={heroLink}>
-      <img
-        src={href('preview.jpg')}
-        width="1400"
-        height="800"
-        loading="lazy"
-        alt={`JBrowse with the VHL codon on the genome on the left, under interface and ClinVar tracks, and the same residue highlighted in the predicted VHL–${shownPartner?.gene ?? ''} complex on the right`}
-      />
-      <span>
-        Every variant opens like this: its codon on the genome beside its residue in the predicted complex. Here, a
-        pathogenic {vhl.gene} variant against {shownPartner?.gene}.
-      </span>
-    </a>
-  </section>
-
-  <section>
-    <h2>A tour in 80 seconds</h2>
-    <video class="tour" controls preload="none" poster={href('tour.jpg')} width="1280" height="720">
-      <source src={href('tour.mp4')} type="video/mp4" />
-    </video>
+    <figure class="tour">
+      <video controls preload="none" poster={href('tour.jpg')} width="1280" height="720">
+        <source src={href('tour.mp4')} type="video/mp4" />
+      </video>
+      <figcaption>
+        A tour in 80 seconds: find a gene, turn its predicted complex in 3D, follow a variant from the protein map to the
+        structure, and open it beside the genome in JBrowse.
+      </figcaption>
+    </figure>
   </section>
 
   <section>
@@ -110,14 +94,3 @@ const tiles = [
 <script>
   import '../scripts/home.ts'
 </script>
-
-<style>
-  .tour {
-    display: block;
-    width: 100%;
-    height: auto;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--surface);
-  }
-</style>
