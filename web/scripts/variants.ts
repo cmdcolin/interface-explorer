@@ -5,6 +5,9 @@ const sort = document.querySelector<HTMLSelectElement>('#variant-sort')
 const condition =
   document.querySelector<HTMLSelectElement>('#variant-condition')
 const leadsOnly = document.querySelector<HTMLInputElement>('#variant-leads')
+const partnerDiseaseOnly = document.querySelector<HTMLInputElement>(
+  '#variant-partner-disease',
+)
 
 function conditionsOf(element: HTMLElement | SVGElement) {
   const parsed: unknown = JSON.parse(element.dataset.conditions ?? '[]')
@@ -23,7 +26,9 @@ function render() {
   const visible = (element: HTMLElement | SVGElement) =>
     labels.has(element.dataset.label ?? '') &&
     (!wanted || conditionsOf(element).includes(wanted)) &&
-    (!leadsOnly?.checked || element.dataset.lead !== undefined)
+    (!leadsOnly?.checked || element.dataset.lead !== undefined) &&
+    (!partnerDiseaseOnly?.checked ||
+      element.dataset.partnerDisease !== undefined)
   for (const row of rows) {
     row.hidden = !visible(row)
   }

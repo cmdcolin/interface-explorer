@@ -1,0 +1,125 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import { disease as readDisease, diseaseRows, geneRows } from '../../lib/data.ts'
+import { LABEL_KEYS, amCell, chip, clinvarHref, conditionCell, esc, partnerDiseaseNotes } from '../../lib/html.ts'
+import { geneHref, href } from '../../lib/site.ts'
+import { sortableTable } from '../../lib/table.ts'
+
+export function getStaticPaths() {
+  return diseaseRows().map(row => ({ params: { page: row.page } }))
+}
+
+const disease = readDisease(Astro.params.page ?? '')
+const pages = new Map(geneRows().map(row => [row.accession, row.page]))
+const partnerCell = (partner: string, accession: string) => {
+  const page = pages.get(accession)
+  return page ? `<a href="${geneHref(page)}">${esc(partner)}</a>` : esc(partner)
+}
+const counts = Object.fromEntries(
+  LABEL_KEYS.map(label => [label, disease.variants.filter(v => v.label === label).length]),
+)
+const genes = sortableTable({
+  id: 'disease-genes',
+  rows: disease.genes,
+  sortBy: 2,
+  noun: 'genes',
+  placeholder: 'Filter genes',
+  search: g => [g.gene],
+  columns: [
+    { label: 'Gene', cell: g => `<a href="${geneHref(g.page)}">${esc(g.gene)}</a>`, sort: g => g.gene },
+    { label: 'Interfaces', num: true, cell: g => g.partners, sort: g => g.partners },
+    { label: 'Pathogenic', num: true, cell: g => g.pathogenic, sort: g => g.pathogenic },
+    { label: 'Uncertain', num: true, cell: g => g.uncertain, sort: g => g.uncertain },
+    { label: 'Benign', num: true, cell: g => g.benign, sort: g => g.benign },
+  ],
+})
+const variants = sortableTable({
+  id: 'disease-variants',
+  rows: disease.variants,
+  sortBy: 3,
+  noun: 'variants',
+  placeholder: 'Filter genes, changes, conditions or partners',
+  search: v => [v.gene, v.change, ...v.conditions, ...v.partners],
+  columns: [
+    { label: 'Gene', cell: v => `<a href="${geneHref(v.page)}">${esc(v.gene)}</a>`, sort: v => v.gene },
+    {
+      label: 'Change',
+      cell: v => `<a href="${geneHref(v.page)}?residue=${v.position}">${esc(v.change)}</a>`,
+      sort: v => `${v.gene} ${String(v.position).padStart(6, '0')}`,
+    },
+    {
+      label: 'ClinVar',
+      cell: v => `<span class="nowrap">${chip(v.label)} <a href="${clinvarHref(v.variation)}" title="${esc(v.review)}">VCV${String(v.variation).padStart(9, '0')}</a></span>`,
+      sort: v => LABEL_KEYS.length - LABEL_KEYS.indexOf(v.label),
+    },
+    { label: 'AlphaMissense', num: true, cell: v => amCell(v.alphaMissense), sort: v => v.alphaMissense ?? -1 },
+    { label: 'Condition', cell: v => conditionCell(v.conditions), sort: v => v.conditions[0] ?? '' },
+    {
+      label: 'Interfaces',
+      cell: v => `<span class="muted">${esc(v.partners.map(p => (p === v.gene ? 'itself' : p)).join(', '))}</span>`,
+      sort: v => v.partners.length,
+    },
+    {
+      label: "Partner's disease",
+      cell: v => partnerDiseaseNotes(v.partnerDiseases) || '<span class="muted">—</span>',
+      sort: v => v.partnerDiseases.length,
+    },
+  ],
+})
+const description = `${disease.name}: ${disease.genes.length} genes with ClinVar missense variants at a predicted protein interface.`
+---
+
+<Layout title={disease.name} description={description} nav="diseases">
+  <p><a href={href('diseases/')}>← All diseases</a></p>
+  <h1>{disease.name}</h1>
+  <p class="lede">
+    <a href={`https://monarchinitiative.org/${disease.id}`}>{disease.id}</a>{
+      disease.seriesSize !== undefined ? `, an OMIM phenotypic series of ${disease.seriesSize} diseases that share a phenotype and are caused by different genes` : ''
+    }. {disease.genes.length} gene{disease.genes.length === 1 ? ' has' : 's have'} ClinVar missense variants listing it at a
+    confident predicted interface: {counts.pathogenic} pathogenic, {counts.uncertain} uncertain and {counts.benign} benign.
+  </p>
+  {
+    disease.pairs.length > 0 && (
+      <>
+        <h2>Pairs that both cause it</h2>
+        <p class="muted">
+          Predicted complexes whose two proteins both have this disease{disease.seriesSize !== undefined ? ', or one in this series,' : ''} among
+          their UniProt diseases, with the ClinVar variants listing it on either side of the interface. A variant there may
+          cause the disease by breaking that interaction.
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Gene</th><th>Partner</th><th class="num">ipSAE</th>
+                {LABEL_KEYS.map(label => <th class="num" set:html={chip(label)} />)}
+                <th>Open</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                disease.pairs.toSorted((a, b) => b.pathogenic - a.pathogenic || b.uncertain - a.uncertain).map(p => (
+                  <tr>
+                    <td><a href={geneHref(p.page)}>{p.gene}</a></td>
+                    <td set:html={partnerCell(p.partner, p.accession)} />
+                    <td class="num">{p.ipsae?.toFixed(2)}</td>
+                    {LABEL_KEYS.map(label => <td class="num">{p[label]}</td>)}
+                    <td><a href={`${geneHref(p.page)}?partner=${encodeURIComponent(p.partner)}`}>In 3D</a></td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+      </>
+    )
+  }
+  <h2>Genes</h2>
+  <Fragment set:html={genes} />
+  <h2>Variants at an interface</h2>
+  <Fragment set:html={variants} />
+</Layout>
+
+<script>
+  import '../../scripts/table.ts'
+</script>

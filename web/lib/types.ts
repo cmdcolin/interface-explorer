@@ -1,10 +1,25 @@
-import type { GenePage, leads } from '../../src/pages.ts'
+import type { DiseasePage, GenePage, leads } from '../../src/pages.ts'
 
 export type Label = 'pathogenic' | 'uncertain' | 'benign'
 
 export type Gene = GenePage
 export type GeneVariant = Gene['variants'][number]
 export type Feature = Gene['features'][number]
+export type Disease = DiseasePage
+
+export interface DiseaseRow {
+  id: string
+  page: string
+  name: string
+  seriesSize?: number
+  genes: number
+  causal: string[]
+  pairs: number
+  pathogenic: number
+  uncertain: number
+  benign: number
+}
+
 export type Lead = ReturnType<typeof leads>[number] & { page: string }
 
 export interface GeneRow {

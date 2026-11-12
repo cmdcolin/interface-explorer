@@ -82,6 +82,32 @@ export async function diseaseFeatures() {
   return new Map(entries.map(entry => [accessionOf(entry), featuresOf(entry)]))
 }
 
+export function diseasesOf(entry: UniProtEntry) {
+  return records(entry.comments).flatMap(comment => {
+    const disease = record(comment.disease)
+    const name = text(disease.diseaseId)
+    const reference = record(disease.diseaseCrossReference)
+    const mim = text(reference.id)
+    const note = text(record(records(record(comment.note).texts)[0]).value)
+    return comment.commentType === 'DISEASE' &&
+      note?.startsWith('The disease is caused by') &&
+      name !== undefined &&
+      reference.database === 'MIM' &&
+      mim !== undefined
+      ? [{ name, omim: `OMIM:${mim}` }]
+      : []
+  })
+}
+
+export async function humanDiseases() {
+  const entries = await uniprotEntries(
+    DISEASE_QUERY,
+    join(DATA, 'uniprot_human_diseases.json'),
+    'accession,cc_disease',
+  )
+  return new Map(entries.map(entry => [accessionOf(entry), diseasesOf(entry)]))
+}
+
 const CONTEXT_FIELDS = 'accession,protein_families,cc_subcellular_location'
 
 export function contextOf(entry: UniProtEntry): ProteinContext {

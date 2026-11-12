@@ -65,6 +65,24 @@ export function conditionCell(conditions: string[]) {
     : '<span class="muted">—</span>'
 }
 
+export function partnerDiseaseNotes(
+  diseases: { partner: string; disease: string; series?: { name: string; size: number } }[],
+) {
+  return diseases
+    .map(d =>
+      d.series
+        ? `<div class="cell-note disease-note" title="${esc(`${d.partner} causes ${d.disease}, which is in the same OMIM phenotypic series as this variant's condition: ${d.series.name}, a series of ${d.series.size} diseases. A large series is weak evidence.`)}">${esc(d.partner)}: ${esc(d.disease)} <span class="muted">(series: ${esc(d.series.name)}, ${d.series.size} diseases)</span></div>`
+        : `<div class="cell-note disease-note match" title="${esc(`${d.partner} causes ${d.disease} too, according to UniProt`)}">${esc(d.partner)} causes it too: ${esc(d.disease)}</div>`,
+    )
+    .join('')
+}
+
+export function reachNote(partners: string[], gene: string) {
+  return partners.length === 1
+    ? '<div class="cell-note" title="This residue is at no other predicted interface">its only interface</div>'
+    : `<div class="cell-note muted" title="${esc(`This residue is at the interfaces of ${partners.map(p => (p === gene ? 'itself' : p)).join(', ')}`)}">shared by ${partners.length} interfaces</div>`
+}
+
 export function clinvarHref(variation: number) {
   return `https://www.ncbi.nlm.nih.gov/clinvar/variation/${variation}/`
 }

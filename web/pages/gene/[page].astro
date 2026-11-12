@@ -7,7 +7,7 @@ import {
   variantSpec,
 } from '../../../src/links.ts'
 import Layout from '../../layouts/Layout.astro'
-import { gene as readGene, geneRows, isoformIndex, summary } from '../../lib/data.ts'
+import { diseaseRows, gene as readGene, geneRows, isoformIndex, summary } from '../../lib/data.ts'
 import {
   LABEL_KEYS,
   alphaMissenseNote,
@@ -18,12 +18,14 @@ import {
   conservedCell,
   esc,
   leadNote,
+  partnerDiseaseNotes,
   percent,
+  reachNote,
   phylopCell,
 } from '../../lib/html.ts'
 import { pathogenicAtSameResidue, proteinMap, variantData, partnerLabel } from '../../lib/maps.ts'
 import { initialPartner, partnerPicks, stories, structureData } from '../../lib/structure.ts'
-import { JBROWSE, geneHref, href, isoformHref } from '../../lib/site.ts'
+import { JBROWSE, diseaseHref, geneHref, href, isoformHref } from '../../lib/site.ts'
 
 export function getStaticPaths() {
   return geneRows().map(row => ({ params: { page: row.page } }))
@@ -52,6 +54,8 @@ const initial = initialPartner(gene)
 const picks = partnerPicks(gene)
 const structureJson = JSON.stringify(structureData(gene)).replaceAll('<', '\\u003c')
 const SHOWN_PARTNERS = 3
+const diseasePages = diseaseRows().filter(d => d.causal.includes(gene.page))
+const partnerDiseaseCount = gene.variants.filter(v => v.partnerDiseases.length).length
 const rows = gene.variants
   .map(v => {
     const same = sameResidue.get(v) ?? []
@@ -64,7 +68,8 @@ const rows = gene.variants
       <td>${conditionCell(v.conditions)}</td>
       <td class="num">${amCell(v.alphaMissense)}</td>
       <td class="num">${phylopCell(v.phylop, edges)}</td>
-      <td class="nowrap">${partnerLinks(partners.slice(0, SHOWN_PARTNERS))}${partners.length > SHOWN_PARTNERS ? `<details class="more"><summary>+${partners.length - SHOWN_PARTNERS} more</summary>${partnerLinks(partners.slice(SHOWN_PARTNERS))}</details>` : ''}</td>
+      <td class="nowrap">${partnerLinks(partners.slice(0, SHOWN_PARTNERS))}${partners.length > SHOWN_PARTNERS ? `<details class="more"><summary>+${partners.length - SHOWN_PARTNERS} more</summary>${partnerLinks(partners.slice(SHOWN_PARTNERS))}</details>` : ''}${reachNote(v.partners, gene.gene)}</td>
+      <td>${partnerDiseaseNotes(v.partnerDiseases) || '<span class="muted">—</span>'}</td>
       <td class="nowrap"><a href="${genomeUrl(v.chrom, v.pos - 30, v.pos + 30, JBROWSE)}">chr${esc(v.chrom)}:${v.pos.toLocaleString()}</a></td>
     </tr>`
   })
@@ -88,6 +93,19 @@ const rows = gene.variants
     <a class="button" href={`https://alphafold.ebi.ac.uk/entry/${gene.accession}`}>AlphaFold DB entry</a>
     {isoformRow && <a class="button" href={isoformHref(isoformRow.page)}>Isoforms ({isoformRow.modelled})</a>}
   </div>
+  {
+    diseasePages.length > 0 && (
+      <p class="muted">
+        Diseases:{' '}
+        {diseasePages.map((d, i) => (
+          <>
+            {i > 0 && ' · '}
+            <a href={diseaseHref(d.page)}>{d.name}</a>
+          </>
+        ))}
+      </p>
+    )
+  }
   {
     partnerStories.length > 0 && (
       <section class="structure-section">
@@ -237,6 +255,13 @@ const rows = gene.variants
         </label>
       )
     }
+    {
+      partnerDiseaseCount > 0 && (
+        <label title="Variants at the interface of a partner whose own disease matches the variant's condition">
+          <input type="checkbox" id="variant-partner-disease" /> Only where a partner causes the same disease or one in its series ({partnerDiseaseCount})
+        </label>
+      )
+    }
     <label>
       Sort by
       <select id="variant-sort">
@@ -262,7 +287,7 @@ const rows = gene.variants
   <div class="table-wrap">
     <table id="variants">
       <thead>
-        <tr><th>Change</th><th>ClinVar</th><th>Condition</th><th class="num">AlphaMissense</th><th class="num" title="Conservation of the changed base across 100 vertebrates">phyloP</th><th title="Partners whose interface holds this residue; each opens the variant in 3D with that partner">3D</th><th>Genome</th></tr>
+        <tr><th>Change</th><th>ClinVar</th><th>Condition</th><th class="num">AlphaMissense</th><th class="num" title="Conservation of the changed base across 100 vertebrates">phyloP</th><th title="Partners whose interface holds this residue; each opens the variant in 3D with that partner">3D</th><th title="Partners at this residue whose own UniProt diseases match this variant's ClinVar condition, as the same disease or in the same OMIM phenotypic series">Partner's disease</th><th>Genome</th></tr>
       </thead>
       <tbody set:html={rows} />
     </table>

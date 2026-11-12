@@ -17,6 +17,7 @@ export interface Variant {
   pos: number
   allele: string
   conditions: string[]
+  diseases: string[]
 }
 
 export const VARIANTS = join(OUT, 'clinvar.ndjson')
@@ -49,6 +50,7 @@ export function parseVariant(value: Record<string, unknown>) {
           pos,
           allele: text(value.allele) ?? '',
           conditions: list(value.conditions).flatMap(c => text(c) ?? []),
+          diseases: list(value.diseases).flatMap(c => text(c) ?? []),
         } satisfies Variant,
       ]
     : []

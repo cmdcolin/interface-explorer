@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   AMINO_ACIDS,
   conditions,
+  diseaseIds,
   MISSENSE,
   onSequence,
   toCanonical,
@@ -81,5 +82,20 @@ describe('toCanonical', () => {
     expect(
       toCanonical({ position: 10, change: 'G10L' }, isoform),
     ).toBeUndefined()
+  })
+})
+
+describe('diseaseIds', () => {
+  it('keeps MONDO and OMIM identifiers, including phenotypic series', () => {
+    expect(
+      diseaseIds(
+        'MONDO:MONDO:0021001,MedGen:C3469186,OMIM:235200,Orphanet:465508|MedGen:C3661900|MONDO:MONDO:0006507,MedGen:C0392514,OMIM:PS235200;MedGen:CN169374',
+      ),
+    ).toEqual([
+      'MONDO:0021001',
+      'OMIM:235200',
+      'MONDO:0006507',
+      'OMIM:PS235200',
+    ])
   })
 })

@@ -4,6 +4,8 @@ import { join } from 'node:path'
 import type { mdResult } from '../../src/md.ts'
 
 import type {
+  Disease,
+  DiseaseRow,
   Gene,
   GeneRow,
   Gpcr,
@@ -40,5 +42,7 @@ export const md = once<Md>('md.json')
 export const isoformIndex = once<IsoformIndex>('isoforms.json')
 export const isoformTotals = once<IsoformTotals>('isoformTotals.json')
 export const gene = (page: string) => read<Gene>(`genes/${page}.json`)
+export const diseaseRows = once<DiseaseRow[]>('diseases.json')
+export const disease = (page: string) => read<Disease>(`diseases/${page}.json`)
 export const isoform = (page: string) =>
   read<IsoformRecord>(`isoforms/${page}.json`)

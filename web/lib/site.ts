@@ -14,6 +14,10 @@ export function geneHref(page: string) {
   return href(`gene/${encodeURIComponent(page)}/`)
 }
 
+export function diseaseHref(page: string) {
+  return href(`disease/${encodeURIComponent(page)}/`)
+}
+
 export function isoformHref(page: string) {
   return href(`isoforms/${encodeURIComponent(page)}/`)
 }

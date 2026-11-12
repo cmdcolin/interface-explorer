@@ -7,7 +7,8 @@
   `data/`; keep workers at 3–4, since AlphaFold DB rate-limits. Proteins that
   fail are listed in `out/atlas_failures.json`.
 - `pnpm clinvar`: downloads ClinVar's `variant_summary.txt.gz` and writes
-  `out/clinvar.ndjson` for every reviewed human protein.
+  `out/clinvar.ndjson` for every reviewed human protein, with each variant's
+  condition names and their MONDO and OMIM identifiers.
 - `pnpm alphamissense`: downloads AlphaMissense's 1.2 GB
   `AlphaMissense_aa_substitutions.tsv.gz` and writes `out/alphamissense.json`,
   a score for each variant in `out/clinvar.ndjson`.
@@ -31,10 +32,13 @@
   ClinVar, in `out/md.json` and `site/data/md.json`.
 - `pnpm tracks`: `site/jbrowse/config.json`, `interfaces.bb` and
   `interface_variants.bb`.
-- `pnpm pages`: `site/data/summary.json`, `genes.json`, `leads.json` and
-  `genes/<GENE>.json`, with each disease protein's UniProt domains and regions
-  (one UniProt download, cached in `data/uniprot_disease_features.json`) and
-  which chain of each AlphaFold DB complex is the gene's.
+- `pnpm pages`: `site/data/summary.json`, `genes.json`, `leads.json`,
+  `genes/<GENE>.json`, `diseases.json` and `diseases/<MONDO_ID>.json`, with
+  each disease protein's UniProt domains and regions (cached in
+  `data/uniprot_disease_features.json`), each protein's UniProt diseases
+  (cached in `data/uniprot_human_diseases.json`), the MONDO ontology (cached in
+  `data/mondo.obo.gz`) and which chain of each AlphaFold DB complex is the
+  gene's.
 - `pnpm findings`: regenerates `docs/findings.md` from `site/data/summary.json`,
   `out/gnomad.json` and the interface tracks, so its numbers never go stale.
 - `pnpm isoforms [workers]`: `site/data/isoforms.json` and

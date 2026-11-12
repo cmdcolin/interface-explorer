@@ -13,6 +13,8 @@ import {
 } from './atlasData.ts'
 import type { AtlasProtein } from './atlasData.ts'
 import { downloaded } from './clinvar.ts'
+import { readOntology } from './diseases.ts'
+import type { Disease, DiseaseOntology, SharedDisease } from './diseases.ts'
 import {
   CONSERVATION,
   cachedCodonScores,
@@ -35,7 +37,7 @@ import type { CodingPositions } from './coordinates.ts'
 import { readJson, record, writeJson } from './json.ts'
 import { pythonRound } from './numeric.ts'
 import { OUT, SITE_DATA } from './paths.ts'
-import { diseaseFeatures, humanContexts } from './uniprot.ts'
+import { diseaseFeatures, humanContexts, humanDiseases } from './uniprot.ts'
 import { pairCaution } from './pairs.ts'
 import type { ProteinContext } from './pairs.ts'
 import type { Feature } from './uniprot.ts'
@@ -107,6 +109,7 @@ export function geneRecord(
   features: Feature[] = [],
   patchRanks = new Map<string, PatchRank>(),
   contexts = new Map<string, ProteinContext>(),
+  sharedDiseases = (_variant: Variant, _partner: string): SharedDisease[] => [],
 ) {
   const atResidue = new Map<number, string[]>()
   const partners = protein.interfaces
@@ -153,12 +156,24 @@ export function geneRecord(
             phylop: rounded(variant.phylop),
             position: variant.position,
             partners: [...new Set(names)].sort(),
+            partnerDiseases: partners.flatMap(partner =>
+              variant.label !== 'benign' &&
+              names.includes(partner.gene) &&
+              partner.accession &&
+              !partner.homodimer
+                ? sharedDiseases(variant, partner.accession).map(shared => ({
+                    partner: partner.gene,
+                    ...shared,
+                  }))
+                : [],
+            ),
             variation: variant.variation,
             review: variant.review,
             chrom: variant.chrom,
             pos: variant.pos,
             allele: variant.allele,
             conditions: variant.conditions,
+            diseases: variant.diseases,
           },
         ]
       : []
@@ -205,7 +220,11 @@ export function leads(gene: ReturnType<typeof geneRecord>) {
       const touched = gene.partners.filter(p =>
         variant.partners.includes(p.gene),
       )
-      const partner = touched.find(p => !p.apart) ?? touched[0]
+      const linked = new Set(variant.partnerDiseases.map(d => d.partner))
+      const partner =
+        touched.find(p => !p.apart && linked.has(p.gene)) ??
+        touched.find(p => !p.apart) ??
+        touched[0]
       return sameResidue.length && partner
         ? [
             {
@@ -234,6 +253,115 @@ export function leads(gene: ReturnType<typeof geneRecord>) {
 
 type Partner = ReturnType<typeof geneRecord>['partners'][number]
 
+export function diseaseRecords(
+  genes: GenePage[],
+  ontology: Pick<DiseaseOntology, 'concepts' | 'name' | 'size' | 'isSeries'>,
+  uniprotDiseases: Map<string, Disease[]>,
+) {
+  const hits = new Map<
+    string,
+    { gene: GenePage; variant: GenePage['variants'][number] }[]
+  >()
+  for (const gene of genes) {
+    for (const variant of gene.variants) {
+      for (const id of ontology.concepts(variant.diseases)) {
+        hits.set(id, [...(hits.get(id) ?? []), { gene, variant }])
+      }
+    }
+  }
+  const diseaseConcepts = new Map(
+    [...uniprotDiseases].map(([accession, diseases]) => [
+      accession,
+      new Set(ontology.concepts(diseases.map(d => d.omim))),
+    ]),
+  )
+  return [...hits]
+    .filter(([, found]) => found.some(h => h.variant.label === 'pathogenic'))
+    .map(([id, found]) => {
+      const byGene = [...Map.groupBy(found, h => h.gene)]
+      return {
+        id,
+        page: id.replace(':', '_'),
+        name: ontology.name(id),
+        seriesSize: ontology.isSeries(id) ? ontology.size(id) : undefined,
+        genes: byGene
+          .map(([gene, own]) => ({
+            gene: gene.gene,
+            page: gene.page,
+            accession: gene.accession,
+            partners: new Set(own.flatMap(h => h.variant.partners)).size,
+            ...labelCounts(own.map(h => h.variant)),
+          }))
+          .sort(
+            (a, b) => b.pathogenic - a.pathogenic || compare(a.gene, b.gene),
+          ),
+        pairs: [
+          ...Map.groupBy(
+            byGene.flatMap(([gene, own]) =>
+              gene.partners.flatMap(partner =>
+                !partner.homodimer &&
+                partner.accession &&
+                diseaseConcepts.get(gene.accession)?.has(id) &&
+                diseaseConcepts.get(partner.accession)?.has(id)
+                  ? [
+                      {
+                        gene: gene.gene,
+                        page: gene.page,
+                        key: [gene.accession, partner.accession]
+                          .sort()
+                          .join(' '),
+                        partner: partner.gene,
+                        accession: partner.accession,
+                        ipsae: partner.ipsae,
+                        variants: own
+                          .map(h => h.variant)
+                          .filter(v => v.partners.includes(partner.gene)),
+                      },
+                    ]
+                  : [],
+              ),
+            ),
+            pair => pair.key,
+          ).values(),
+        ].flatMap(([first, ...rest]) =>
+          first
+            ? [
+                {
+                  gene: first.gene,
+                  page: first.page,
+                  partner: first.partner,
+                  accession: first.accession,
+                  ipsae: first.ipsae,
+                  ...labelCounts(
+                    [first, ...rest].flatMap(side => side.variants),
+                  ),
+                },
+              ]
+            : [],
+        ),
+        variants: found.map(({ gene, variant }) => ({
+          gene: gene.gene,
+          page: gene.page,
+          change: variant.change,
+          position: variant.position,
+          label: variant.label,
+          variation: variant.variation,
+          review: variant.review,
+          conditions: variant.conditions,
+          alphaMissense: variant.alphaMissense,
+          partners: variant.partners,
+          partnerDiseases: variant.partnerDiseases,
+        })),
+      }
+    })
+}
+
+export type DiseasePage = ReturnType<typeof diseaseRecords>[number]
+
+function compare(a: string, b: string) {
+  return a < b ? -1 : a > b ? 1 : 0
+}
+
 export function distinctPairs(
   genes: { accession: string; partners: Partner[] }[],
   keep: (partner: Partner) => boolean,
@@ -256,6 +384,8 @@ async function main() {
   const scores = readScores()
   const features = await diseaseFeatures()
   const contexts = await humanContexts()
+  const ontology = await readOntology()
+  const diseases = await humanDiseases()
   const comparisons = readComparisons()
   const experiments = Map.groupBy(comparisons, pair => pair.accession)
   const analysis = record(readJson(join(OUT, 'analysis.json')))
@@ -310,6 +440,8 @@ async function main() {
               }),
             ),
             contexts,
+            (variant, partner) =>
+              ontology.shared(variant.diseases, diseases.get(partner) ?? []),
           ),
         ]
       : []
@@ -339,6 +471,25 @@ async function main() {
       ...g.counts,
     }))
     .sort((a, b) => (a.gene < b.gene ? -1 : a.gene > b.gene ? 1 : 0))
+  const diseasePages = diseaseRecords(pages, ontology, diseases)
+  for (const disease of diseasePages) {
+    writeJson(join(SITE_DATA, 'diseases', `${disease.page}.json`), disease)
+  }
+  writeJson(
+    join(SITE_DATA, 'diseases.json'),
+    diseasePages
+      .map(d => ({
+        id: d.id,
+        page: d.page,
+        name: d.name,
+        seriesSize: d.seriesSize,
+        genes: d.genes.length,
+        causal: d.genes.flatMap(g => (g.pathogenic ? [g.page] : [])),
+        pairs: d.pairs.length,
+        ...labelCounts(d.variants),
+      }))
+      .sort((a, b) => compare(a.name.toLowerCase(), b.name.toLowerCase())),
+  )
   const shortlist = pages.flatMap(page =>
     leads(page).map(lead => ({ ...lead, page: page.page })),
   )

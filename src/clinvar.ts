@@ -99,6 +99,22 @@ export function conditions(phenotypes: string) {
   ]
 }
 
+export function diseaseIds(phenotypeIds: string) {
+  return [
+    ...new Set(
+      phenotypeIds
+        .split(/[|;,]/)
+        .flatMap(id =>
+          id.startsWith('MONDO:MONDO:')
+            ? [id.slice('MONDO:'.length)]
+            : id.startsWith('OMIM:')
+              ? [id]
+              : [],
+        ),
+    ),
+  ].map(interned)
+}
+
 export function downloaded() {
   const modified = statSync(SUMMARY).mtime
   const pad = (n: number) => `${n}`.padStart(2, '0')
@@ -130,6 +146,7 @@ function missenseVariant(field: (name: string) => string) {
           pos: Number(field('PositionVCF')),
           allele: `${field('ReferenceAlleleVCF')}>${field('AlternateAlleleVCF')}`,
           conditions: conditions(field('PhenotypeList')),
+          diseases: diseaseIds(field('PhenotypeIDS')),
         } satisfies Variant,
       }
     : undefined

@@ -1,0 +1,58 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { diseaseRows } from '../lib/data.ts'
+import { esc } from '../lib/html.ts'
+import { diseaseHref } from '../lib/site.ts'
+import { sortableTable } from '../lib/table.ts'
+
+const diseases = diseaseRows()
+const withPairs = diseases.filter(d => d.pairs > 0).length
+const table = sortableTable({
+  id: 'diseases',
+  rows: diseases,
+  sortBy: 3,
+  noun: 'diseases',
+  placeholder: 'Filter diseases',
+  search: d => [d.name, d.id],
+  columns: [
+    {
+      label: 'Disease',
+      cell: d =>
+        `<a href="${diseaseHref(d.page)}">${esc(d.name)}</a>${d.seriesSize !== undefined ? `<div class="cell-note" title="An OMIM phenotypic series: diseases that share a phenotype and are caused by different genes">OMIM series of ${d.seriesSize}</div>` : ''}`,
+      sort: d => d.name.toLowerCase(),
+    },
+    { label: 'Genes', num: true, cell: d => d.genes, sort: d => d.genes },
+    {
+      label: 'Binding pairs that both cause it',
+      num: true,
+      cell: d => (d.pairs ? d.pairs : '<span class="muted">—</span>'),
+      sort: d => d.pairs,
+    },
+    { label: 'Pathogenic', num: true, cell: d => d.pathogenic, sort: d => d.pathogenic },
+    { label: 'Uncertain', num: true, cell: d => d.uncertain, sort: d => d.uncertain },
+    { label: 'Benign', num: true, cell: d => d.benign, sort: d => d.benign },
+  ],
+})
+---
+
+<Layout title="Diseases" nav="diseases">
+  <h1>Diseases</h1>
+  <p class="lede">
+    The {diseases.length.toLocaleString()} diseases listed as a condition of a ClinVar missense variant classified
+    pathogenic at a confident predicted interface, and the genes and variants behind each. Diseases that OMIM groups into a
+    phenotypic series, a shared phenotype caused by different genes, also get a page for the whole series. ClinVar lists
+    conditions per variant, not per classification, so a listed condition is not always the one the variant was classified
+    pathogenic for.
+  </p>
+  <p class="note">
+    For {withPairs.toLocaleString()} of them, two genes that UniProt says cause the disease, or diseases in the same
+    series, are predicted to bind each other. The disease may then arise by breaking that interaction from either side.
+    A large series is weak evidence: its diseases share a phenotype, not necessarily a mechanism.
+    Diseases are matched through <a href="https://mondo.monarchinitiative.org/">MONDO</a>.
+  </p>
+  <Fragment set:html={table} />
+</Layout>
+
+<script>
+  import '../scripts/table.ts'
+</script>

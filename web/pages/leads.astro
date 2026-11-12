@@ -2,7 +2,7 @@
 import { complexSpec, genomeUrl, sessionUrl } from '../../src/links.ts'
 import Layout from '../layouts/Layout.astro'
 import { leadRows, summary } from '../lib/data.ts'
-import { alphaMissenseNote, amCell, clinvarHref, conditionCell, esc, phylopCell } from '../lib/html.ts'
+import { alphaMissenseNote, amCell, clinvarHref, conditionCell, esc, partnerDiseaseNotes, phylopCell } from '../lib/html.ts'
 import { JBROWSE, geneHref, href } from '../lib/site.ts'
 import { sortableTable } from '../lib/table.ts'
 
@@ -52,7 +52,7 @@ const table = sortableTable({
     {
       label: 'Touches',
       cell: lead =>
-        `<span class="muted">${esc(lead.partners.slice(0, 2).map(name => (name === lead.gene ? 'itself' : name)).join(', '))}${lead.partners.length > 2 ? ` +${lead.partners.length - 2}` : ''}</span>${lead.apart ? '<div class="cell-note caution" title="UniProt places one protein of every pair this residue touches only inside mitochondria and the other never in mitochondria">different compartments</div>' : ''}`,
+        `<span class="muted">${esc(lead.partners.slice(0, 2).map(name => (name === lead.gene ? 'itself' : name)).join(', '))}${lead.partners.length > 2 ? ` +${lead.partners.length - 2}` : ''}</span>${lead.apart ? '<div class="cell-note caution" title="UniProt places one protein of every pair this residue touches only inside mitochondria and the other never in mitochondria">different compartments</div>' : ''}${partnerDiseaseNotes(lead.partnerDiseases)}`,
       sort: lead => lead.partners.join(', '),
     },
     {

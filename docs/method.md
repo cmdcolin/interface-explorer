@@ -22,6 +22,23 @@
   variant is mapped through that isoform to the canonical residue. Transcripts
   UniProt assigns to no isoform are used only when 95% of their variants match
   the canonical sequence, and every variant's wild-type residue must match.
+- **Diseases:** each ClinVar variant keeps the MONDO and OMIM identifiers of
+  its conditions, and OMIM identifiers are resolved to MONDO terms through
+  MONDO's cross-references. ClinVar lists conditions per variant, not per
+  classification, so a condition on a pathogenic variant is not always the one
+  it was classified pathogenic for. A protein's diseases are its UniProt
+  disease annotations noted "The disease is caused by variants affecting…", by
+  their OMIM number; annotations of susceptibility, possible cause or
+  involvement, and those without an OMIM number, are left out. A variant's
+  condition and a partner's disease match when they are the same MONDO term,
+  or when both are direct members of the same OMIM phenotypic series (a MONDO
+  term with an OMIMPS cross-reference, the series' members being its `is_a`
+  children), the smallest such series named with its number of member diseases
+  (children with an OMIM entry). Benign variants and the protein's own
+  homodimer are never matched. A disease page is a MONDO term, or a phenotypic
+  series holding it, listed on a pathogenic variant at a confident interface;
+  its pairs are the predicted complexes of its genes where both proteins have a
+  UniProt disease within it, both directions counted as one.
 - **Conservation:** phyloP of every coding base from UCSC's 100-way
   vertebrate alignment (multiz100way) bigWig, cached per protein in
   `data/phylop100way/`. A variant takes its base's score; a residue takes the

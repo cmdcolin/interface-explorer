@@ -438,6 +438,16 @@ details.more summary {
   white-space: nowrap;
 }
 
+.cell-note.disease-note {
+  white-space: normal;
+  min-width: 12em;
+}
+
+.cell-note.match {
+  color: var(--text);
+  font-weight: 600;
+}
+
 .cell-note.caution {
   color: var(--uncertain);
   font-weight: 600;

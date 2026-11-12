@@ -12,7 +12,9 @@ assistance.
 - [UCSC Genome Browser](https://genome.ucsc.edu/) phyloP scores from the
   100-way vertebrate alignment (multiz100way).
 - [UniProt](https://www.uniprot.org/) (CC-BY 4.0): the disease proteins, their
-  isoforms, domains and regions, and RefSeq cross-references.
+  isoforms, domains, regions and diseases, and RefSeq cross-references.
+- [MONDO](https://mondo.monarchinitiative.org/) (CC-BY 4.0): disease terms and
+  OMIM phenotypic series, to match conditions across genes.
 - [Mol\*](https://molstar.org/) (MIT): the 3D view.
 - [EBI Proteins API](https://www.ebi.ac.uk/proteins/api/doc/) protein → genome
   coordinates.

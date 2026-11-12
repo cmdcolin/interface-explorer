@@ -8,7 +8,7 @@ import { JBROWSE, href } from '../lib/site.ts'
 interface Props {
   title?: string
   description?: string
-  nav?: 'genes' | 'leads' | 'isoforms' | 'blog' | 'architecture' | 'comparison' | 'about'
+  nav?: 'genes' | 'diseases' | 'leads' | 'isoforms' | 'blog' | 'architecture' | 'comparison' | 'about'
   indexed?: boolean
   image?: ImageMetadata
 }
@@ -24,6 +24,7 @@ const preview = image
 const previewUrl = new URL(preview, Astro.site)
 const explore = [
   ['genes', 'Genes'],
+  ['diseases', 'Diseases'],
   ['leads', 'Leads'],
   ['isoforms', 'Isoforms'],
 ] as const

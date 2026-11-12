@@ -1,7 +1,9 @@
 import { expect, test } from 'vitest'
 
+import { diseaseOntology, parseObo } from './diseases.ts'
 import {
   alphaMissenseCalls,
+  diseaseRecords,
   distinctPairs,
   geneRecord,
   leads,
@@ -54,6 +56,7 @@ test('an interface variant carries its AlphaMissense score', () => {
         pos: 100,
         allele: 'C>T',
         conditions: [],
+        diseases: [],
       },
       {
         position: 11,
@@ -65,6 +68,7 @@ test('an interface variant carries its AlphaMissense score', () => {
         pos: 103,
         allele: 'T>C',
         conditions: [],
+        diseases: [],
       },
     ],
     { chrom: 'chr1', strand: '+', start: 1, end: 300 },
@@ -110,6 +114,7 @@ test('a partner carries its patch rank, and an interface variant its phyloP', ()
         pos: 100,
         allele: 'C>T',
         conditions: [],
+        diseases: [],
         phylop: 6.4371,
       },
     ],
@@ -154,6 +159,7 @@ test('a lead is an uncertain variant where the same or another substitution is p
     pos: position * 3,
     allele: 'C>T',
     conditions: label === 'pathogenic' ? ['Disease'] : [],
+    diseases: [],
   })
   const record = geneRecord(
     {
@@ -250,6 +256,7 @@ test('totals count every classified variant, counts only those at an interface',
     pos: position * 3,
     allele: 'C>T',
     conditions: [],
+    diseases: [],
   })
   const record = geneRecord(
     {
@@ -295,6 +302,7 @@ test('a lead on a pair that never shares a compartment is marked apart', () => {
     pos: 30,
     allele: 'C>T',
     conditions: [],
+    diseases: [],
   })
   const record = geneRecord(
     {
@@ -406,4 +414,110 @@ test('a homodimer is the protein paired with itself, never its own paralog', () 
   expect(
     record.partners.map(p => [p.gene, p.homodimer, p.paralogs, p.apart]),
   ).toEqual([['GENE', true, false, false]])
+})
+
+test('a variant whose condition its partner also causes is linked, and a disease page counts the pair once', () => {
+  const ontology = diseaseOntology(
+    parseObo(`[Term]
+id: MONDO:0000010
+name: complex deficiency
+xref: OMIMPS:100000
+
+[Term]
+id: MONDO:0000011
+name: complex deficiency 1
+xref: OMIM:100001
+is_a: MONDO:0000010
+
+[Term]
+id: MONDO:0000012
+name: complex deficiency 2
+xref: OMIM:100002
+is_a: MONDO:0000010
+`),
+  )
+  const uniprot = new Map([
+    ['P00001', [{ name: 'Complex deficiency 1', omim: 'OMIM:100001' }]],
+    ['P00002', [{ name: 'Complex deficiency 2', omim: 'OMIM:100002' }]],
+  ])
+  const gene = (
+    accession: string,
+    name: string,
+    partner: string,
+    partnerGene: string,
+    disease: string,
+  ) => ({
+    ...geneRecord(
+      {
+        accession,
+        gene: name,
+        length: 100,
+        context: {},
+        complexes: 1,
+        hetero: 1,
+        homo: 0,
+        interfaces: [
+          {
+            entity: `AF-${name}`,
+            partner,
+            partner_gene: partnerGene,
+            modelled_as: null,
+            iptm: 0.8,
+            ipsae: 0.8,
+            pdockq: 0.5,
+            residues: { 10: 90 },
+          },
+        ],
+      },
+      [
+        {
+          position: 10,
+          label: 'pathogenic',
+          change: 'A10D',
+          variation: Number(accession.slice(1)),
+          review: '',
+          chrom: '1',
+          pos: 30,
+          allele: 'C>T',
+          conditions: [name],
+          diseases: [disease],
+        },
+      ],
+      { chrom: 'chr1', strand: '+', start: 1, end: 300 },
+      new Map(),
+      new Map(),
+      new Map(),
+      [],
+      new Map(),
+      new Map(),
+      (variant, accession) =>
+        ontology.shared(variant.diseases, uniprot.get(accession) ?? []),
+    ),
+    page: name,
+  })
+  const a = gene('P00001', 'A', 'P00002', 'B', 'OMIM:100001')
+  const b = gene('P00002', 'B', 'P00001', 'A', 'MONDO:0000012')
+  expect(a.variants[0]?.partnerDiseases).toEqual([
+    {
+      partner: 'B',
+      disease: 'Complex deficiency 2',
+      series: { name: 'complex deficiency', size: 2 },
+    },
+  ])
+  const pages = diseaseRecords([a, b], ontology, uniprot)
+  const series = pages.find(d => d.id === 'MONDO:0000010')
+  expect(series?.genes.map(g => g.gene)).toEqual(['A', 'B'])
+  expect(series?.pairs).toEqual([
+    {
+      gene: 'A',
+      page: 'A',
+      partner: 'B',
+      accession: 'P00002',
+      ipsae: 0.8,
+      pathogenic: 2,
+      uncertain: 0,
+      benign: 0,
+    },
+  ])
+  expect(pages.find(d => d.id === 'MONDO:0000011')?.pairs).toEqual([])
 })

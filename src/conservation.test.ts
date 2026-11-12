@@ -33,6 +33,7 @@ function variant(position: number, pos: number, label: Variant['label']) {
     pos,
     allele: 'A>G',
     conditions: [],
+    diseases: [],
   } satisfies Variant
 }
 

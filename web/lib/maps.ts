@@ -73,7 +73,7 @@ export function pathogenicAtSameResidue(gene: Gene) {
 }
 
 export function variantData(v: GeneVariant, sameResidue: string[] = []) {
-  return `data-label="${v.label}" data-conditions="${esc(JSON.stringify(v.conditions))}"${sameResidue.length ? ' data-lead' : ''}`
+  return `data-label="${v.label}" data-conditions="${esc(JSON.stringify(v.conditions))}"${sameResidue.length ? ' data-lead' : ''}${v.partnerDiseases.length ? ' data-partner-disease' : ''}`
 }
 
 function overlap(a: Set<number>, b: Set<number>) {
