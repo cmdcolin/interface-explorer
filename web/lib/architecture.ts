@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process'
+import { spawnSync } from 'node:child_process'
 
 type Kind = 'source' | 'step' | 'file' | 'viewer' | 'live'
 
@@ -40,7 +40,7 @@ const color = (name: keyof typeof COLORS) => COLORS[name][0]
 const SANS = 'Helvetica'
 const MONO = 'Courier'
 
-const COLUMNS = [
+export const COLUMNS = [
   'Sources',
   'Fetch and compute',
   'Cache',
@@ -56,7 +56,7 @@ function escape(text: string) {
     .replaceAll('>', '&gt;')
 }
 
-function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
+export function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
   return [
     {
       id: 'uniprot',
@@ -248,7 +248,7 @@ function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
       id: 'jbrowse',
       kind: 'viewer',
       title: 'JBrowse 2',
-      lines: ['Protein3d, MsaView', 'plugins'],
+      lines: ['Protein3d, MsaView', 'plugins, opened at', 'a variant'],
     },
     {
       id: 'astro',
@@ -260,7 +260,7 @@ function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
       id: 'prism',
       kind: 'viewer',
       title: 'Prism 3D viewer',
-      lines: ['Mol* v6 build,', 'site/prism/'],
+      lines: ['Mol* v6 build,', 'embedded in', 'gene pages'],
     },
     {
       id: 'live',
@@ -271,7 +271,7 @@ function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
   ]
 }
 
-const edges: Edge[] = [
+export const edges: Edge[] = [
   { from: 'uniprot', to: 'atlas' },
   { from: 'afdb', to: 'atlas' },
   { from: 'ebi', to: 'coords' },
@@ -305,13 +305,13 @@ const edges: Edge[] = [
   { from: 'pages', to: 'data' },
   { from: 'jbFiles', to: 'jbrowse' },
   { from: 'data', to: 'astro' },
-  { from: 'astro', to: 'prism', label: 'embeds' },
-  { from: 'astro', to: 'jbrowse', label: 'opens at a variant' },
+  { from: 'astro', to: 'prism' },
+  { from: 'astro', to: 'jbrowse' },
   { from: 'live', to: 'prism', dashed: true },
   { from: 'live', to: 'jbrowse', dashed: true },
 ]
 
-const columns = [
+export const columns = [
   [
     'uniprot',
     'afdb',
@@ -391,7 +391,7 @@ function headings() {
   )
 }
 
-function dot(numbers: Numbers) {
+export function architectureDot(numbers: Numbers) {
   const all = nodes(numbers)
   const order = columns.map(
     (ids, i) => `${[`h${i}`, ...ids].join(' -> ')} [style=invis];`,
@@ -425,8 +425,44 @@ function theme(svg: string) {
   )
 }
 
-export function architectureSvg(numbers: Numbers) {
-  return theme(
-    execFileSync('dot', ['-Tsvg'], { input: dot(numbers), encoding: 'utf8' }),
+const HEADING = /<title>h\d+<\/title>[\s\S]*?<\/g>/g
+const Y = /\by="(-?[\d.]+)"/g
+
+function alignHeadings(svg: string) {
+  const blocks = svg.match(HEADING) ?? []
+  const top = Math.min(
+    ...blocks.flatMap(block =>
+      [...block.matchAll(Y)].map(match => Number(match[1])),
+    ),
   )
+  return blocks.reduce(
+    (out, block) => out.replace(block, block.replace(Y, `y="${top}"`)),
+    svg,
+  )
+}
+
+function fail(message: string): never {
+  throw new Error(message)
+}
+
+function renderDot(source: string) {
+  const result = spawnSync('dot', ['-Tsvg'], {
+    input: source,
+    encoding: 'utf8',
+  })
+  const missing =
+    result.error !== undefined &&
+    'code' in result.error &&
+    result.error.code === 'ENOENT'
+  return missing
+    ? fail(
+        'Graphviz `dot` is not installed; install graphviz to build the site',
+      )
+    : result.status === 0
+      ? result.stdout
+      : fail(`dot failed: ${result.stderr}`)
+}
+
+export function architectureSvg(numbers: Numbers) {
+  return alignHeadings(theme(renderDot(architectureDot(numbers))))
 }

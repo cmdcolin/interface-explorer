@@ -1,0 +1,53 @@
+import { describe, expect, it } from 'vitest'
+import {
+  architectureDot,
+  architectureSvg,
+  columns,
+  COLUMNS,
+  edges,
+  nodes,
+} from './architecture.ts'
+
+const numbers = { proteins: 1000, contact: 5, ipsae: 0.5, plddt: 70 }
+const ids = nodes(numbers).map(node => node.id)
+
+describe('architecture graph', () => {
+  it('has a heading for every column', () => {
+    expect(COLUMNS).toHaveLength(columns.length)
+  })
+
+  it('places every node in exactly one column', () => {
+    expect([...columns.flat()].sort()).toEqual([...ids].sort())
+  })
+
+  it('has unique node ids', () => {
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+
+  it('only connects nodes that exist', () => {
+    const known = new Set(ids)
+    expect(
+      edges.filter(edge => !known.has(edge.from) || !known.has(edge.to)),
+    ).toEqual([])
+  })
+
+  it('writes every node into the DOT source', () => {
+    const dot = architectureDot(numbers)
+    expect(ids.filter(id => !dot.includes(`${id} [label=`))).toEqual([])
+  })
+
+  it('renders a themed SVG with no leftover placeholder colours', () => {
+    const svg = architectureSvg(numbers)
+    expect(svg).toContain('var(--surface-2)')
+    expect(svg).not.toMatch(/#00000\d/)
+  })
+
+  it('puts every column heading at the same height', () => {
+    const svg = architectureSvg(numbers)
+    const ys = [
+      ...svg.matchAll(/<title>h\d+<\/title>[\s\S]*?<text[^>]* y="(-?[\d.]+)"/g),
+    ].map(match => match[1])
+    expect(ys).toHaveLength(COLUMNS.length)
+    expect(new Set(ys).size).toBe(1)
+  })
+})

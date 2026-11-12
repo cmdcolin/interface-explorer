@@ -29,4 +29,5 @@
 - **JBrowse:** the interface and variant [tracks](tracks.md), hosted at
   jbrowse.org.
 - **How it works** and **Comparison** with other resources, each linked to its
-  paper.
+  paper. The How it works diagram is laid out by Graphviz at build time
+  (`web/lib/architecture.ts`), so building the site needs `dot` installed.
