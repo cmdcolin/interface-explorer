@@ -1,0 +1,73 @@
+---
+import ComplexView from '../../components/ComplexView.astro'
+import Layout from '../../layouts/Layout.astro'
+import { clinvarHref } from '../../lib/html.ts'
+import { geneHref, href } from '../../lib/site.ts'
+import { contactView, runs, viralContacts } from '../../lib/viral.ts'
+
+export function getStaticPaths() {
+  const v = viralContacts()
+  return v.contacts.map(contact => ({
+    params: { pdb: contact.pdb },
+    props: { contact, others: v.contacts.filter(c => c.pdb !== contact.pdb), page: v.pageOf(contact.gene) },
+  }))
+}
+
+const { contact, others, page } = Astro.props
+const title = `${contact.gene} and ${contact.protein}`
+const entry = contact.pdb.toUpperCase()
+---
+
+<Layout title={title} description={`The ${entry} interface between ${contact.gene} and the SARS-CoV-2 ${contact.protein}, with the ClinVar missense variants on it.`}>
+  <article class="post">
+    <p><a href={href('blog/2026-11-12-sars-cov-2/')}>← Where SARS-CoV-2 holds a human disease protein</a></p>
+    <h1>{title}</h1>
+    <p>
+      <a href={`https://www.rcsb.org/structure/${entry}`}>{entry}</a> holds both.
+      {page && <>The explorer's page for <a href={geneHref(page)}>{contact.gene}</a> has its predicted human partners.</>}
+    </p>
+
+    <ComplexView view={contactView(contact)}>
+      {contact.gene} (grey) and the SARS-CoV-2 {contact.protein} (green) in {entry}. Blue on each: the
+      {' '}{contact.residues.length} {contact.gene} residues and {contact.viralResidues.length} viral
+      residues within 5 Å of the other. Red, orange and grey marks: pathogenic, uncertain and benign
+      ClinVar missense variants on the contact. Hover a residue for its variants; drag to rotate.
+    </ComplexView>
+
+    <h2>The contact</h2>
+    <ul>
+      <li><strong>{contact.gene}:</strong> {runs(contact.residues)}</li>
+      <li>
+        <strong>{contact.protein}:</strong>{' '}
+        {runs(contact.viralNumbers.length ? contact.viralNumbers : contact.viralResidues)}
+        {contact.viralNumbers.length > 0 && <> ({runs(contact.viralResidues)} in {contact.viralName} numbering)</>}
+      </li>
+      <li>
+        <strong>ClinVar on them:</strong>{' '}
+        {contact.variants.length
+          ? contact.variants.map(variant => (
+              <>
+                <a href={clinvarHref(variant.variation)}>{variant.change}</a>{' '}
+                <span class={`count ${variant.label}`}>{variant.label}</span>{' '}
+              </>
+            ))
+          : 'none classified'}
+      </li>
+    </ul>
+    <p class="muted">
+      One structure, one side of one interaction. Several of these entries hold a peptide rather than the
+      whole human protein, and nothing here is evidence about COVID-19 susceptibility.
+      Every contacting residue, both numberings, is in <a href={href('data/viral-contacts.tsv')}>viral-contacts.tsv</a>.
+    </p>
+
+    <h2>The other interfaces</h2>
+    <ul>
+      {others.map(other => (
+        <li>
+          <a href={href(`viral/${other.pdb}/`)}>{other.gene} and {other.protein}</a>{' '}
+          <span class="muted">{other.pdb.toUpperCase()}</span>
+        </li>
+      ))}
+    </ul>
+  </article>
+</Layout>

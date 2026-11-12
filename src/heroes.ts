@@ -69,3 +69,19 @@ await screenshots(
   { dir: join(ROOT, 'web', 'content', 'blog', 'heroes'), format: 'jpeg' },
   process.argv.slice(2),
 )
+
+await screenshots(
+  [
+    { name: 'isg15-plpro', pdb: '7rbs' },
+    { name: 'nemo-nsp5', pdb: '7t2u' },
+    { name: 'ywhaz-n', pdb: '7zit' },
+  ].map(({ name, pdb }) => ({
+    name,
+    url: (local: string) => `${local}viral/${pdb}/`,
+    clip: '.complex-view .structure',
+    height: 1600,
+    wait: 25,
+  })),
+  { dir: join(ROOT, 'web', 'content', 'blog', 'figures'), format: 'jpeg' },
+  process.argv.slice(2),
+)
