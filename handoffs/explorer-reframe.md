@@ -15,19 +15,15 @@ description: "Reframe the site from a findings paper to an app for exploring dis
   for exploring those, with the statistics as evidence that the predicted
   interfaces are worth exploring.
 - **State as of 2026-11-12:** renamed to Interface explorer, URL
-  `/interface-explorer/`. Home headline now reads "Explore pathogenic
-  variants at protein interfaces", with the odds ratio as supporting evidence
-  in the lede; the rest of the hero and the other framing changes below are
-  not started. Claim a step here before starting it.
+  `/interface-explorer/`. Home headline done; the other framing changes
+  below are not started. Claim a step here before starting it.
 
 ## Framing changes
 
-- **Home hero (`web/pages/index.astro`):** replace the finding headline
-  ("Pathogenic variants concentrate at protein interfaces" plus the odds
-  ratio) with what you can do: look up a gene or variant, see the predicted
-  partner it touches in 3D and on the genome. Gene search becomes the primary
-  action. The odds ratio moves down to a "why trust the interfaces" line linking
-  to the validation post.
+- **Home hero (`web/pages/index.astro`):** headline is "Explore pathogenic
+  variants at protein interfaces" (done). Keep the hero light: no gene search
+  or other action controls in it, since it overloads easily. Search, if added,
+  lives elsewhere (nav or the Genes page).
 - **Tiles:** lead with explorable counts (genes, partners, uncertain variants
   with a named partner, leads), not percentages.
 - **Blog:** keep the posts, retitled as evidence and worked examples rather
