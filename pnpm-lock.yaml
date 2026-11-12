@@ -191,6 +191,12 @@ importers:
       astro:
         specifier: ^7.4.10
         version: 7.4.10(@types/node@24.19.2)(yaml@2.9.1)
+      chrome-capture:
+        specifier: ^0.1.2
+        version: 0.1.2
+      playwright-core:
+        specifier: ^1.65.0
+        version: 1.65.0
       prettier:
         specifier: ^3.9.10
         version: 3.9.10
@@ -952,6 +958,11 @@ packages:
     resolution: {integrity: sha512-TQMmc3w+5AxjpL8iIiwebF73dRDF4fBIieAqGn9RGCWaEVwQ6Fb2cGe31Yns0RRIzii5goJ1Y7xbMwo1TxMplw==}
     engines: {node: '>= 20.19.0'}
 
+  chrome-capture@0.1.2:
+    resolution: {integrity: sha512-Xc5/q1MqfbfLlEBRPG06Wvc0emqOaK4fPDr5NOGJOmpAP/RiV5FI2I8odl1qasjcdgMPBfajngUsyt/o0UN6Hg==}
+    engines: {node: '>=24.11.0'}
+    hasBin: true
+
   ci-info@4.5.0:
     resolution: {integrity: sha512-d1uM8k5UZEyPza1n/MG3ko8nKupKN0KJpFsipgPcgaCCvV+IqIfJ+NzTjetlLM+UcXZx3+cLrNr76+eAO7G1Mw==}
     engines: {node: '>=8'}
@@ -1370,6 +1381,11 @@ packages:
   picomatch@4.0.7:
     resolution: {integrity: sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==}
     engines: {node: '>=12'}
+
+  playwright-core@1.65.0:
+    resolution: {integrity: sha512-vNSKgH6YqtN7cdT/L334zo0a+YwkrpicyrHJlWWPIm/Q+Nn2SWInil01oT0mbu96U4GgoRtCYQD9CzJQgju+lA==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   postcss@8.5.32:
     resolution: {integrity: sha512-LJlKCCAUFKOuZxipUdYw1NzIITEsPcgyOG9LkvRJvuKj/bRzbuRY0ARXvL0pWGpsZvn8jku+LMep2eU0seHp8g==}
@@ -2639,6 +2655,8 @@ snapshots:
     dependencies:
       readdirp: 5.1.1
 
+  chrome-capture@0.1.2: {}
+
   ci-info@4.5.0: {}
 
   cliui@9.0.1:
@@ -2998,6 +3016,8 @@ snapshots:
   picomatch@2.3.2: {}
 
   picomatch@4.0.7: {}
+
+  playwright-core@1.65.0: {}
 
   postcss@8.5.32:
     dependencies:
