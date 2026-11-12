@@ -3,10 +3,12 @@ import { gene, isoform, isoformTotals } from './data.ts'
 import { esc } from './html.ts'
 import { isoformMap, proteinMap } from './maps.ts'
 import { JBROWSE, geneHref, href, isoformHref } from './site.ts'
+import { initialPartner } from './structure.ts'
 
 export function geneCase(page: string) {
   const g = gene(page)
-  const partner = g.partners.toSorted((a, b) => b.variants - a.variants)[0]
+  const lead = initialPartner(g)
+  const partner = g.partners.find(p => p.gene === lead)
   return `
     ${proteinMap(g)}
     <div class="actions">

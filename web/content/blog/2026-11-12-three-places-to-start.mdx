@@ -11,6 +11,7 @@ import Html from '../../components/Html.astro'
 import { appCase, geneCase, gnao1, isoformTotals, vhl } from '../../lib/cases.ts'
 
 export const VHL = vhl()
+export const ELOC = VHL.partners.find(p => p.gene === 'ELOC')
 export const GNAO1 = gnao1()
 export const isoforms = isoformTotals()
 
@@ -21,7 +22,10 @@ its residues in the predicted complex.
 
 {VHL.counts.pathogenic} pathogenic variants of the von Hippel–Lindau tumour
 suppressor sit on the {VHL.interfaceResidues} residues that hold elongin C, with
-{VHL.counts.uncertain} uncertain ones among them.
+{VHL.counts.uncertain} uncertain ones among them. The crystal structure
+{ELOC.experiment.pdb.toUpperCase()} puts {ELOC.experiment.experimental} residues
+of VHL against elongin C, and the prediction has {ELOC.experiment.shared} of
+them.
 
 <Html html={geneCase('VHL')} />
 

@@ -1,13 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import {
-  INTERFACE_TRACKS,
-  geneLocus,
-  pdbSpec,
-  sessionUrl,
-  variantSpec,
-} from './links.ts'
+import { sessionUrl, variantSpec } from './links.ts'
 import type { GenePage } from './pages.ts'
 import { ROOT, SITE_DATA } from './paths.ts'
 import { LIVE, screenshots } from './screenshots.ts'
@@ -44,13 +38,9 @@ await screenshots(
     },
     {
       name: 'are-the-interfaces-real',
-      url: () =>
-        sessionUrl(
-          pdbSpec('KRAS', '6EPL', geneLocus(gene('KRAS')), INTERFACE_TRACKS),
-          jbrowse,
-        ),
+      url: () => `${LIVE}gene/PRPH2/?partner=ROM1`,
       height: 800,
-      wait: 45,
+      wait: 30,
     },
     {
       name: 'project-9-gpcrs',

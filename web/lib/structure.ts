@@ -61,6 +61,24 @@ export function structureData(gene: Gene) {
   return { partners, variants: gene.variants.map(v => sceneVariant(v)) }
 }
 
+export const AGREEMENT = { confirmed: 2, unchecked: 1, contradicted: 0 }
+
+function agreement(experiment: Partner['experiment']) {
+  return experiment?.experimental
+    ? experiment.shared >= experiment.experimental / 2
+      ? AGREEMENT.confirmed
+      : AGREEMENT.contradicted
+    : AGREEMENT.unchecked
+}
+
+export function leadPartner(candidates: { gene: string; pathogenic: number; agreement: number }[]) {
+  const rank = (c: (typeof candidates)[number]) => [Math.sign(c.pathogenic), c.agreement, c.pathogenic]
+  return candidates.toSorted((a, b) => {
+    const ra = rank(a)
+    return rank(b).map((x, i) => x - (ra[i] ?? 0)).find(d => d !== 0) ?? 0
+  })[0]?.gene
+}
+
 export function stories(gene: Gene) {
   return gene.partners.flatMap(p => {
     const residues = new Set(partnerResidues(p))
@@ -93,13 +111,10 @@ export function stories(gene: Gene) {
     ]
       .filter(Boolean)
       .join(' ')
-    return p.chain ? [{ gene: p.gene, pathogenic, html }] : []
+    return p.chain ? [{ gene: p.gene, pathogenic, agreement: agreement(experiment), html }] : []
   })
 }
 
 export function initialPartner(gene: Gene) {
-  return stories(gene).reduce<{ gene: string; pathogenic: number } | undefined>(
-    (best, s) => (!best || s.pathogenic > best.pathogenic ? s : best),
-    undefined,
-  )?.gene
+  return leadPartner(stories(gene))
 }

@@ -18,7 +18,8 @@ one.
 - **Genes:** a searchable table of the 1,331 disease genes with a confident
   predicted partner. Each gene page opens on its predicted complex in 3D,
   starting with the partner whose interface carries the most pathogenic
-  variants. The page's protein is grey, the partner green under a translucent
+  variants, preferring one that an experimental structure confirms over one no
+  structure covers, and either over one a structure contradicts. The page's protein is grey, the partner green under a translucent
   surface, and its interface residues blue; the ClinVar variants on them are
   coloured by classification. A sentence above the 3D view gives each partner's
   counts, the PDB entry that confirms it, and any UniProt region annotated as

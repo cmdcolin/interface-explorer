@@ -20,7 +20,7 @@ import {
   shareBars,
   shareFigure,
 } from '../../lib/charts.ts'
-import { summary } from '../../lib/data.ts'
+import { gene, leadRows, summary } from '../../lib/data.ts'
 import { percent } from '../../lib/html.ts'
 
 export const s = summary()
@@ -28,6 +28,8 @@ export const e = s.enrichment
 export const v = s.variantsAtInterface
 export const am = s.alphaMissense.calls
 export const c = s.conservation.enrichment
+export const psen1 = leadRows().find(r => r.gene === 'PSEN1' && r.change === 'F86L')
+export const aph1a = gene('PSEN1').partners.find(p => p.gene === 'APH1A')
 export const counted = e =>
   ['pathogenic at interface', 'benign at interface']
     .map(key => Number(e[key].split('/')[1]))
@@ -121,7 +123,15 @@ score likely pathogenic.
 {s.leads.variants.toLocaleString()} of the uncertain variants, in
 {s.leads.genes.toLocaleString()} genes, change an interface residue where a
 different substitution is already classified pathogenic. They are on the
-[Leads](../../leads/) page.
+[Leads](../../leads/) page. The best of them sit on interfaces that
+experiment confirms. PSEN1 {psen1.change}, for instance, is uncertain, but
+{psen1.sameResidue.join(' and ')} at the same residue is a pathogenic cause of
+early-onset Alzheimer disease, and AlphaMissense scores {psen1.change}
+{psen1.alphaMissense.toFixed(2)}. Residue {psen1.position} is on presenilin's
+predicted interface with APH1A. The γ-secretase structure
+{aph1a.experiment.pdb.toUpperCase()} puts {aph1a.experiment.experimental}
+residues of presenilin against APH1A, and the prediction has
+{aph1a.experiment.shared} of them.
 
 ## Caveats
 

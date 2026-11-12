@@ -4,7 +4,7 @@ date: '2026-11-12'
 order: 3
 description: 'Two independent checks: where the PDB holds both proteins, the predicted interface covers most of the experimental one, even for pairs solved after AlphaFold was trained; and predicted interfaces are more conserved than random patches of the same protein surface.'
 hero: './heroes/are-the-interfaces-real.jpg'
-heroAlt: 'KRAS on the genome with its predicted interface codons, beside the experimental KRAS–SOS1 structure 6EPL'
+heroAlt: 'PRPH2''s gene page on its predicted complex with ROM1, an interface that a structure solved after AlphaFold''s training confirms residue for residue'
 ---
 
 import Html from '../../components/Html.astro'
@@ -14,7 +14,7 @@ import {
   recallHistogram,
   shareBars,
 } from '../../lib/charts.ts'
-import { summary } from '../../lib/data.ts'
+import { gene, summary } from '../../lib/data.ts'
 import { percent } from '../../lib/html.ts'
 
 export const s = summary()
@@ -24,6 +24,10 @@ export const r = s.conservation.residues
 export const pa = r.patches.all
 export const near = r.nearbyPatches.all
 export const share = x => `${Math.round(100 * x)}%`
+export const prph2 = gene('PRPH2')
+export const rom1 = prph2.partners.find(p => p.gene === 'ROM1')
+export const rom1Variants = prph2.variants.filter(v => v.partners.includes('ROM1'))
+export const count = label => rom1Variants.filter(v => v.label === label).length
 
 Every interface in the atlas is a prediction. Two checks say most of them are
 real: experimental structures, where they exist, and evolution, which has kept
@@ -51,11 +55,23 @@ deposited by {s.validation.cutoff}, the cutoff of its training set. For those th
 median is {share(unseen.recall)}, and
 {percent(unseen.recovered, unseen.touching)} have at least half of their
 experimental interface predicted, against
-{percent(all.recovered, all.touching)} of all pairs. In the other direction, a
+{percent(all.recovered, all.touching)} of all pairs.
+
+In the other direction, a
 median {share(all.precision)} of the predicted residues the structure resolves
 are in the experimental interface ({share(unseen.precision)} for pairs with no
 structure before the cutoff). Each gene page names the structure its partners
 were checked against.
+
+Peripherin-2 and ROM1 are a pair AlphaFold could not have seen. They pair in the rims of photoreceptor
+discs, and variants in [PRPH2](../../gene/PRPH2/?partner=ROM1) cause
+retinitis pigmentosa, alone or together with ROM1. The first structure of the
+pair, <a href={`https://www.rcsb.org/structure/${rom1.experiment.pdb}`}>{rom1.experiment.pdb.toUpperCase()}</a>,
+came out in 2022. It puts {rom1.experiment.experimental} residues of PRPH2
+against ROM1, and the prediction has {rom1.experiment.shared} of them, with
+{rom1.experiment.predicted - rom1.experiment.shared} more of its own. On that
+interface ClinVar has {count('pathogenic')} pathogenic and {count('uncertain')}
+uncertain missense variants.
 
 ## Against evolution
 
