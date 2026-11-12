@@ -123,10 +123,47 @@ a {
   gap: 4px 18px;
 }
 
-.site-header nav a[aria-current] {
+.site-header nav a[aria-current],
+.site-header nav .nav-menu > summary[aria-current] {
   color: var(--text);
   font-weight: 650;
   text-decoration: none;
+}
+
+.nav-menu {
+  position: relative;
+}
+
+.nav-menu > summary {
+  cursor: pointer;
+  color: var(--link);
+  text-decoration: underline;
+  list-style: none;
+}
+
+.nav-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.nav-menu > summary::after {
+  content: ' ▾';
+  font-size: 0.8em;
+}
+
+.nav-menu-items {
+  position: absolute;
+  z-index: 10;
+  top: 100%;
+  left: -12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 130px;
+  margin-top: 6px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
 }
 
 h1:focus {

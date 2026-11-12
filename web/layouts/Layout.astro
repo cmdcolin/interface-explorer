@@ -22,10 +22,13 @@ const preview = image
   ? (await getImage({ src: image, width: 1400, height: 800, format: 'jpg' })).src
   : href('preview.jpg')
 const previewUrl = new URL(preview, Astro.site)
-const links = [
+const explore = [
   ['genes', 'Genes'],
   ['leads', 'Leads'],
   ['isoforms', 'Isoforms'],
+] as const
+const exploreActive = explore.some(([key]) => key === nav)
+const links = [
   ['blog', 'Blog'],
   ['architecture', 'How it works'],
   ['comparison', 'Comparison'],
@@ -69,6 +72,18 @@ const links = [
         </a>
       </div>
       <nav>
+        <details class="nav-menu">
+          <summary aria-current={exploreActive ? 'true' : undefined}>Explore</summary>
+          <div class="nav-menu-items">
+            {
+              explore.map(([key, label]) => (
+                <a href={href(`${key}/`)} aria-current={nav === key ? 'page' : undefined}>
+                  {label}
+                </a>
+              ))
+            }
+          </div>
+        </details>
         {
           links.map(([key, label]) => (
             <a href={href(`${key}/`)} aria-current={nav === key ? 'page' : undefined}>
@@ -98,5 +113,18 @@ const links = [
       viewer <a href="https://jbrowse.org/jb2/">JBrowse 2</a>.
       <a href="https://github.com/cmdcolin/interface-explorer">Source</a>.
     </footer>
+    <script>
+      const menu = document.querySelector<HTMLDetailsElement>('.nav-menu')
+      document.addEventListener('click', event => {
+        if (event.target instanceof Node && !menu?.contains(event.target)) {
+          menu?.removeAttribute('open')
+        }
+      })
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+          menu?.removeAttribute('open')
+        }
+      })
+    </script>
   </body>
 </html>
