@@ -7,12 +7,14 @@ hero: './heroes/project-9-gpcrs.jpg'
 heroAlt: 'The dopamine D1 receptor holding Gαs in 7JVQ, seen side-on: the α5 helix of Gαs reaches up into the receptor, with its pathogenic ClinVar variants in red where they meet'
 ---
 
-import ComplexView from '../../components/ComplexView.astro'
 import GpcrComplexes from '../../components/GpcrComplexes.astro'
 import Html from '../../components/Html.astro'
 import { summary } from '../../lib/data.ts'
 import { surfaceMap } from '../../lib/maps.ts'
 import { project9 } from '../../lib/project9.ts'
+import Shot from '../../components/Shot.astro'
+import { href } from '../../lib/site.ts'
+import featuredShot from './heroes/project-9-gpcrs.jpg'
 
 export const p = project9()
 export const t = summary().thresholds
@@ -28,12 +30,16 @@ its last {p.tip} residues**, the tip of the α5 helix that Gαs pushes into the
 receptor's cytoplasmic cavity. The receptor side has
 {p.receptorPathogenic || 'none'}.
 
-<ComplexView view={p.featured.view}>
+<Shot
+  src={featuredShot}
+  alt="The dopamine D1 receptor in green holding grey Gαs in 7JVQ, the α5 helix reaching up into the receptor with red pathogenic variants where they meet"
+  href={href(`gpcr/${p.featured.pdb}/`)}
+>
   The dopamine D1 receptor (green, under a translucent surface) holding Gαs
   (grey) in {p.featured.pdb}. Blue: residues within 5 Å of the other protein.
   The {p.featured.pathogenic} Gαs residues with a pathogenic ClinVar variant are
-  red, uncertain ones orange. Hover a residue for its variants.
-</ComplexView>
+  red, uncertain ones orange.
+</Shot>
 
 ## The tip of Gαs
 

@@ -1,5 +1,4 @@
 import { gene, gpcr } from './data.ts'
-import { complexView } from './gpcr.ts'
 import type { Agreement } from './types.ts'
 
 const OLFACTORY = /^OR\d/
@@ -109,7 +108,6 @@ export function project9() {
       ...FEATURED,
       receptor: featured?.receptorSide.gene,
       pathogenic: pathogenic(featured?.gProteins.find(g => g.gene === FEATURED.gAlpha)?.variants ?? []).length,
-      view: complexView(FEATURED.pdb, FEATURED.gAlpha),
     },
     olfactory: olfactory.map(p => p.gene),
     ipsaeRange: [Math.min(...ipsae), Math.max(...ipsae)].map(x => x.toFixed(2)),

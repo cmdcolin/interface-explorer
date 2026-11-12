@@ -46,14 +46,14 @@ await screenshots(
     },
     {
       name: 'project-9-gpcrs',
-      url: local => `${local}blog/2026-11-12-project-9-gpcrs/`,
+      url: local => `${local}gpcr/7JVQ/`,
       clip: '.complex-view .structure',
       height: 1600,
       wait: 25,
     },
     {
       name: 'slc35a2-switch',
-      url: local => `${local}blog/2026-11-12-slc35a2-switch/`,
+      url: local => `${local}switch/`,
       clip: '.complex-view .structure',
       height: 1600,
       wait: 25,
@@ -72,12 +72,12 @@ await screenshots(
 
 await screenshots(
   [
-    { name: 'isg15-plpro', pdb: '7rbs' },
-    { name: 'nemo-nsp5', pdb: '7t2u' },
-    { name: 'ywhaz-n', pdb: '7zit' },
-  ].map(({ name, pdb }) => ({
+    { name: 'isg15-plpro', path: 'viral/7rbs/' },
+    { name: 'nemo-nsp5', path: 'viral/7t2u/' },
+    { name: 'ywhaz-n', path: 'viral/7zit/' },
+  ].map(({ name, path }) => ({
     name,
-    url: (local: string) => `${local}viral/${pdb}/`,
+    url: (local: string) => `${local}${path}`,
     clip: '.complex-view .structure',
     height: 1600,
     wait: 25,

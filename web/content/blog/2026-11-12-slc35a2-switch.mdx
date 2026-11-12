@@ -7,11 +7,12 @@ hero: './heroes/slc35a2-switch.jpg'
 heroAlt: "SLC35A2's AlphaFold model side-on, with the residues that switch between its lumen-open and cytosol-open states in blue and their ClinVar variants marked"
 ---
 
-import ComplexView from '../../components/ComplexView.astro'
 import Html from '../../components/Html.astro'
 import { summary } from '../../lib/data.ts'
-import { mdPost, switchView } from '../../lib/md.ts'
-import { isoformHref } from '../../lib/site.ts'
+import { mdPost } from '../../lib/md.ts'
+import Shot from '../../components/Shot.astro'
+import { href, isoformHref } from '../../lib/site.ts'
+import switchShot from './heroes/slc35a2-switch.jpg'
 
 export const m = mdPost()
 export const plddt = summary().thresholds.plddt
@@ -33,12 +34,15 @@ residues whose Foldseek 3Di letter (the local shape of the backbone) changes.
 The top pair, {m.top?.from}–{m.top?.to}, goes from {m.top?.c1} nm apart in one
 conformer to {m.top?.c2} nm in the other.
 
-<ComplexView view={switchView()}>
+<Shot
+  src={switchShot}
+  alt="SLC35A2's AlphaFold model side-on to the membrane, the switching residues in blue with their ClinVar variants marked"
+  href={href('switch/')}
+>
   SLC35A2's AlphaFold model, side-on to the membrane. Blue: the {m.switches}{' '}
   residues StarMD ranks as switching between the two conformers. Red: a
-  pathogenic ClinVar variant; orange: uncertain. Hover a residue for its
-  variants.
-</ComplexView>
+  pathogenic ClinVar variant; orange: uncertain.
+</Shot>
 
 ## Conservation, AlphaMissense and ClinVar at the switch residues
 

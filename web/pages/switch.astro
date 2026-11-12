@@ -1,0 +1,51 @@
+---
+import ComplexView from '../components/ComplexView.astro'
+import Layout from '../layouts/Layout.astro'
+import { md } from '../lib/data.ts'
+import { clinvarHref } from '../lib/html.ts'
+import { switchView } from '../lib/md.ts'
+import { href } from '../lib/site.ts'
+
+const data = md()
+const classified = data.residues.flatMap(residue =>
+  residue.variants
+    .filter(variant => variant.label !== 'benign')
+    .map(variant => ({ ...variant, residue: residue.name })),
+)
+---
+
+<Layout
+  title={`${data.gene}'s switch residues`}
+  description={`The residues molecular dynamics picks out as switching between SLC35A2's two open states, in 3D on its AlphaFold model, with the ClinVar variants on them.`}
+>
+  <article class="post">
+    <p><a href={href('blog/2026-11-12-slc35a2-switch/')}>← SLC35A2 has no partner to map, so we mapped its moving parts</a></p>
+    <h1>{data.gene}'s switch residues</h1>
+    <p>
+      The AlphaFold model of {data.gene}, the Golgi UDP-galactose transporter, side-on to the membrane.
+      StarMD ranked these residues as the ones that change most between the lumen-open and cytosol-open
+      conformers across six GROMACS runs.
+    </p>
+
+    <ComplexView view={switchView()}>
+      {data.gene}'s AlphaFold model. Blue: the {data.residues.length} residues StarMD ranks as switching
+      between the two conformers. Red and orange marks: pathogenic and uncertain ClinVar missense
+      variants on them. Hover a residue for its variants; drag to rotate.
+    </ComplexView>
+
+    <h2>The variants on them</h2>
+    <ul>
+      {classified.map(variant => (
+        <li>
+          <a href={clinvarHref(variant.variation)}>{variant.change}</a>{' '}
+          <span class={`count ${variant.label}`}>{variant.label}</span>{' '}
+          <span class="muted">on {variant.residue}</span>
+        </li>
+      ))}
+    </ul>
+    <p class="muted">
+      {data.gene} has no gene page in the explorer: AlphaFold DB predicts no confident complex for it, so
+      there is no partner to put a surface against. These residues come from the simulations instead.
+    </p>
+  </article>
+</Layout>

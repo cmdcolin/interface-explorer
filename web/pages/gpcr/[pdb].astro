@@ -1,0 +1,80 @@
+---
+import ComplexView from '../../components/ComplexView.astro'
+import Layout from '../../layouts/Layout.astro'
+import { gpcr } from '../../lib/data.ts'
+import { complexView, receptorLinks } from '../../lib/gpcr.ts'
+import { clinvarHref } from '../../lib/html.ts'
+import { href } from '../../lib/site.ts'
+
+export function getStaticPaths() {
+  const complexes = gpcr().complexes
+  return complexes.map(complex => {
+    const principal = complex.gProteins
+      .filter(g => g.residues.length)
+      .toSorted((a, b) => b.residues.length - a.residues.length)[0]
+    return {
+      params: { pdb: complex.pdb },
+      props: {
+        complex,
+        principal,
+        others: complexes.filter(c => c.pdb !== complex.pdb),
+      },
+    }
+  })
+}
+
+const { complex, principal, others } = Astro.props
+const receptor = complex.receptorSide
+const title = `${receptor.gene} and ${principal?.gene ?? 'its G protein'}`
+const variants = principal?.variants ?? []
+---
+
+<Layout title={title} description={`The ${complex.pdb} interface between the ${complex.receptor} receptor and ${principal?.gene}, with the ClinVar missense variants on it.`}>
+  <article class="post">
+    <p><a href={href('blog/2026-11-12-project-9-gpcrs/')}>← GPCRs and their G proteins</a></p>
+    <h1>{title}</h1>
+    <p>
+      <a href={`https://www.rcsb.org/structure/${complex.pdb}`}>{complex.pdb}</a>,
+      {' '}{complex.method} at {complex.resolution} Å, {complex.state.toLowerCase()} state.
+      {complex.species !== 'Human' && <> {complex.species} receptor.</>}
+      {principal?.chimera && <> The G protein is a chimera, so some of its residues are not the human sequence.</>}
+    </p>
+
+    {principal && <ComplexView view={complexView(complex.pdb, principal.gene)}>
+      The {complex.receptor} receptor (green, under a translucent surface) holding {principal.gene} (grey)
+      in {complex.pdb}. Blue: the residues within 5 Å of the other protein. Red, orange and grey marks:
+      pathogenic, uncertain and benign ClinVar missense variants on them. Hover a residue for its
+      variants; drag to rotate.
+    </ComplexView>}
+
+    <h2>The interface</h2>
+    <ul>
+      <li><strong>{receptor.gene} ({complex.receptor}):</strong> {receptor.residues.length} residues</li>
+      {complex.gProteins.filter(g => g.residues.length).map(g => (
+        <li><strong>{g.gene}:</strong> {g.residues.length} residues{g.chimera ? ', chimeric construct' : ''}</li>
+      ))}
+      <li>
+        <strong>ClinVar on the {principal?.gene} side:</strong>{' '}
+        {variants.length
+          ? variants.map(variant => (
+              <>
+                <a href={clinvarHref(variant.variation)}>{variant.change}</a>{' '}
+                <span class={`count ${variant.label}`}>{variant.label}</span>{' '}
+              </>
+            ))
+          : 'none classified'}
+      </li>
+    </ul>
+    <p set:html={`Open it beside the genome: ${receptorLinks(receptor.gene, complex.pdb, receptor.locus)}`} />
+
+    <h2>The other complexes</h2>
+    <ul>
+      {others.map(other => (
+        <li>
+          <a href={href(`gpcr/${other.pdb}/`)}>{other.receptorSide.gene} and {other.g_subtype}</a>{' '}
+          <span class="muted">{other.pdb}</span>
+        </li>
+      ))}
+    </ul>
+  </article>
+</Layout>
