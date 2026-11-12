@@ -60,10 +60,18 @@ a {
 }
 
 .brand {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
   font-weight: 650;
   font-size: 18px;
   color: var(--text);
   text-decoration: none;
+}
+
+.brand-logo {
+  width: 28px;
+  height: 28px;
 }
 
 .brand-group {
