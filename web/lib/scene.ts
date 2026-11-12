@@ -6,6 +6,7 @@ export interface ScenePartner {
   entity: string
   chain: string
   residues: number[]
+  side?: { page: string; residues: number[]; variants: SceneVariant[] }
 }
 
 export interface SceneVariant {
@@ -32,6 +33,7 @@ interface Node {
 }
 
 const LABELLED_SITES = 3
+const LABELLED_PARTNER_SITES = 2
 
 export function modelUrl(entity: string) {
   return `https://alphafold.ebi.ac.uk/files/${entity}-model_v1.bcif`
@@ -59,8 +61,8 @@ export function ranges(residues: number[]) {
   return out
 }
 
-export function sites(partner: ScenePartner, variants: SceneVariant[]) {
-  return [...Map.groupBy(variants.filter(v => v.partners.includes(partner.gene)), v => v.position)]
+export function sites(variants: SceneVariant[]) {
+  return [...Map.groupBy(variants, v => v.position)]
     .map(([position, here]) => ({
       position,
       residue: here[0]?.change[0] ?? '',
@@ -73,47 +75,54 @@ export function sites(partner: ScenePartner, variants: SceneVariant[]) {
     .sort((a, b) => a.position - b.position)
 }
 
-export function scene(partner: ScenePartner, variants: SceneVariant[], colors: SceneColors) {
-  const own = partner.chain
-  const other = otherChain(own)
-  const interfaceSelector = ranges(partner.residues).map(([beg, end]) => ({
-    auth_asym_id: own,
-    beg_auth_seq_id: beg,
-    end_auth_seq_id: end,
-  }))
-  const here = sites(partner, variants)
+function interfaceSelector(chain: string, residues: number[]) {
+  return ranges(residues).map(([beg, end]) => ({ auth_asym_id: chain, beg_auth_seq_id: beg, end_auth_seq_id: end }))
+}
+
+function siteNodes(chain: string, here: ReturnType<typeof sites>, colors: SceneColors, prefix: string, labels: number) {
   const labelled = new Set(
     here
       .filter(s => s.pathogenic)
       .toSorted((a, b) => b.pathogenic - a.pathogenic)
-      .slice(0, LABELLED_SITES)
+      .slice(0, labels)
       .map(s => s.position),
   )
-  const structure = node('structure', { type: 'model' }, [
-    node('component', { selector: { auth_asym_id: own } }, [
-      node('representation', { type: 'cartoon' }, [
-        node('color', { color: colors.chain }),
-        ...(interfaceSelector.length ? [node('color', { color: colors.interface, selector: interfaceSelector })] : []),
-      ]),
+  return here.map(s =>
+    node('component', { selector: { auth_asym_id: chain, auth_seq_id: s.position } }, [
+      node('representation', { type: 'ball_and_stick', size_factor: 1.3 }, [node('color', { color: colors[s.label] })]),
+      node('tooltip', {
+        text: `${prefix}${s.residue}${s.position}: ${s.byLabel.map(([label, changes]) => `${label} ${changes.join(', ')}`).join('; ')}`,
+      }),
+      ...(labelled.has(s.position) ? [node('label', { text: `${prefix}${s.residue}${s.position}` })] : []),
     ]),
+  )
+}
+
+function cartoon(base: string, highlight: ReturnType<typeof interfaceSelector>, colors: SceneColors) {
+  return node('representation', { type: 'cartoon' }, [
+    node('color', { color: base }),
+    ...(highlight.length ? [node('color', { color: colors.interface, selector: highlight })] : []),
+  ])
+}
+
+export function scene(partner: ScenePartner, variants: SceneVariant[], colors: SceneColors) {
+  const own = partner.chain
+  const other = otherChain(own)
+  const ownInterface = interfaceSelector(own, partner.residues)
+  const otherInterface = interfaceSelector(other, partner.side?.residues ?? [])
+  const structure = node('structure', { type: 'model' }, [
+    node('component', { selector: { auth_asym_id: own } }, [cartoon(colors.chain, ownInterface, colors)]),
     node('component', { selector: { auth_asym_id: other } }, [
-      node('representation', { type: 'cartoon' }, [node('color', { color: colors.partner })]),
+      cartoon(colors.partner, otherInterface, colors),
       node('representation', { type: 'surface' }, [
         node('color', { color: colors.partner }),
         node('opacity', { opacity: 0.28 }),
       ]),
     ]),
-    ...here.map(s =>
-      node('component', { selector: { auth_asym_id: own, auth_seq_id: s.position } }, [
-        node('representation', { type: 'ball_and_stick', size_factor: 1.3 }, [node('color', { color: colors[s.label] })]),
-        node('tooltip', {
-          text: `${s.residue}${s.position}: ${s.byLabel.map(([label, changes]) => `${label} ${changes.join(', ')}`).join('; ')}`,
-        }),
-        ...(labelled.has(s.position) ? [node('label', { text: `${s.residue}${s.position}` })] : []),
-      ]),
-    ),
-    ...(interfaceSelector.length
-      ? [node('component', { selector: interfaceSelector }, [node('focus', { radius_factor: 1.4 })])]
+    ...siteNodes(own, sites(variants.filter(v => v.partners.includes(partner.gene))), colors, '', LABELLED_SITES),
+    ...siteNodes(other, sites(partner.side?.variants ?? []), colors, `${partner.gene} `, LABELLED_PARTNER_SITES),
+    ...(ownInterface.length
+      ? [node('component', { selector: [...ownInterface, ...otherInterface] }, [node('focus', { radius_factor: 1.4 })])]
       : []),
   ])
   return {

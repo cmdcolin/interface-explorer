@@ -136,9 +136,10 @@ test('a lead is an uncertain variant where another substitution is pathogenic', 
       lead.sameResidue,
       lead.knownConditions,
       lead.pathogenicResidues,
+      lead.partner,
       lead.entity,
     ]),
-  ).toEqual([['A10V', ['A10D'], ['Disease'], 1, 'AF-1']])
+  ).toEqual([['A10V', ['A10D'], ['Disease'], 1, 'PARTNER', 'AF-1']])
 })
 
 test('a gene record carries its complex chain and UniProt features', () => {

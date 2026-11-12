@@ -44,7 +44,7 @@ const rows = gene.variants
     const partners = gene.partners.filter(p => v.partners.includes(p.gene))
     const partnerLinks = (shown: typeof partners) =>
       shown.map(p => `<a href="${sessionUrl(variantSpec(gene, v, p), JBROWSE)}">${esc(p.gene)}</a>`).join(', ')
-    return `<tr ${variantData(v, same)} data-position="${v.position}" data-am="${v.alphaMissense ?? -1}">
+    return `<tr ${variantData(v, same)} data-position="${v.position}" data-partners="${esc(partners.map(p => p.gene).join(','))}" data-am="${v.alphaMissense ?? -1}">
       <td>${esc(v.change)}${same.length ? `<div class="cell-note" title="A pathogenic substitution at the same residue">pathogenic ${same.map(esc).join(', ')} here</div>` : ''}</td>
       <td class="nowrap">${chip(v.label)} <a href="${clinvarHref(v.variation)}" title="${esc(v.review)}">VCV${String(v.variation).padStart(9, '0')}</a></td>
       <td>${conditionCell(v.conditions)}</td>
@@ -96,9 +96,9 @@ const rows = gene.variants
         <div class="legend">
           <span><span class="swatch" style="background:var(--chain)"></span>{gene.gene}</span>
           <span><span class="swatch" style="background:var(--partner)"></span>partner</span>
-          <span><span class="swatch" style="background:var(--interface)"></span>{gene.gene} residue at the interface</span>
+          <span><span class="swatch" style="background:var(--interface)"></span>residue at the interface</span>
           {LABEL_KEYS.map(label => <span><span class="swatch" style={`background:var(--${label})`}></span>{label} variant</span>)}
-          <span class="muted">Hover the protein map or a variant to find it in 3D; click to zoom.</span>
+          <span class="muted">Hover the protein map or a variant to find it in 3D; click to zoom and get a link to that view.</span>
         </div>
         <script is:inline type="application/json" id="structure-data" set:html={structureJson} />
       </section>

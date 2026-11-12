@@ -39,7 +39,7 @@ test('consecutive residues become ranges', () => {
 })
 
 test('a site takes its most severe label and lists the changes under each', () => {
-  expect(sites(partner, variants)).toEqual([
+  expect(sites(variants.filter(v => v.partners.includes('ELOC')))).toEqual([
     {
       position: 5,
       residue: 'R',
@@ -64,4 +64,24 @@ test('the scene loads the complex, labels pathogenic sites and focuses the inter
   expect(text).not.toContain('"text":"L9"')
   expect(text).not.toContain('G40S')
   expect(kinds(spec.root).filter(kind => kind === 'focus')).toHaveLength(1)
+})
+
+test("a partner that is a disease protein too gets its own interface and variants painted", () => {
+  const text = JSON.stringify(
+    scene(
+      {
+        ...partner,
+        side: {
+          page: 'ELOC',
+          residues: [100, 101],
+          variants: [{ change: 'A100V', label: 'pathogenic', position: 100, partners: ['VHL'] }],
+        },
+      },
+      variants,
+      colors,
+    ),
+  )
+  expect(text).toContain('{"auth_asym_id":"A","beg_auth_seq_id":100,"end_auth_seq_id":101}')
+  expect(text).toContain('"selector":{"auth_asym_id":"A","auth_seq_id":100}')
+  expect(text).toContain('"text":"ELOC A100"')
 })

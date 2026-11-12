@@ -74,9 +74,30 @@ const linkable = [
   ...document.querySelectorAll<HTMLElement | SVGElement>('.protein-map .variant-mark, #variants tbody tr'),
 ]
 
+const params = new URLSearchParams(location.search)
+const asked = params.get('partner')?.toUpperCase()
+const askedResidue = Number(params.get('residue'))
+
 let viewer: PrismViewer | undefined
-let current = data?.partners.find(p => p.gene === host?.dataset.initial) ?? data?.partners[0]
+let current =
+  data?.partners.find(p => p.gene.toUpperCase() === asked) ??
+  data?.partners.find(p => p.gene === host?.dataset.initial) ??
+  data?.partners[0]
 let hovered: number | undefined
+let pinned = Number.isInteger(askedResidue) && askedResidue > 0 ? askedResidue : undefined
+
+function syncUrl() {
+  const next = new URLSearchParams(location.search)
+  if (current) {
+    next.set('partner', current.gene)
+  }
+  if (pinned === undefined) {
+    next.delete('residue')
+  } else {
+    next.set('residue', String(pinned))
+  }
+  history.replaceState(null, '', `?${next}${location.hash}`)
+}
 
 function showCursor(position: number | undefined) {
   const first = Number(map?.dataset.first)
@@ -102,7 +123,7 @@ function showCursor(position: number | undefined) {
 function highlight(position: number | undefined) {
   if (position !== hovered) {
     hovered = position
-    showCursor(position)
+    showCursor(position ?? pinned)
     if (viewer && current) {
       void (position === undefined
         ? viewer.api.run('highlight.clear')
@@ -112,9 +133,16 @@ function highlight(position: number | undefined) {
 }
 
 function focus(position: number) {
+  pinned = position
+  showCursor(hovered ?? pinned)
   if (viewer && current) {
     void viewer.api.run('focus.set', { target: `${current.chain}:${position}` })
   }
+}
+
+function pin(position: number) {
+  focus(position)
+  syncUrl()
 }
 
 function markPartner(gene: string) {
@@ -125,7 +153,7 @@ function markPartner(gene: string) {
     story.hidden = story.dataset.partner !== gene
   }
   for (const row of document.querySelectorAll<SVGGElement>('.partner-row')) {
-    row.classList.toggle('active', row.dataset.partner === gene)
+    row.classList.toggle('active', (row.dataset.names ?? '').split(', ').includes(gene))
   }
 }
 
@@ -142,7 +170,13 @@ async function show(partner: ScenePartner) {
 
 function choose(gene: string | undefined) {
   const partner = data?.partners.find(p => p.gene === gene)
-  return partner && partner !== current ? show(partner) : Promise.resolve()
+  return partner && partner !== current
+    ? show(partner).then(() => {
+        pinned = undefined
+        showCursor(hovered)
+        syncUrl()
+      })
+    : Promise.resolve()
 }
 
 function mapPosition(event: PointerEvent) {
@@ -176,9 +210,12 @@ async function start() {
         const chainOf = () => current?.chain ?? 'A'
         viewer.events.hover.subscribe(e => {
           hovered = residueOf(e.target, chainOf())
-          showCursor(hovered)
+          showCursor(hovered ?? pinned)
         })
         await show(current)
+        if (pinned !== undefined) {
+          focus(pinned)
+        }
       } else if (status) {
         status.textContent = 'The 3D viewer did not load.'
       }
@@ -199,15 +236,25 @@ map?.addEventListener('pointerleave', () => highlight(undefined))
 map?.addEventListener('click', event => {
   const position = mapPosition(event)
   const row = event.target instanceof Element ? event.target.closest<SVGGElement>('.partner-row') : null
-  void choose(row?.dataset.partner).then(() => (position === undefined ? undefined : focus(position)))
+  void choose(row?.dataset.partner).then(() => (position === undefined ? undefined : pin(position)))
 })
 
 document.querySelectorAll<HTMLTableRowElement>('#variants tbody tr').forEach(row => {
   row.addEventListener('mouseenter', () => highlight(Number(row.dataset.position)))
   row.addEventListener('mouseleave', () => highlight(undefined))
+  row.addEventListener('click', event => {
+    const partners = (row.dataset.partners ?? '').split(',')
+    if (!(event.target instanceof Element && event.target.closest('a'))) {
+      void choose(current && partners.includes(current.gene) ? current.gene : partners[0]).then(() => {
+        pin(Number(row.dataset.position))
+        host?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      })
+    }
+  })
 })
 
 if (current) {
   markPartner(current.gene)
 }
+showCursor(pinned)
 void start()

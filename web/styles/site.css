@@ -934,6 +934,10 @@ h3 {
   stroke-width: 1.5;
 }
 
+#variants tbody tr {
+  cursor: pointer;
+}
+
 #variants tr.linked td {
   background: var(--surface-2);
 }

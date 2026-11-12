@@ -47,7 +47,7 @@ const table = sortableTable({
       cell: lead => {
         const loc = `chr${lead.chrom}:${lead.pos - 30}-${lead.pos + 30}`
         const variant = `chr${lead.chrom}:${lead.pos}${lead.allele ? ` ${lead.allele}` : ''}`
-        return `<span class="nowrap"><a href="${genomeUrl(lead.chrom, lead.pos - 30, lead.pos + 30, JBROWSE)}">Genome</a> · <a href="${sessionUrl(complexSpec(lead.gene, lead.entity, loc, variant), JBROWSE)}">3D</a></span>`
+        return `<span class="nowrap"><a href="${geneHref(lead.page)}?partner=${encodeURIComponent(lead.partner)}&amp;residue=${lead.position}">In 3D</a> · <a href="${genomeUrl(lead.chrom, lead.pos - 30, lead.pos + 30, JBROWSE)}">Genome</a> · <a href="${sessionUrl(complexSpec(lead.gene, lead.entity, loc, variant), JBROWSE)}">3D + genome</a></span>`
       },
       sort: lead => lead.pos,
     },

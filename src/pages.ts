@@ -191,6 +191,7 @@ export function leads(gene: ReturnType<typeof geneRecord>) {
                   )
                   .map(p => p.position),
               ).size,
+              partner: partner.gene,
               entity: partner.entity,
             },
           ]

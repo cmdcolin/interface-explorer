@@ -202,7 +202,7 @@ export function proteinMap(gene: Gene) {
         .map((track, index) => {
           const y = top + index * rowHeight
           const names = track.names.join(', ')
-          return `<g class="partner-row"${track.partner ? ` data-partner="${esc(track.partner)}"` : ''}><rect class="row-hit" x="0" y="${y - 1.5}" width="${width}" height="${rowHeight}" /><text class="row-label" x="0" y="${y + 9}">${esc(track.label)}<title>${esc(names)}</title></text>
+          return `<g class="partner-row"${track.partner ? ` data-partner="${esc(track.partner)}"` : ''} data-names="${esc(names)}"><rect class="row-hit" x="0" y="${y - 1.5}" width="${width}" height="${rowHeight}" /><text class="row-label" x="0" y="${y + 9}">${esc(track.label)}<title>${esc(names)}</title></text>
             <line class="baseline" x1="${scale(1)}" x2="${scale(gene.length)}" y1="${y + 5}" y2="${y + 5}" />
             ${track.residues.map(r => `<rect x="${scale(r) - 1}" y="${y}" width="2.5" height="10" fill="var(--interface)"><title>residue ${r}: interface with ${esc(names)}</title></rect>`).join('')}</g>`
         })
