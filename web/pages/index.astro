@@ -18,14 +18,10 @@ const shownPartner = shown && vhl.partners.find(p => shown.partners.includes(p.g
 const heroLink = shown ? sessionUrl(variantSpec(vhl, shown), JBROWSE) : JBROWSE
 const all = await posts()
 const tiles = [
-  [s.proteins, 'human disease proteins checked', href('about/')],
-  [
-    s.withPartner,
-    `have a confident predicted partner (${percent(s.withPartner, s.proteins)}), ${s.partners.toLocaleString()} interfaces in all`,
-    href('genes/'),
-  ],
-  [s.variantsAtInterface.uncertain, 'variants of uncertain significance sit on those interfaces', href('genes/')],
-  [s.leads.variants, 'of them change a residue where another substitution is pathogenic', href('leads/')],
+  [s.withPartner, 'disease genes with a confident predicted partner', href('genes/')],
+  [s.partners, 'predicted interfaces, each in 3D and on the genome', href('genes/')],
+  [s.variantsAtInterface.uncertain, 'variants of uncertain significance with a named partner they touch', href('genes/')],
+  [s.leads.variants, 'leads: uncertain variants at a residue where another substitution is pathogenic', href('leads/')],
 ] as const
 ---
 

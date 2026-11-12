@@ -7,8 +7,9 @@ one.
 
 **Live:** https://cmdcolin.github.io/interface-explorer/
 
-- **Start page:** the headline share of variants at an interface, a gene
-  search, every gene as a dot, and links to the blog.
+- **Start page:** what there is to explore (genes, interfaces, uncertain
+  variants with a partner, leads), the odds ratio as evidence that the
+  interfaces matter, every gene as a dot, and links to the blog.
 - **Blog:** the findings as charts (the pathogenic-versus-benign odds ratio
   under each control, by confidence band and within each calibrated
   AlphaMissense evidence band, and how many variants at an interface reach

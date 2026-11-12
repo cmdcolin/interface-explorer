@@ -15,8 +15,8 @@ description: "Reframe the site from a findings paper to an app for exploring dis
   for exploring those, with the statistics as evidence that the predicted
   interfaces are worth exploring.
 - **State as of 2026-11-12:** renamed to Interface explorer, URL
-  `/interface-explorer/`. Home headline done; the other framing changes
-  below are not started. Claim a step here before starting it.
+  `/interface-explorer/`. Home headline, tiles and the README start-page
+  line done; blog retitles and the README/About openings not started. Claim a step here before starting it.
 
 ## Framing changes
 
@@ -24,8 +24,8 @@ description: "Reframe the site from a findings paper to an app for exploring dis
   variants at protein interfaces" (done). Keep the hero light: no gene search
   or other action controls in it, since it overloads easily. Search, if added,
   lives elsewhere (nav or the Genes page).
-- **Tiles:** lead with explorable counts (genes, partners, uncertain variants
-  with a named partner, leads), not percentages.
+- **Tiles:** explorable counts (genes, interfaces, uncertain variants with a
+  named partner, leads), not percentages (done).
 - **Blog:** keep the posts, retitled as evidence and worked examples rather
   than headline findings.
 - **Gene pages and Leads:** the core of the app already; once the mechanism
