@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { geneRecord, runs } from './pages.ts'
+import { alphaMissenseCalls, geneRecord, runs } from './pages.ts'
 
 test('consecutive residues collapse into runs', () => {
   expect(runs([5, 1, 2, 3, 7, 8, 10])).toBe('1–3, 5, 7–8, 10')
@@ -64,4 +64,19 @@ test('an interface variant carries its AlphaMissense score', () => {
     ['A10V', undefined],
     ['L11P', 0.97],
   ])
+})
+
+test('AlphaMissense calls are counted per ClinVar label, over scored variants', () => {
+  expect(
+    alphaMissenseCalls([
+      { label: 'uncertain', alphaMissense: 0.9 },
+      { label: 'uncertain', alphaMissense: 0.2 },
+      { label: 'uncertain' },
+      { label: 'benign', alphaMissense: 0.1 },
+    ]),
+  ).toEqual({
+    pathogenic: { scored: 0, likelyPathogenic: 0 },
+    uncertain: { scored: 2, likelyPathogenic: 1 },
+    benign: { scored: 1, likelyPathogenic: 0 },
+  })
 })

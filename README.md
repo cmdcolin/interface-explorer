@@ -7,6 +7,10 @@ one.
 
 **Live:** https://cmdcolin.github.io/interface-atlas/
 
+- **Start page:** the findings as charts: the pathogenic-versus-benign odds
+  ratio under each control, by confidence band and within each AlphaMissense
+  class; the variants at an interface and how AlphaMissense calls them; every
+  gene as a dot; and three worked examples (VHL, GNAO1, APP695).
 - **Genes:** a searchable table of the 1,331 disease genes with a confident
   predicted partner. Each gene page lists its partners, a protein map and the
   ClinVar variants at an interface, each with its AlphaMissense score. It

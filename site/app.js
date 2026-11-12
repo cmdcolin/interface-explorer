@@ -46,8 +46,8 @@ function percent(n, d) {
 }
 
 function oddsText(e) {
-  const [low, high] = e['95% CI (bootstrap over proteins)']
-  return `${e['Mantel–Haenszel odds ratio'].toFixed(1)}× <span class="muted">(95% CI ${low}–${high})</span>`
+  const [low, high] = e[INTERVAL]
+  return `${e[ODDS].toFixed(1)}× <span class="muted">(95% CI ${low}–${high})</span>`
 }
 
 function tableShell(id, placeholder) {
@@ -91,31 +91,334 @@ function sortableTable({ id, rows, columns, sortKey, noun, matches }) {
   render()
 }
 
+const ODDS = 'Mantel–Haenszel odds ratio'
+const INTERVAL = '95% CI (bootstrap over proteins)'
+const FOREST = { min: 0.3, max: 5.5, ticks: [0.5, 1, 2, 4] }
+
+function forestPosition(x) {
+  return (100 * Math.log(x / FOREST.min)) / Math.log(FOREST.max / FOREST.min)
+}
+
+function shareAt(e, label) {
+  const [n, d] = e[`${label} at interface`].split('/').map(Number)
+  return `${percent(n, d)} of ${d.toLocaleString()} ${label}`
+}
+
+function forestPlot(rows) {
+  return `
+    <div class="forest">
+      ${rows
+        .map(({ label, e }) => {
+          const [low, high] = e[INTERVAL]
+          return `<div class="forest-row" title="${e['proteins informative']} proteins with both pathogenic and benign variants">
+            <div class="forest-label"><strong>${label}</strong><span class="muted">at an interface: ${shareAt(e, 'pathogenic')}, ${shareAt(e, 'benign')}</span></div>
+            <div class="forest-track">
+              <span class="forest-null" style="left:${forestPosition(1)}%"></span>
+              <span class="forest-ci" style="left:${forestPosition(low)}%;width:${forestPosition(high) - forestPosition(low)}%"></span>
+              <span class="forest-dot" style="left:${forestPosition(e[ODDS])}%"></span>
+            </div>
+            <div class="forest-value">${e[ODDS].toFixed(1)}× <span class="muted">${low}–${high}</span></div>
+          </div>`
+        })
+        .join('')}
+      <div class="forest-row forest-axis">
+        <div class="forest-label"></div>
+        <div class="forest-track">${FOREST.ticks.map(t => `<span class="forest-tick" style="left:${forestPosition(t)}%">${t}×</span>`).join('')}</div>
+        <div class="forest-value"></div>
+      </div>
+    </div>`
+}
+
+function compositionBar(counts) {
+  const total = Object.values(counts).reduce((a, b) => a + b, 0)
+  return `
+    <div class="stack" role="img" aria-label="Classified missense variants at an interface: ${Object.keys(LABELS).map(label => `${counts[label].toLocaleString()} ${label}`).join(', ')}">
+      ${Object.keys(LABELS).map(label => `<span style="flex-grow:${counts[label]};background:var(--${label})" title="${LABELS[label]}: ${counts[label].toLocaleString()} (${percent(counts[label], total)})"></span>`).join('')}
+    </div>
+    <div class="legend">
+      ${Object.keys(LABELS).map(label => `<span><span class="swatch" style="background:var(--${label})"></span>${LABELS[label]} <strong>${counts[label].toLocaleString()}</strong> (${percent(counts[label], total)})</span>`).join('')}
+    </div>`
+}
+
+function callBars(calls) {
+  return `
+    <div class="bars">
+      ${Object.keys(LABELS)
+        .map(label => {
+          const { scored, likelyPathogenic } = calls[label]
+          return `<div class="bar-row" title="${likelyPathogenic.toLocaleString()} of ${scored.toLocaleString()} scored">
+            <div>ClinVar ${LABELS[label].toLowerCase()}</div>
+            <div class="bar-track"><span style="width:${(100 * likelyPathogenic) / scored}%;background:var(--${label})"></span></div>
+            <div class="bar-value">${percent(likelyPathogenic, scored)}</div>
+          </div>`
+        })
+        .join('')}
+    </div>`
+}
+
+const SCATTER_TICKS = [0, 5, 25, 50, 100, 200, 400]
+
+function geneScatter(genes) {
+  const width = 1000
+  const height = 440
+  const left = 54
+  const bottom = 46
+  const maxX = Math.max(...genes.map(g => g.uncertain))
+  const maxY = Math.max(...genes.map(g => g.pathogenic))
+  const x = v => left + Math.sqrt(v / maxX) * (width - left - 70)
+  const y = v => height - bottom - Math.sqrt(v / maxY) * (height - bottom - 20)
+  const distance = g => g.uncertain / maxX + g.pathogenic / maxY
+  const placed = []
+  genes
+    .toSorted((a, b) => distance(b) - distance(a))
+    .slice(0, 40)
+    .forEach(g => {
+      const box = { x: x(g.uncertain) + 8, y: y(g.pathogenic) - 7, w: g.gene.length * 8 + 4, h: 15, gene: g.gene }
+      if (placed.every(p => box.x > p.x + p.w || p.x > box.x + box.w || box.y > p.y + p.h || p.y > box.y + box.h)) {
+        placed.push(box)
+      }
+    })
+  return `
+    <div class="scatter-wrap">
+      <svg class="scatter" viewBox="0 0 ${width} ${height}" role="img" aria-label="Each gene by its pathogenic and uncertain ClinVar missense variants at a predicted interface">
+        ${SCATTER_TICKS.filter(t => t <= maxX).map(t => `<line class="grid" x1="${x(t)}" x2="${x(t)}" y1="20" y2="${height - bottom}" /><text class="tick" x="${x(t)}" y="${height - bottom + 18}" text-anchor="middle">${t}</text>`).join('')}
+        ${SCATTER_TICKS.filter(t => t <= maxY).map(t => `<line class="grid" x1="${left}" x2="${width - 16}" y1="${y(t)}" y2="${y(t)}" /><text class="tick" x="${left - 8}" y="${y(t) + 4}" text-anchor="end">${t}</text>`).join('')}
+        <text class="axis-title" x="${(width + left) / 2}" y="${height - 6}" text-anchor="middle">Variants of uncertain significance at an interface →</text>
+        <text class="axis-title" x="${left - 40}" y="12">↑ Pathogenic variants at an interface</text>
+        ${genes.map((g, index) => `<circle data-index="${index}" cx="${x(g.uncertain)}" cy="${y(g.pathogenic)}" r="4.5" />`).join('')}
+        ${placed.map(p => `<text class="gene-label" x="${p.x}" y="${p.y + 11}">${esc(p.gene)}</text>`).join('')}
+      </svg>
+    </div>
+    <div class="tooltip" id="scatter-tip" hidden></div>`
+}
+
+function wireScatter(genes) {
+  const tip = document.getElementById('scatter-tip')
+  const svg = document.querySelector('.scatter')
+  const geneAt = event => genes[event.target.dataset?.index]
+  svg.addEventListener('pointermove', event => {
+    const g = geneAt(event)
+    tip.hidden = !g
+    if (g) {
+      tip.innerHTML = `<strong>${esc(g.gene)}</strong> with ${esc(g.topPartner)}${g.partners > 1 ? ` and ${g.partners - 1} more` : ''}<br />${Object.keys(LABELS).map(label => `<span class="swatch" style="background:var(--${label})"></span>${g[label]} ${label}`).join(' · ')}<br /><span class="muted">${g.interfaceResidues} interface residues of ${g.length}</span>`
+      tip.style.left = `${Math.min(event.clientX + 14, window.innerWidth - tip.offsetWidth - 8)}px`
+      tip.style.top = `${event.clientY + 14}px`
+    }
+  })
+  svg.addEventListener('pointerleave', () => {
+    tip.hidden = true
+  })
+  svg.addEventListener('click', event => {
+    const g = geneAt(event)
+    if (g) {
+      location.hash = `#/gene/${encodeURIComponent(g.page)}`
+    }
+  })
+}
+
+function geneSearch(genes) {
+  return `
+    <form class="search" id="gene-search">
+      <input type="search" list="gene-names" placeholder="Jump to a gene, e.g. VHL" aria-label="Jump to a gene" autocomplete="off" />
+      <datalist id="gene-names">${genes.map(g => `<option value="${esc(g.gene)}"></option>`).join('')}</datalist>
+      <button class="button primary">Open</button>
+      <span class="muted" id="gene-search-miss"></span>
+    </form>`
+}
+
+function wireGeneSearch(genes) {
+  const form = document.getElementById('gene-search')
+  const input = form.querySelector('input')
+  const open = () => {
+    const query = input.value.trim().toUpperCase()
+    const g = genes.find(candidate => candidate.gene.toUpperCase() === query)
+    document.getElementById('gene-search-miss').textContent = g || !query ? '' : `No gene called ${input.value.trim()} has a confident predicted partner.`
+    if (g) {
+      location.hash = `#/gene/${encodeURIComponent(g.page)}`
+    }
+  }
+  form.addEventListener('submit', event => {
+    event.preventDefault()
+    open()
+  })
+  input.addEventListener('input', event => {
+    if (event.inputType === 'insertReplacementText' || event.inputType === undefined) {
+      open()
+    }
+  })
+}
+
+function geneLocus(gene) {
+  const pad = Math.round((gene.end - gene.start) * 0.05) + 200
+  return `chr${gene.chrom}:${gene.start - pad}-${gene.end + pad}`
+}
+
+function geneCase(gene, title, text) {
+  const partner = gene.partners.toSorted((a, b) => b.variants - a.variants)[0]
+  return `
+    <section class="case">
+      <h3>${title}</h3>
+      <p>${text}</p>
+      ${proteinMap(gene)}
+      <div class="actions">
+        <a class="button primary" href="${complexLink(gene.gene, partner.entity, geneLocus(gene))}">${esc(gene.gene)}–${esc(partner.gene)} in 3D beside the genome</a>
+        <a class="button" href="#/gene/${encodeURIComponent(gene.page)}">All ${gene.variants.length} variants</a>
+      </div>
+    </section>`
+}
+
 async function home() {
-  const [summary, genes] = await Promise.all([load('data/summary.json'), load('data/genes.json')])
+  const [summary, genes, isoforms, gpcr, vhl, gnao1, app695] = await Promise.all([
+    load('data/summary.json'),
+    load('data/genes.json'),
+    load('data/isoforms.json'),
+    load('data/gpcr.json'),
+    load('data/genes/VHL.json'),
+    load('data/genes/GNAO1.json'),
+    load('data/isoforms/APP.json'),
+  ])
   const v = summary.variantsAtInterface
+  const e = summary.enrichment
+  const am = summary.alphaMissense.calls
+  const classified = v.pathogenic + v.uncertain + v.benign
+  const isoformCount = isoforms.genes.reduce((n, g) => n + g.modelled - 1, 0)
+  const lackingInterface = isoforms.genes.reduce((n, g) => n + g.interfaceLost, 0)
+  const lackingPathogenic = isoforms.genes.filter(g => g.pathogenicLost > 0).length
+  const appPair = { ...app695, isoforms: app695.isoforms.filter(i => ['APP695', 'APP751'].includes(i.name)) }
+  const gnas = gpcr.gAlphas.find(g => g.gene === 'GNAS')
+  const compared = gpcr.gAlphas.filter(g => g.afdb && !g.chimeraOnly)
   app.innerHTML = `
-    <h1>Which disease variants sit where proteins touch?</h1>
+    <section class="hero">
+      <h1>Disease variants cluster where proteins touch</h1>
+      <p class="lede">
+        We mapped every confident <a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a> predicted
+        complex of a human disease protein back to the genome, codon by codon, and asked which
+        ClinVar missense variants land on an interface. Pathogenic ones do
+        <strong>${e.all[ODDS].toFixed(1)}×</strong> as often as benign ones.
+      </p>
+      ${geneSearch(genes)}
+      <div class="tiles">
+        <div class="tile"><div class="value">${summary.proteins.toLocaleString()}</div><div class="label">human disease proteins checked</div></div>
+        <div class="tile"><div class="value">${summary.withPartner.toLocaleString()}</div><div class="label">have a confident predicted partner (${percent(summary.withPartner, summary.proteins)})</div></div>
+        <div class="tile"><div class="value">${summary.partners.toLocaleString()}</div><div class="label">predicted interfaces, mapped to hg38 codons</div></div>
+        <div class="tile"><div class="value">${classified.toLocaleString()}</div><div class="label">classified ClinVar missense variants on them</div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Pathogenic variants sit at interfaces more often than benign ones</h2>
+      <p class="lede">
+        Odds that a pathogenic missense variant is at a predicted interface, against a benign one in the same protein.
+        Restricting to folded residues, then to folded residues on the surface, shows the effect is not just
+        "folded versus disordered".
+      </p>
+      ${forestPlot([
+        { label: 'All residues', e: e.all },
+        { label: `Folded only (pLDDT ≥ ${summary.thresholds.plddt})`, e: e.ordered },
+        { label: 'Folded and surface-exposed', e: e.orderedSurface },
+      ])}
+      <div class="split">
+        <div>
+          <h3>It holds at every confidence level</h3>
+          <p class="muted">Interfaces grouped by the complex's ipSAE, each against residues at no interface.</p>
+          ${forestPlot(
+            Object.entries(e.byConfidenceBand)
+              .filter(([name]) => name.startsWith('ipSAE'))
+              .map(([label, band]) => ({ label: esc(label), e: band })),
+          )}
+        </div>
+        <div>
+          <h3>It adds modestly to AlphaMissense</h3>
+          <p class="muted">The same comparison among variants AlphaMissense puts in one class. It sees one protein at a time, not the partner.</p>
+          ${forestPlot(Object.entries(e.byAlphaMissenseClass).map(([label, group]) => ({ label: esc(label.replace('AlphaMissense l', 'L').replace('AlphaMissense a', 'A')), e: group })))}
+        </div>
+      </div>
+      <p class="muted">Mantel–Haenszel odds ratios across proteins; lines are 95% intervals from resampling proteins, and the dashed line marks no difference. Hover a row for the number of proteins behind it.</p>
+    </section>
+
+    <section>
+      <h2>${v.uncertain.toLocaleString()} variants of uncertain significance sit at an interface</h2>
+      <p class="lede">
+        Most variants at an interface have no verdict yet. Each one now has a structural hypothesis: the partner it may disturb.
+      </p>
+      ${compositionBar(v)}
+      <h3>How many does AlphaMissense call likely pathogenic?</h3>
+      ${callBars(am)}
+      <p class="muted">
+        Share of scored variants at an interface with AlphaMissense above ${summary.alphaMissense.likelyPathogenic}. The uncertain ones fall between
+        the known pathogenic and benign: ${am.uncertain.likelyPathogenic.toLocaleString()} leads worth a look.
+      </p>
+    </section>
+
+    <section>
+      <h2>Every gene in the atlas</h2>
+      <p class="lede">
+        One dot per gene, ${genes.length.toLocaleString()} in all. Genes high up have known pathogenic variants at an interface;
+        genes far right have many unresolved ones on the same surface. Click a dot to open the gene, or
+        <a href="#/genes">browse the table</a>.
+      </p>
+      ${geneScatter(genes)}
+    </section>
+
+    <section>
+      <h2>Three places to start</h2>
+      ${geneCase(vhl, 'VHL and elongin C', `${vhl.counts.pathogenic} pathogenic variants of the von Hippel–Lindau tumour suppressor sit on the ${vhl.interfaceResidues} residues that hold elongin C, with ${vhl.counts.uncertain} uncertain ones among them.`)}
+      ${geneCase(gnao1, 'GNAO1, Gβ and the RGS proteins', `Gαo's ${gnao1.counts.pathogenic} pathogenic interface variants fall in two patches: the N-terminal helix that binds Gβ (L13P, I19M, L23F) and the switch regions that bind RGS proteins (T182I, Q205P, R206).`)}
+      <section class="case">
+        <h3>APP695, the neuronal isoform of APP</h3>
+        <p>
+          Splicing changes interfaces too. APP695 (P05067-4) has no Kunitz inhibitor domain, so it lacks most of APP's predicted interfaces with the
+          proteases KLK11, KLK14 and prostasin; APP751 (P05067-8) keeps the domain and lacks none.
+          Across ${isoforms.genes.length.toLocaleString()} disease genes and ${isoformCount.toLocaleString()} modelled isoforms,
+          ${lackingInterface} isoforms lack half or more of a partner interface, and ${lackingPathogenic.toLocaleString()} genes have an isoform missing a residue with a pathogenic variant.
+        </p>
+        ${isoformMap(appPair)}
+        <div class="actions">
+          <a class="button primary" href="#/isoforms/APP">All ${app695.isoforms.length} APP isoforms</a>
+          <a class="button" href="#/isoforms">Isoforms of every gene</a>
+        </div>
+      </section>
+    </section>
+
+    <section>
+      <h2>Do the predictions match experiment?</h2>
+      <p class="lede">
+        For G proteins we can check. ${gpcr.complexes.length} cryo-EM and X-ray complexes of amine receptors give the experimental
+        receptor-facing surface of each Gα. AlphaFold DB's predicted GPCR complexes cover ${compared.map(g => `${Math.round(g.afdb.recall * 100)}% of it for ${esc(g.gene)}`).join(' and ')}.
+        Gαs has no predicted GPCR complex at all, so its ${gnas.counts.length} receptor-facing residues, and the
+        ${gnas.variants.filter(variant => variant.label === 'pathogenic').length} pathogenic variants on them, come from experiment alone.
+      </p>
+      <h3>${esc(gnas.gene)} <span class="muted">residues contacting a receptor, by number of the ${gnas.structures} structures</span></h3>
+      ${surfaceMap(gnas)}
+      <div class="actions">
+        <a class="button primary" href="#/gpcr">GPCRs and their G proteins</a>
+        <a class="button" href="jbrowse/">Genome browser</a>
+        <a class="button" href="#/about">Method and caveats</a>
+      </div>
+    </section>
+    <p class="note">
+      Only ${percent(summary.withPartner, summary.proteins)} of disease proteins have any predicted partner, and the complexes are predictions:
+      an interface variant is a lead, not a mechanism.
+    </p>`
+  wireGeneSearch(genes)
+  wireScatter(genes)
+}
+
+async function genesPage() {
+  const [summary, genes] = await Promise.all([load('data/summary.json'), load('data/genes.json')])
+  app.innerHTML = `
+    <h1>Genes</h1>
     <p class="lede">
-      For each human disease gene, this atlas marks the codons whose residues sit
-      at an interface in an <a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a>
-      predicted complex, and lists the ClinVar missense variants that fall there.
+      The ${genes.length.toLocaleString()} disease genes with a confident predicted partner in
+      <a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a>, and the ClinVar missense variants at their interfaces.
       Pick a gene to see its partners and variants, or open them on the genome.
     </p>
-    <div class="tiles">
-      <div class="tile"><div class="value">${summary.genes.toLocaleString()}</div><div class="label">genes with a confident predicted partner, of ${summary.proteins.toLocaleString()} disease genes</div></div>
-      <div class="tile"><div class="value">${summary.partners.toLocaleString()}</div><div class="label">predicted partner interfaces (ipSAE ≥ ${summary.thresholds.ipsae})</div></div>
-      <div class="tile"><div class="value">${v.uncertain.toLocaleString()}</div><div class="label">variants of uncertain significance at an interface</div></div>
-      <div class="tile"><div class="value">${summary.enrichment.orderedSurface['Mantel–Haenszel odds ratio'].toFixed(1)}×</div><div class="label">pathogenic vs benign at interfaces, among folded surface residues</div></div>
-    </div>
     <p class="note">
       Covers all ${summary.proteins.toLocaleString()} reviewed human proteins with a UniProt disease
       annotation. Only ${percent(summary.withPartner, summary.proteins)} have any predicted partner, and
       the complexes are predictions.${summary.unmapped ? ` ${summary.unmapped} more genes with a partner are left out because their coding coordinates don't map to hg38.` : ''}
       See <a href="#/about">About</a>.
     </p>
-    <p>Splicing changes interfaces too: see how each gene's <a href="#/isoforms">isoforms</a> differ.</p>
-    <h2>Genes</h2>
     ${tableShell('genes', 'Filter genes or partners')}`
   sortableTable({
     id: 'genes',
@@ -184,7 +487,7 @@ async function genePage(name) {
   const isoformRow = isoforms.genes.find(r => r.accession === gene.accession)
   const pad = Math.round((gene.end - gene.start) * 0.05) + 200
   app.innerHTML = `
-    <p><a href="#/">← All genes</a></p>
+    <p><a href="#/genes">← All genes</a></p>
     <h1>${esc(gene.gene)}</h1>
     <p class="lede">
       UniProt <a href="https://www.uniprot.org/uniprotkb/${esc(gene.accession)}">${esc(gene.accession)}</a>,
@@ -604,7 +907,7 @@ async function about() {
       <li>Their heterodimers from AlphaFold DB's 2026 complex release (AlphaFold-Multimer), kept at ipSAE ≥ ${t.ipsae}, the AlphaFold DB team's threshold.</li>
       <li>Interface residues: any heavy atom within ${t.contact} Å of the partner, residue pLDDT ≥ ${t.plddt}. Mapped to hg38 codons with EBI Proteins API coordinates.</li>
       <li>Variants: single-nucleotide missense variants classified pathogenic, likely pathogenic, uncertain, likely benign or benign in NCBI's weekly ClinVar <code>variant_summary</code> (downloaded ${esc(summary.provenance.clinvarDownloaded)}), on a RefSeq transcript UniProt maps to the canonical isoform. Conflicting classifications are left out, and so is any variant whose wild-type residue does not match the canonical sequence at its position.</li>
-      <li>Each variant's <a href="https://doi.org/10.1126/science.adg7492">AlphaMissense</a> pathogenicity, from the published table of every substitution in the canonical proteins. Of the ${summary.variantsAtInterface.uncertain.toLocaleString()} variants of uncertain significance at an interface, it scores ${summary.alphaMissense.uncertainScored.toLocaleString()} and calls ${summary.alphaMissense.uncertainLikelyPathogenic.toLocaleString()} (${percent(summary.alphaMissense.uncertainLikelyPathogenic, summary.alphaMissense.uncertainScored)}) likely pathogenic.</li>
+      <li>Each variant's <a href="https://doi.org/10.1126/science.adg7492">AlphaMissense</a> pathogenicity, from the published table of every substitution in the canonical proteins. Of the ${summary.variantsAtInterface.uncertain.toLocaleString()} variants of uncertain significance at an interface, it scores ${summary.alphaMissense.calls.uncertain.scored.toLocaleString()} and calls ${summary.alphaMissense.calls.uncertain.likelyPathogenic.toLocaleString()} (${percent(summary.alphaMissense.calls.uncertain.likelyPathogenic, summary.alphaMissense.calls.uncertain.scored)}) likely pathogenic.</li>
     </ul>
     <h2>Does the interface mean anything?</h2>
     <p>Within each protein, pathogenic missense variants sit at a predicted interface more often than benign ones:</p>
@@ -646,13 +949,15 @@ async function route() {
       await isoformIndex()
     } else if (page === 'gpcr') {
       await gpcrPage()
+    } else if (page === 'genes') {
+      await genesPage()
     } else if (page === 'about') {
       await about()
     } else {
       await home()
     }
   } catch (error) {
-    app.innerHTML = `<p>Could not load this page: ${esc(error.message)}. <a href="#/">Back to all genes</a>.</p>`
+    app.innerHTML = `<p>Could not load this page: ${esc(error.message)}. <a href="#/">Back to the start</a>.</p>`
   }
   window.scrollTo(0, 0)
 }

@@ -41,6 +41,27 @@ function labelCounts(variants: { label: Variant['label'] }[]) {
   )
 }
 
+export function alphaMissenseCalls(
+  variants: { label: Variant['label']; alphaMissense?: number }[],
+) {
+  return Object.fromEntries(
+    LABELS.map(label => {
+      const scored = variants.filter(
+        v => v.label === label && v.alphaMissense !== undefined,
+      )
+      return [
+        label,
+        {
+          scored: scored.length,
+          likelyPathogenic: scored.filter(v =>
+            isLikelyPathogenic(v.alphaMissense),
+          ).length,
+        },
+      ]
+    }),
+  )
+}
+
 export function geneRecord(
   protein: AtlasProtein,
   variants: Variant[],
@@ -170,9 +191,6 @@ async function main() {
     .sort((a, b) => (a.gene < b.gene ? -1 : a.gene > b.gene ? 1 : 0))
   const summaryCounts = record(analysis.summary)
   const controlled = record(analysis.controlled_for_order_and_surface)
-  const uncertain = genes
-    .flatMap(g => g.variants)
-    .filter(v => v.label === 'uncertain')
   const summary = {
     proteins: summaryCounts['disease proteins'],
     withPartner: summaryCounts['with any predicted hetero complex'],
@@ -181,17 +199,16 @@ async function main() {
     partners: genes.reduce((n, g) => n + g.partners.length, 0),
     variantsAtInterface: labelCounts(genes.flatMap(g => g.variants)),
     alphaMissense: {
-      uncertainScored: uncertain.filter(v => v.alphaMissense !== undefined)
-        .length,
-      uncertainLikelyPathogenic: uncertain.filter(v =>
-        isLikelyPathogenic(v.alphaMissense),
-      ).length,
+      calls: alphaMissenseCalls(genes.flatMap(g => g.variants)),
       likelyBenign: LIKELY_BENIGN,
       likelyPathogenic: LIKELY_PATHOGENIC,
     },
     enrichment: {
       all: controlled['all residues'],
+      ordered: controlled['ordered (pLDDT ≥ 70)'],
       orderedSurface: controlled['ordered and surface (pLDDT ≥ 70, RSA ≥ 0.2)'],
+      byConfidenceBand: analysis.by_confidence_band,
+      byAlphaMissenseClass: analysis.by_alphamissense_class,
     },
     thresholds: { ipsae: CONFIDENT, plddt: MIN_PLDDT, contact: CONTACT },
     provenance: { clinvarDownloaded: downloaded() },
