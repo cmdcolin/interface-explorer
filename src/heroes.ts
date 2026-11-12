@@ -60,10 +60,10 @@ await screenshots(
     },
     {
       name: 'sars-cov-2',
-      url: local =>
-        `${local}blog/2026-11-12-sars-cov-2/#three-worth-a-second-look`,
-      height: 700,
-      wait: 5,
+      url: local => `${local}figures/sars-cov-2/`,
+      clip: '.hero-figure',
+      height: 1000,
+      wait: 35,
     },
   ],
   { dir: join(ROOT, 'web', 'content', 'blog', 'heroes'), format: 'jpeg' },

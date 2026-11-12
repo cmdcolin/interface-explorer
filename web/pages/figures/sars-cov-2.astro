@@ -1,0 +1,49 @@
+---
+import ComplexView from '../../components/ComplexView.astro'
+import Layout from '../../layouts/Layout.astro'
+import { contactView, viralContacts } from '../../lib/viral.ts'
+
+const v = viralContacts()
+const panels = [
+  { gene: 'ISG15', label: 'ISG15, held by the papain-like protease' },
+  { gene: 'YWHAZ', label: '14-3-3ζ, with the nucleoprotein in its groove' },
+].flatMap(panel => {
+  const contact = v.byGene(panel.gene)
+  return contact ? [{ ...panel, contact }] : []
+})
+---
+
+<Layout title="SARS-CoV-2 hero figure" indexed={false}>
+  <div class="hero-figure">
+    {panels.map(panel => (
+      <ComplexView view={contactView(panel.contact)}>{panel.label}</ComplexView>
+    ))}
+  </div>
+</Layout>
+
+<style>
+  .hero-figure {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    padding: 24px;
+    width: 1360px;
+    max-width: none;
+    margin-left: calc(50% - 680px);
+    background: var(--surface);
+  }
+
+  .hero-figure :global(.complex-view) {
+    margin: 0;
+  }
+
+  .hero-figure :global(.structure) {
+    height: 620px;
+  }
+
+  .hero-figure :global(.complex-view figcaption) {
+    margin-top: 12px;
+    color: var(--text-1);
+    font-size: 19px;
+  }
+</style>
