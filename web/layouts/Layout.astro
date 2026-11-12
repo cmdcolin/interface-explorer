@@ -16,7 +16,7 @@ interface Props {
 const DEFAULT_DESCRIPTION =
   'ClinVar missense variants at predicted protein–protein interfaces of human disease genes, each one opened on the genome beside the 3D complex.'
 const { title, description = DEFAULT_DESCRIPTION, nav, indexed = true, image } = Astro.props
-const fullTitle = title ? `${title} · Interface atlas` : 'Interface atlas'
+const fullTitle = title ? `${title} · Interface explorer` : 'Interface explorer'
 const canonical = new URL(Astro.url.pathname, Astro.site)
 const preview = image
   ? (await getImage({ src: image, width: 1400, height: 800, format: 'jpg' })).src
@@ -42,7 +42,7 @@ const links = [
     <meta name="description" content={description} />
     {indexed && <link rel="canonical" href={canonical} />}
     <meta property="og:type" content="website" />
-    <meta property="og:title" content={title ?? 'Interface atlas: disease variants cluster where proteins touch'} />
+    <meta property="og:title" content={title ?? 'Interface explorer: disease variants on predicted protein interfaces'} />
     <meta property="og:description" content={description} />
     {indexed && <meta property="og:url" content={canonical} />}
     <meta property="og:image" content={previewUrl} />
@@ -57,7 +57,7 @@ const links = [
       <div class="brand-group">
         <a class="brand" href={href()}>
           <img class="brand-logo" src={href('logo.svg')} alt="" />
-          Interface atlas
+          Interface explorer
         </a>
         <a
           class="event-badge"
@@ -85,7 +85,7 @@ const links = [
     <footer class="site-footer">
       <p class="event-note" style={`--logo: url(${href('biohackathon-logo.svg')})`}>
         <span class="event-logo" role="img" aria-label="BioHackathon Europe"></span>
-        Interface atlas is a <a href="https://biohackathon-europe.org/">BioHackathon Europe 2026</a> project.
+        Interface explorer is a <a href="https://biohackathon-europe.org/">BioHackathon Europe 2026</a> project.
       </p>
       Prototype. Predicted complexes from
       <a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a> (CC-BY 4.0),
@@ -96,7 +96,7 @@ const links = [
       gene coordinates via the <a href="https://www.ebi.ac.uk/proteins/api/doc/">EBI Proteins API</a>,
       conservation from <a href="https://genome.ucsc.edu/">UCSC</a>'s 100-way vertebrate phyloP,
       viewer <a href="https://jbrowse.org/jb2/">JBrowse 2</a>.
-      <a href="https://github.com/cmdcolin/interface-atlas">Source</a>.
+      <a href="https://github.com/cmdcolin/interface-explorer">Source</a>.
     </footer>
   </body>
 </html>

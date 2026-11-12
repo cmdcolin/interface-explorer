@@ -447,7 +447,7 @@
         "hg38"
       ],
       "category": [
-        "Interface atlas"
+        "Interface explorer"
       ],
       "description": "Codons of residues within 5 Å of a partner in an AlphaFold DB heterodimer with ipSAE ≥ 0.6, residue pLDDT ≥ 70. One feature per partner.",
       "adapter": {
@@ -463,7 +463,7 @@
         "hg38"
       ],
       "category": [
-        "Interface atlas"
+        "Interface explorer"
       ],
       "description": "ClinVar missense variants (NCBI variant_summary) whose residue sits at a confident predicted interface. Red pathogenic, orange uncertain, grey benign.",
       "adapter": {
@@ -479,7 +479,7 @@
         "hg38"
       ],
       "category": [
-        "Interface atlas"
+        "Interface explorer"
       ],
       "description": "Codons of residues within 5 Å of the partner in cryo-EM and X-ray receptor–G protein complexes of biogenic amine receptors, selected from GPCRdb. One feature per structure and side, e.g. DRD1–GNAS (7JVQ).",
       "adapter": {
@@ -495,7 +495,7 @@
         "hg38"
       ],
       "category": [
-        "Interface atlas"
+        "Interface explorer"
       ],
       "description": "ClinVar missense variants (NCBI variant_summary) whose residue contacts the partner in an experimental receptor–G protein complex. Red pathogenic, orange uncertain, grey benign.",
       "adapter": {
@@ -505,7 +505,7 @@
     }
   ],
   "defaultSession": {
-    "name": "Interface atlas",
+    "name": "Interface explorer",
     "views": [
       {
         "type": "LinearGenomeView",

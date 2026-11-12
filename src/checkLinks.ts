@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { glob } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 
-const BASE = '/interface-atlas/'
+const BASE = '/interface-explorer/'
 const EXTERNAL = /^(?:[a-z][a-z+.-]*:|\/\/)/i
 
 export function internalTargets(html: string, page: string, base = BASE) {

@@ -1,11 +1,11 @@
-# interface-atlas
+# interface-explorer
 
 **TL;DR:** for every human disease gene, which codons sit at an interface in an
 AlphaFold DB predicted complex, which ClinVar missense variants fall there, and
 how each alternative isoform's predicted structure differs from the canonical
 one.
 
-**Live:** https://cmdcolin.github.io/interface-atlas/
+**Live:** https://cmdcolin.github.io/interface-explorer/
 
 - **Start page:** the headline share of variants at an interface, a gene
   search, every gene as a dot, and links to the blog.
@@ -48,7 +48,7 @@ one.
   its predicted fold, and which pathogenic sites and partner interfaces it
   lacks. Each isoform opens superposed on the canonical model, linked to its own
   transcript.
-- **JBrowse**, hosted at jbrowse.org on the atlas's config, with the tracks
+- **JBrowse**, hosted at jbrowse.org on the explorer's config, with the tracks
   below.
 
 ## Tracks
@@ -305,7 +305,7 @@ one.
   MolViewSpec for the chosen complex in `web/lib/scene.ts`, and reads the
   complex from AlphaFold DB.
 - A summary deck is in `slides/`: `make` there builds
-  `interface-atlas-summary.pdf` with LuaLaTeX, and `make screenshots` retakes
+  `interface-explorer-summary.pdf` with LuaLaTeX, and `make screenshots` retakes
   its screenshots with headless Chrome.
 
 Requires Node 24 or later, pnpm, and UCSC's `bedToBigBed`.

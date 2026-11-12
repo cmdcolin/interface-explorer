@@ -81,7 +81,7 @@ function bedTrack(
     trackId,
     name,
     assemblyNames: ['hg38'],
-    category: ['Interface atlas'],
+    category: ['Interface explorer'],
     description,
     adapter: { type: 'BigBedAdapter', uri: file },
   }
@@ -220,7 +220,7 @@ async function writeConfig(defaultLocus: string) {
     aggregateTextSearchAdapters: hg38.aggregateTextSearchAdapters ?? [],
     tracks,
     defaultSession: {
-      name: 'Interface atlas',
+      name: 'Interface explorer',
       views: [
         {
           type: 'LinearGenomeView',

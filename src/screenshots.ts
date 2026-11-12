@@ -8,8 +8,8 @@ import { setTimeout as sleep } from 'node:timers/promises'
 import { ROOT } from './paths.ts'
 
 const siteDir = join(ROOT, 'dist')
-const base = '/interface-atlas/'
-export const LIVE = 'https://cmdcolin.github.io/interface-atlas/'
+const base = '/interface-explorer/'
+export const LIVE = 'https://cmdcolin.github.io/interface-explorer/'
 const chrome = process.env.CHROME ?? 'google-chrome'
 
 const contentTypes: Record<string, string> = {

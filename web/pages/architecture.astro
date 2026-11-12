@@ -176,7 +176,7 @@ function chipLayout(b: ReturnType<typeof place>) {
 const laidOut = [...byId.values()].map(b => ({ ...b, ...chipLayout(b) }))
 ---
 
-<Layout title="How it works" nav="architecture" description="How the interface atlas is built: data sources, the Node pipeline and its libraries, and the static site and viewers it feeds.">
+<Layout title="How it works" nav="architecture" description="How the interface explorer is built: data sources, the Node pipeline and its libraries, and the static site and viewers it feeds.">
   <h1>How it works</h1>
   <p class="lede">
     A Node pipeline pulls public data, finds which disease-protein residues touch a predicted partner, maps them to genome
@@ -274,7 +274,7 @@ const laidOut = [...byId.values()].map(b => ({ ...b, ...chipLayout(b) }))
       from AlphaFold DB and colours it from the page's JSON.
     </li>
     <li>
-      <a href={JBROWSE}>JBrowse 2</a> shows the atlas's bigBed tracks beside UCSC's hg38 ClinVar, RefSeq and phyloP
+      <a href={JBROWSE}>JBrowse 2</a> shows the explorer's bigBed tracks beside UCSC's hg38 ClinVar, RefSeq and phyloP
       tracks, and its Protein3d plugin opens a variant inside its complex next to the genome.
     </li>
   </ul>

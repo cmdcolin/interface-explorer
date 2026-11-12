@@ -1,5 +1,5 @@
 {
-  "name": "interface-atlas",
+  "name": "interface-explorer",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@12.16.1",

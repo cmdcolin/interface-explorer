@@ -3,9 +3,9 @@ import { defineConfig } from 'astro/config'
 
 export default defineConfig({
   site: 'https://cmdcolin.github.io',
-  base: '/interface-atlas',
+  base: '/interface-explorer',
   trailingSlash: 'always',
-  redirects: { '/gpcr': '/interface-atlas/blog/2026-11-12-project-9-gpcrs/' },
+  redirects: { '/gpcr': '/interface-explorer/blog/2026-11-12-project-9-gpcrs/' },
   srcDir: './web',
   publicDir: './site',
   outDir: './dist',

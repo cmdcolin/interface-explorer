@@ -26,7 +26,7 @@ interface Resource {
 
 const resources: Resource[] = [
   {
-    name: 'Interface atlas',
+    name: 'Interface explorer',
     year: '2026',
     paper: { label: 'Method', url: href('about/') },
     site: { label: 'this site', url: href() },
@@ -137,11 +137,11 @@ const amClasses = Object.entries(s.enrichment.byAlphaMissenseClass)
 <Layout
   title="Comparison"
   nav="comparison"
-  description="How the interface atlas compares with other resources that put disease variants on predicted protein–protein interfaces, and what it adds."
+  description="How the interface explorer compares with other resources that put disease variants on predicted protein–protein interfaces, and what it adds."
 >
   <h1>How it compares</h1>
   <p class="lede">
-    Disease variants clustering where proteins touch is not a new finding. What the atlas adds is the newest predicted
+    Disease variants clustering where proteins touch is not a new finding. What the explorer adds is the newest predicted
     complexes, controls on the enrichment, a genome-browser view of the interfaces, and the leads and isoforms built on them.
   </p>
 
@@ -174,7 +174,7 @@ const amClasses = Object.entries(s.enrichment.byAlphaMissenseClass)
     </table>
   </div>
 
-  <h2>What the atlas confirms</h2>
+  <h2>What the explorer confirms</h2>
   <ul>
     <li>
       Disease mutations sit at interfaces more often than chance. <a href="https://doi.org/10.1038/nbt.2106">Wang et al. (2012)</a>
@@ -184,7 +184,7 @@ const amClasses = Object.entries(s.enrichment.byAlphaMissenseClass)
     </li>
     <li>
       On AlphaFold complexes, <a href="https://doi.org/10.1038/s41594-022-00910-8">Burke et al. (2023)</a> found pathogenic
-      ClinVar variants 2.3-fold enriched over benign ones at interfaces. The atlas's <Fragment
+      ClinVar variants 2.3-fold enriched over benign ones at interfaces. The explorer's <Fragment
         set:html={oddsText(s.enrichment.all)}
       /> over all residues agrees, on a different set of pairs (STRING physical interactions, not HuRI and hu.MAP) and a
       different confidence score (ipSAE, not pDockQ).
@@ -234,7 +234,7 @@ const amClasses = Object.entries(s.enrichment.byAlphaMissenseClass)
     <li>
       <strong>Isoforms.</strong> <a href={href('isoforms/')}>Which isoforms lack a pathogenic site or most of an interface</a>,
       from AlphaFold DB's isoform models. <a href="https://doi.org/10.1016/j.cell.2016.01.029">Yang et al. (2016)</a> showed
-      in the lab that most isoform pairs share less than half their interactions; the atlas shows where in the structure
+      in the lab that most isoform pairs share less than half their interactions; the explorer shows where in the structure
       that could come from.
     </li>
   </ul>
@@ -244,10 +244,10 @@ const amClasses = Object.entries(s.enrichment.byAlphaMissenseClass)
     <li>Jänes et al. also assign variants to stability (FoldX) and ligand pockets, not just interfaces.</li>
     <li>PIONEER covers all known human interactions, and cancer mutations from about 11,000 exomes.</li>
     <li>Zhang et al. screened 200 million pairs and found interactions no experiment had.</li>
-    <li>MutPred-PPI predicts, per variant, which partner it disrupts; the atlas only says where a variant sits.</li>
+    <li>MutPred-PPI predicts, per variant, which partner it disrupts; the explorer only says where a variant sits.</li>
     <li>ProtVar adds population and cancer variants; Genomics 2 Proteins adds experimental structures.</li>
     <li>
-      The atlas covers {s.withPartner.toLocaleString()} disease proteins, those with a confident AlphaFold DB heterodimer;
+      The explorer covers {s.withPartner.toLocaleString()} disease proteins, those with a confident AlphaFold DB heterodimer;
       AlphaFold DB modelled only STRING physical pairs.
     </li>
   </ul>

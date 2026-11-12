@@ -16,7 +16,7 @@ import { parseJson, readJson, writeAtomically } from './json.ts'
 const ATTEMPTS = 9
 const TIMEOUT = 300_000
 const DOWNLOAD_TIMEOUT = 3_600_000
-const HEADERS = { 'user-agent': 'interface-atlas' }
+const HEADERS = { 'user-agent': 'interface-explorer' }
 
 async function request(
   url: URL,
