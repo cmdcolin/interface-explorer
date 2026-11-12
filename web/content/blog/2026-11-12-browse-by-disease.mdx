@@ -4,7 +4,7 @@ date: '2026-11-12'
 order: 7
 description: 'Each disease now has a page with its genes and their interface variants. Where two predicted partners both cause the disease, the page lists the pair, which points to the interaction a variant might break.'
 hero: './heroes/browse-by-disease.jpg'
-heroAlt: "NDUFV1 and NDUFV2 of mitochondrial complex I in 3D, NDUFV1 grey and NDUFV2 green, with ClinVar variants marked where the two meet"
+heroAlt: "A word cloud of disease names, sized by how many pathogenic ClinVar variants sit at a predicted interface, with diseases where two predicted partners both cause it in blue"
 ---
 
 import { diseasePost } from '../../lib/diseasePost.ts'
@@ -52,7 +52,7 @@ not the same one.
     their predicted pairings join two genes that both cause it.
     {p.ndufv && (
       <>
-        {' '}One is NDUFV2 with NDUFV1, in the hero image (ipSAE {p.ndufv.ipsae}),
+        {' '}One is NDUFV2 with NDUFV1 (ipSAE {p.ndufv.ipsae}),
         with {p.ndufv.pathogenic} pathogenic and {p.ndufv.uncertain} uncertain
         variants listing it on the two sides of their interface.{' '}
         <a href={p.ndufv.href}>Open the pair in 3D</a>.

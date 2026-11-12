@@ -67,10 +67,10 @@ await screenshots(
     },
     {
       name: 'browse-by-disease',
-      url: local => `${local}gene/NDUFV1/?partner=NDUFV2`,
-      clip: '#structure',
-      height: 1600,
-      wait: 30,
+      url: local => `${local}figures/diseases/`,
+      clip: '.hero-figure',
+      height: 1000,
+      wait: 2,
     },
     {
       name: 'sars-cov-2',
