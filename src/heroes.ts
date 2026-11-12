@@ -52,6 +52,13 @@ await screenshots(
       wait: 25,
     },
     {
+      name: 'the-partner-is-itself',
+      url: local => `${local}gene/SOD1/?partner=SOD1`,
+      clip: '#structure',
+      height: 1600,
+      wait: 30,
+    },
+    {
       name: 'slc35a2-switch',
       url: local => `${local}switch/`,
       clip: '.complex-view .structure',
@@ -75,10 +82,15 @@ await screenshots(
     { name: 'isg15-plpro', path: 'viral/7rbs/' },
     { name: 'nemo-nsp5', path: 'viral/7t2u/' },
     { name: 'ywhaz-n', path: 'viral/7zit/' },
-  ].map(({ name, path }) => ({
+    {
+      name: 'ttr-itself',
+      path: 'gene/TTR/?partner=TTR',
+      clip: '#structure',
+    },
+  ].map(({ name, path, clip }) => ({
     name,
     url: (local: string) => `${local}${path}`,
-    clip: '.complex-view .structure',
+    clip: clip ?? '.complex-view .structure',
     height: 1600,
     wait: 25,
   })),

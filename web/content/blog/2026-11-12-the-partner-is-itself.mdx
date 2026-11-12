@@ -1,0 +1,106 @@
+---
+title: 'When the partner is the protein itself'
+date: '2026-11-12'
+order: 6
+description: "AlphaFold DB's homodimers bring SOD1, TTR and other disease genes with no other partner into the explorer. Their interfaces hold pathogenic variants AlphaMissense, which scores one chain at a time, gives no pathogenic evidence."
+hero: './heroes/the-partner-is-itself.jpg'
+heroAlt: "SOD1's predicted homodimer in 3D, one copy grey and the other green, with ALS variants marked on both sides of the interface"
+---
+
+import Shot from '../../components/Shot.astro'
+import { itselfPost } from '../../lib/itself.ts'
+import { geneHref } from '../../lib/site.ts'
+import ttrShot from './figures/ttr-itself.jpg'
+
+export const p = itselfPost()
+export const sod1 = p.sod1
+export const ttr = p.ttr
+
+Many disease proteins work as two or more copies of themselves. A variant
+where two copies meet can loosen the pair, or put a faulty copy into every
+pair it joins. The explorer used to show only complexes with other proteins.
+It now adds each disease protein's homodimer from AlphaFold DB, listed as a
+partner called "itself". {p.withHomodimer.toLocaleString()} genes have one, and
+for {p.onlyItself.toLocaleString()} of them it is the only confident complex,
+so they are new to the explorer.
+
+The predicted copy-to-copy interfaces hold up against experiment. Of the{' '}
+{p.checked.toLocaleString()} homodimers with a PDB entry holding two copies of
+the protein, {p.confirmed.toLocaleString()} recover at least half the residues
+in contact there. AlphaFold DB models only two copies, so for a protein that
+assembles into four, like transthyretin, it shows one of the interfaces.
+
+## SOD1 and ALS
+
+SOD1, the copper-zinc superoxide dismutase, is a homodimer, and its variants
+cause familial ALS. Variants that loosen the dimer are thought to free
+monomers that misfold and aggregate. In AlphaFold DB's predicted SOD1
+homodimer (ipSAE {sod1.ipsae}), {sod1.residues} residues of each copy touch the
+other, and PDB {sod1.experiment?.pdb.toUpperCase()} puts{' '}
+{sod1.experiment?.experimental} residues in contact, of which the prediction
+finds {sod1.experiment?.shared}.
+
+{sod1.pathogenic} of SOD1's {sod1.total} pathogenic missense variants sit on
+that interface. AlphaMissense, which scores a single chain and never sees the
+second copy, gives at least supporting evidence of pathogenicity (ACMG PP3, as
+calibrated by [Bergquist et al. 2025](https://doi.org/10.1016/j.gim.2025.101402))
+to {sod1.alphaMissense.reached} of the {sod1.alphaMissense.scored} it scores.
+One it does not is {sod1.highlight?.change}, {sod1.highlight?.literature} in the
+literature's numbering ({sod1.highlight?.reason}): it scores{' '}
+{sod1.highlight?.score}, {sod1.highlight?.evidence}.{' '}
+<a href={`${geneHref(sod1.page)}?partner=${sod1.gene}&residue=${sod1.highlight?.position}`}>Open SOD1 in 3D at that residue</a>.
+
+## TTR and amyloidosis
+
+Transthyretin carries thyroxine and retinol in the blood as a tetramer, two
+dimers back to back. Variants that weaken it let the tetramer come apart, and
+the freed monomers misfold into the amyloid of hereditary transthyretin
+amyloidosis. Tafamidis treats it by binding the tetramer and holding it
+together. In AlphaFold DB's TTR homodimer (ipSAE {ttr.ipsae}),{' '}
+{ttr.residues} residues of each copy touch the other, and PDB{' '}
+{ttr.experiment?.pdb.toUpperCase()} confirms {ttr.experiment?.shared} of its{' '}
+{ttr.experiment?.experimental} contacts.
+
+<Shot
+  src={ttrShot}
+  alt="TTR's predicted homodimer, one copy grey and the other green, with pathogenic variants along the strands where the copies meet"
+  href={`${geneHref(ttr.page)}?partner=${ttr.gene}&residue=${ttr.highlight?.position}`}
+>
+  TTR's predicted homodimer. Grey: one copy; green: the other. Red: a
+  pathogenic ClinVar variant; orange: uncertain.
+</Shot>
+
+{ttr.pathogenic} of TTR's {ttr.total} pathogenic missense variants sit on this
+interface, and AlphaMissense gives pathogenic evidence to only{' '}
+{ttr.alphaMissense.reached} of the {ttr.alphaMissense.scored} it scores. Among
+the rest is {ttr.highlight?.change}, {ttr.highlight?.literature} in the
+literature ({ttr.highlight?.reason}), the variant behind much hereditary
+cardiac amyloidosis and common among people of West African ancestry.
+AlphaMissense scores it {ttr.highlight?.score}: {ttr.highlight?.evidence}, the
+side of the scale that counts against pathogenicity.
+
+## Where the single-chain view falls short
+
+Across all homodimer interfaces, AlphaMissense gives pathogenic evidence to{' '}
+{p.itself.share} of the pathogenic variants it scores
+({p.itself.reached.toLocaleString()} of {p.itself.scored.toLocaleString()}),
+against {p.others.share} at interfaces with other proteins only
+({p.others.reached.toLocaleString()} of {p.others.scored.toLocaleString()}). The
+two sets come from different proteins, so this is a pointer rather than a
+measurement, but it marks the homodimer interfaces as where a single-chain
+score most often leaves a pathogenic variant without evidence, and where a
+view of the complex can add the most.
+
+{p.leads.toLocaleString()} of the [leads](../../leads/), in{' '}
+{p.leadGenes.toLocaleString()} genes, sit on a homodimer interface: uncertain
+variants at a residue where a substitution is already classified pathogenic.
+
+## Caveats
+
+AlphaFold DB models two copies, so a tetramer or a larger ring shows one of its
+interfaces, and the PDB check compares the model with whatever copies one
+crystal holds. An interface variant in a recessive enzyme, such as PAH or GALT,
+more likely weakens the complex than poisons it. Telling those apart needs each
+variant's inheritance, which the explorer does not yet use. The method is on
+the [About](../../about/) page, and every homodimer is on its gene's page as the
+partner "itself".
