@@ -26,7 +26,7 @@ export function interfaceDiagram() {
   const protein = blob(120, 92, 112, 70, 0.6)
   const partner = blob(296, 90, 98, 64, 2.1)
   return `
-    <svg class="interface-diagram" viewBox="0 0 400 200" role="img" aria-label="Cartoon of a disease protein touching its partner; the strip of the protein where they touch is the interface">
+    <svg class="interface-diagram" viewBox="0 0 400 200" role="img" aria-label="Cartoon of a disease protein touching its partner protein; the strip of the protein where they touch is the interface">
       <defs>
         <clipPath id="interface-left"><path d="${seam(-3)}H0V0Z" /></clipPath>
         <clipPath id="interface-right"><path d="${seam(3)}H400V0Z" /></clipPath>
@@ -41,7 +41,7 @@ export function interfaceDiagram() {
       <path d="${partner}" fill="var(--partner)" clip-path="url(#interface-right)" />
       <g fill="currentColor" font-size="14" text-anchor="middle">
         <text x="95" y="96">protein</text>
-        <text x="300" y="96" fill="var(--chip-text)">partner</text>
+        <text x="300" y="96" fill="var(--chip-text)">partner protein</text>
         <text x="180" y="196">interface</text>
       </g>
       <path d="M180 182L186 150" stroke="currentColor" stroke-width="1.2" />
