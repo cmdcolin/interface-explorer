@@ -83,6 +83,7 @@ function atom(accession: string, number: number, x: number): Atom {
     seq: number,
     comp: 'ALA',
     source: { accession, number },
+    sourceLetter: 'A',
     xyz: [x, 0, 0],
   }
 }
@@ -94,11 +95,35 @@ test('agreement counts predicted residues the structure resolves', () => {
     atom('P1', 12, 20),
     atom('P2', 5, 6),
   ]
-  expect(interfaceAgreement(rows, 'P1', 'P2', [11, 12, 99])).toEqual({
+  const own = { accession: 'P1', sequence: 'A'.repeat(20) }
+  expect(interfaceAgreement(rows, own, 'P2', [11, 12, 99])).toEqual({
     experimental: 1,
     predicted: 2,
     shared: 1,
   })
+})
+
+test('agreement accepts isoform chains numbered as the canonical protein', () => {
+  const rows = [atom('P1-2', 11, 3), atom('P1-2', 12, 20), atom('P2-3', 5, 6)]
+  const own = { accession: 'P1', sequence: 'A'.repeat(20) }
+  expect(interfaceAgreement(rows, own, 'P2', [11, 12])).toEqual({
+    experimental: 1,
+    predicted: 2,
+    shared: 1,
+  })
+})
+
+test('agreement leaves out an isoform numbered differently', () => {
+  const rows = [atom('P1-2', 11, 3), atom('P1-2', 12, 4), atom('P2', 5, 6)]
+  const own = { accession: 'P1', sequence: `${'A'.repeat(11)}G` }
+  expect(interfaceAgreement(rows, own, 'P2', [11, 12])).toBeUndefined()
+})
+
+test('agreement needs both proteins in the structure', () => {
+  const own = { accession: 'P1', sequence: 'A'.repeat(20) }
+  expect(
+    interfaceAgreement([atom('P1', 11, 3)], own, 'P2', [11]),
+  ).toBeUndefined()
 })
 
 test('the summary takes medians over pairs that touch', () => {

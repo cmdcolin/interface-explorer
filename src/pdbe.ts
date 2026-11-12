@@ -16,6 +16,7 @@ export interface Atom {
   seq: number
   comp: string
   source: Source | undefined
+  sourceLetter: string
   xyz: Point
 }
 
@@ -49,6 +50,7 @@ export function atoms(cif: string) {
               number: Number(row.pdbx_sifts_xref_db_num),
             }
           : undefined,
+      sourceLetter: row.pdbx_sifts_xref_db_res ?? '',
       xyz: [Number(row.Cartn_x), Number(row.Cartn_y), Number(row.Cartn_z)],
     }))
 }

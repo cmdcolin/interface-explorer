@@ -17,6 +17,7 @@ import { nanPercentile, pythonRound } from './numeric.ts'
 import { DATA, OUT } from './paths.ts'
 import { atoms, mmcif } from './pdbe.ts'
 import type { Atom } from './pdbe.ts'
+import { accessionOf, diseaseEntries, sequenceOf } from './uniprot.ts'
 
 const SIFTS_URL =
   'https://ftp.ebi.ac.uk/pub/databases/msd/sifts/flatfiles/tsv/pdb_chain_uniprot.tsv.gz'
@@ -29,6 +30,7 @@ export const TRAINING_CUTOFF = '2021-09-30'
 const NEAR_BEST = 0.9
 const MAX_CHAINS = 60
 const RECOVERED = 0.5
+const SAME_NUMBERING = 0.9
 const BINS = 10
 const PROGRESS_EVERY = 100
 
@@ -42,6 +44,7 @@ export interface Pair {
   entity: string
   ipsae: number
   predicted: number[]
+  sequence: string
   firstDeposited: string
 }
 
@@ -93,14 +96,22 @@ export function chooseEntry(
     .sort((a, b) => a.chains - b.chains || (a.pdb < b.pdb ? -1 : 1))[0]?.pdb
 }
 
+function isoformOf(atom: Atom, accession: string) {
+  return atom.source?.accession.split('-')[0] === accession
+}
+
 export function interfaceAgreement(
   rows: Atom[],
-  accession: string,
+  { accession, sequence }: { accession: string; sequence: string },
   partner: string,
   predicted: number[],
 ) {
-  const own = rows.filter(atom => atom.source?.accession === accession)
-  const other = rows.filter(atom => atom.source?.accession === partner)
+  const chain = rows.filter(atom => isoformOf(atom, accession))
+  const own = chain.filter(
+    atom =>
+      atom.source && sequence[atom.source.number - 1] === atom.sourceLetter,
+  )
+  const other = rows.filter(atom => isoformOf(atom, partner))
   const within = withinDistance(
     own.map(atom => atom.xyz),
     other.map(atom => atom.xyz),
@@ -111,11 +122,13 @@ export function interfaceAgreement(
     own.flatMap((atom, i) => (within[i] ? (atom.source?.number ?? []) : [])),
   )
   const comparable = predicted.filter(residue => observed.has(residue))
-  return {
-    experimental: experimental.size,
-    predicted: comparable.length,
-    shared: comparable.filter(residue => experimental.has(residue)).length,
-  }
+  return own.length >= SAME_NUMBERING * chain.length && other.length
+    ? {
+        experimental: experimental.size,
+        predicted: comparable.length,
+        shared: comparable.filter(residue => experimental.has(residue)).length,
+      }
+    : undefined
 }
 
 export interface Comparison {
@@ -215,14 +228,24 @@ export function depositionDates(index: string) {
 
 async function compareEntry(pdb: string, pairs: Pair[]) {
   const rows = atoms(await mmcif(pdb))
-  return pairs.map(({ predicted, ...pair }) => ({
-    ...pair,
-    pdb,
-    ...interfaceAgreement(rows, pair.accession, pair.partner, predicted),
-  }))
+  return pairs.flatMap(({ predicted, sequence, ...pair }) => {
+    const agreement = interfaceAgreement(
+      rows,
+      { accession: pair.accession, sequence },
+      pair.partner,
+      predicted,
+    )
+    return agreement ? [{ ...pair, pdb, ...agreement }] : []
+  })
 }
 
-function confidentPairs() {
+async function confidentPairs() {
+  const sequences = new Map(
+    (await diseaseEntries()).map(entry => [
+      accessionOf(entry),
+      sequenceOf(entry),
+    ]),
+  )
   return readAtlas().flatMap(protein =>
     protein.interfaces.filter(isConfident).flatMap(complex =>
       complex.partner
@@ -235,6 +258,7 @@ function confidentPairs() {
               entity: complex.entity,
               ipsae: complex.ipsae ?? 0,
               predicted: confidentResidues(complex, protein.length),
+              sequence: sequences.get(protein.accession) ?? '',
             },
           ]
         : [],
@@ -249,7 +273,7 @@ export async function main(workers = 4) {
   )
   await download(ENTRIES_URL, ENTRIES)
   const deposited = depositionDates(readFileSync(ENTRIES, 'utf8'))
-  const pairs = confidentPairs()
+  const pairs = await confidentPairs()
   const located = pairs.map(pair => {
     const shared = sharedEntries(
       coverage.get(pair.accession),
@@ -291,6 +315,8 @@ export async function main(workers = 4) {
       .length,
     [`only in entries of more than ${MAX_CHAINS} chains, left out`]:
       located.filter(l => l.shared > 0 && !l.pdb).length,
+    'in an entry that does not resolve both proteins':
+      located.filter(l => l.pdb).length - compared.length,
     ...validation(compared),
     failed: results.flatMap(result => ('error' in result ? [result] : [])),
   }
