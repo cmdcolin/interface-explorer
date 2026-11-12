@@ -1,0 +1,101 @@
+---
+title: 'Conservation explains only part of the interface signal'
+date: '2026-11-12'
+order: 4
+description: 'Pathogenic variants favour bases conserved across 100 vertebrates, but at matched conservation they still favour predicted interfaces, which are themselves more conserved than the rest of the surface.'
+---
+
+import Html from '../../components/Html.astro'
+import {
+  conservationQuartileRows,
+  conservationRows,
+  conservedInterfaceRows,
+  forestPlot,
+  odds,
+  shareBars,
+} from '../../lib/charts.ts'
+import { summary } from '../../lib/data.ts'
+import { percent } from '../../lib/html.ts'
+
+export const s = summary()
+export const c = s.conservation
+export const all = c.enrichment.all
+export const surface = c.enrichment.orderedSurface
+export const r = c.residues
+export const counted = e =>
+  ['pathogenic at interface', 'benign at interface']
+    .map(key => Number(e[key].split('/')[1]))
+    .reduce((sum, n) => sum + n, 0)
+
+UCSC's alignment of 100 vertebrate genomes to hg38, from human to lamprey, gives
+every base a phyloP score: the evidence, as −log₁₀ p, that it has changed more
+slowly than neutral DNA would, negative where it has changed faster. We read it
+at every codon of the disease proteins with a predicted complex,
+{c.variants.scored.toLocaleString()} classified ClinVar missense variants among
+them, and put two questions to it.
+
+## Conservation alone predicts pathogenicity
+
+<Html html={shareBars(conservationQuartileRows(s), 'var(--pathogenic)')} />
+
+Of the variants classified pathogenic or benign, the share that are pathogenic,
+by the phyloP of the variant's base, in quarters of all scored variants. Hover a
+row for the counts.
+
+That raises a fair objection to the
+[interface finding](../2026-11-12-disease-variants-cluster/): if interfaces are
+conserved, being at one might be conservation under another name.
+
+## Interfaces still matter at matched conservation
+
+Here pathogenic and benign variants are compared only within the same quarter
+of conservation, protein by protein.
+
+<Html html={forestPlot(conservationRows(s))} />
+
+Over all residues the odds ratio goes from {odds(all.unmatched).toFixed(1)}× to
+{odds(all.matched).toFixed(1)}×; on the folded surface, the comparison that sets
+folding aside, from {odds(surface.unmatched).toFixed(1)}× to
+**{odds(surface.matched).toFixed(1)}×**. Conservation accounts for part of the
+interface signal, not most of it.
+
+Mantel–Haenszel odds ratios with 95% intervals from resampling proteins. The
+unmatched rows count only variants with a phyloP score, so they differ slightly
+from those in the [findings post](../2026-11-12-disease-variants-cluster/). A
+quarter of a protein counts only when it holds both a pathogenic and a benign
+variant, so the matched rows rest on fewer variants: on the folded surface,
+{counted(surface.matched).toLocaleString()} of
+{counted(surface.unmatched).toLocaleString()}.
+
+## Predicted interfaces are more conserved than the rest of the surface
+
+For each confident complex, we compared the conservation of its interface
+residues (the mean phyloP of each codon) with that of the protein's other
+folded, surface-exposed residues at no confident interface, matched for
+exposure and pLDDT. The interface is more conserved in
+**{percent(r.all['interface more conserved'], r.all.complexes)}** of
+{r.all.complexes.toLocaleString()} complexes, by a median
+{r.all['median difference']} phyloP units.
+
+<Html html={shareBars(conservedInterfaceRows(s), 'var(--interface)')} />
+
+Share of complexes whose interface is more conserved, by ipSAE. Hover a row for
+the counts.
+
+That is what real interfaces would show, but it does not prove these ones are
+real: a compact patch of any folded surface might beat the surface average, and
+the share does not rise with confidence. A fair test would set each interface
+against random surface patches of its size.
+
+## Caveats
+
+- phyloP measures DNA, not protein. A codon can be conserved for splicing or an
+  overlapping element, and a third position free to change lowers a codon's
+  mean.
+- Surface residues at no confident interface may touch partners AlphaFold DB
+  did not model, which makes the comparison conservative.
+- Quarters of conservation are coarse: within one, interface variants may still
+  sit on somewhat more conserved bases.
+- phyloP summarises the whole alignment column, so reading the alignment species
+  by species would add little to these questions. The phyloP track is in
+  [JBrowse](../../jbrowse/) beside the interface tracks.

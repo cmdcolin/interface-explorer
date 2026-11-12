@@ -24,7 +24,11 @@ export const COLOURS = {
 } satisfies Record<Label, string>
 
 const HG38 = 'https://jbrowse.org/ucsc/hg38/config.json'
-const KEPT_TRACKS = ['hg38-ncbiRefSeqCurated', 'hg38-clinvarMain']
+const KEPT_TRACKS = [
+  'hg38-ncbiRefSeqCurated',
+  'hg38-clinvarMain',
+  'hg38-phyloP100way',
+]
 const FILE =
   /^[\p{L}\p{N}_./-]+\.(bb|bw|gz|2bit|sizes|tbi|csi|fai|gzi|bed|txt|json|ix|ixx|tsv)$/u
 const SIGNIFICANCE_COLORS = new Map([

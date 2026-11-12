@@ -4,6 +4,7 @@ import type {
   Enrichment,
   GeneRow,
   Label,
+  ResidueConservation,
   Summary,
   Validation,
 } from './types.ts'
@@ -229,4 +230,80 @@ export function recallHistogram(
     <div class="legend">
       ${series.map(s => `<span><span class="swatch" style="background:${s.colour}"></span>${esc(s.label)} (${s.v.touching.toLocaleString()} pairs)</span>`).join('')}
     </div>`
+}
+
+export function shareBars(
+  rows: { label: string; n: number; d: number; title: string }[],
+  colour: string,
+) {
+  return `
+    <div class="bars">
+      ${rows
+        .map(
+          ({
+            label,
+            n,
+            d,
+            title,
+          }) => `<div class="bar-row" title="${esc(title)}">
+            <div>${esc(label)}</div>
+            <div class="bar-track"><span style="width:${(100 * n) / d}%;background:${colour}"></span></div>
+            <div class="bar-value">${percent(n, d)}</div>
+          </div>`,
+        )
+        .join('')}
+    </div>`
+}
+
+export function conservationQuartileRows(summary: Summary) {
+  const { edges, quartiles } = summary.conservation.variants
+  return quartiles.map((counts, i) => {
+    const low = edges[i - 1]
+    const high = edges[i]
+    return {
+      label:
+        low === undefined
+          ? `phyloP < ${high}`
+          : high === undefined
+            ? `phyloP ≥ ${low}`
+            : `phyloP ${low}–${high}`,
+      n: counts.pathogenic,
+      d: counts.pathogenic + counts.benign,
+      title: `${counts.pathogenic.toLocaleString()} pathogenic and ${counts.benign.toLocaleString()} benign`,
+    }
+  })
+}
+
+const MATCHED = ', matched for conservation'
+
+export function conservationRows(summary: Summary) {
+  const { all, orderedSurface } = summary.conservation.enrichment
+  return [
+    { label: 'All residues', e: all.unmatched },
+    { label: `All residues${MATCHED}`, e: all.matched },
+    { label: 'Folded and surface-exposed', e: orderedSurface.unmatched },
+    {
+      label: `Folded and surface-exposed${MATCHED}`,
+      e: orderedSurface.matched,
+    },
+  ]
+}
+
+export function matchedRows(summary: Summary) {
+  return conservationRows(summary).filter(row => row.label.endsWith(MATCHED))
+}
+
+function conservedRow(label: string, r: ResidueConservation) {
+  return {
+    label,
+    n: r['interface more conserved'],
+    d: r.complexes,
+    title: `${r['interface more conserved'].toLocaleString()} of ${r.complexes.toLocaleString()} complexes; median difference ${r['median difference']} phyloP`,
+  }
+}
+
+export function conservedInterfaceRows(summary: Summary) {
+  return Object.entries(summary.conservation.residues.byConfidenceBand).map(
+    ([label, r]) => conservedRow(label, r),
+  )
 }

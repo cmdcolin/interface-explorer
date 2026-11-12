@@ -11,6 +11,7 @@ import {
   callBars,
   compositionBar,
   confidenceRows,
+  matchedRows,
   forestPlot,
   odds,
   shareFigure,
@@ -59,6 +60,15 @@ The same comparison among variants AlphaMissense puts in one class. It sees one
 protein at a time, not the partner.
 
 <Html html={forestPlot(alphaMissenseRows(s))} />
+
+### Conservation explains only part of it
+
+Pathogenic variants favour conserved bases, and interfaces are conserved.
+Comparing variants only within the same quarter of conservation across 100
+vertebrates lowers the odds ratios above but leaves most of the effect; the
+[conservation post](../2026-11-12-interfaces-are-conserved/) has the detail.
+
+<Html html={forestPlot(matchedRows(s))} />
 
 Mantel–Haenszel odds ratios across proteins; lines are 95% intervals from
 resampling proteins, and the dashed line marks no difference. Hover a row for

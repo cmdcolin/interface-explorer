@@ -28,6 +28,17 @@ export interface Enrichment {
   '95% CI (bootstrap over proteins)': [number, number]
 }
 
+export interface ConservationMatch {
+  unmatched: Enrichment
+  matched: Enrichment
+}
+
+export interface ResidueConservation {
+  complexes: number
+  'interface more conserved': number
+  'median difference': number
+}
+
 export interface Validation {
   pairs: number
   touching: number
@@ -56,6 +67,18 @@ export interface Summary {
     orderedSurface: Enrichment
     byConfidenceBand: Record<string, Enrichment>
     byAlphaMissenseClass: Record<string, Enrichment>
+  }
+  conservation: {
+    variants: {
+      scored: number
+      edges: number[]
+      quartiles: Record<Label, number>[]
+    }
+    enrichment: Record<'all' | 'orderedSurface', ConservationMatch>
+    residues: {
+      all: ResidueConservation
+      byConfidenceBand: Record<string, ResidueConservation>
+    }
   }
   validation: { cutoff: string; all: Validation; unseen: Validation }
   thresholds: { ipsae: number; plddt: number; contact: number }

@@ -16,6 +16,7 @@ import {
 } from './atlasData.ts'
 import type { AtlasProtein } from './atlasData.ts'
 import { downloaded } from './clinvar.ts'
+import { CONSERVATION } from './conservation.ts'
 import { readComparisons, validation } from './experimental.ts'
 import type { Comparison } from './experimental.ts'
 import { CONFIDENT, CONTACT, LABELS, MIN_PLDDT } from './constants.ts'
@@ -197,6 +198,7 @@ async function main() {
   const comparisons = readComparisons()
   const experiments = Map.groupBy(comparisons, pair => pair.accession)
   const analysis = record(readJson(join(OUT, 'analysis.json')))
+  const conservation = record(readJson(CONSERVATION))
   const mapped = await Promise.all(
     proteins.map(async protein => ({
       protein,
@@ -250,6 +252,7 @@ async function main() {
   )
   const summaryCounts = record(analysis.summary)
   const controlled = record(analysis.controlled_for_order_and_surface)
+  const matched = record(conservation.enrichment)
   const summary = {
     proteins: summaryCounts['disease proteins'],
     withPartner: summaryCounts['with any predicted hetero complex'],
@@ -272,6 +275,14 @@ async function main() {
       orderedSurface: controlled['ordered and surface (pLDDT ≥ 70, RSA ≥ 0.2)'],
       byConfidenceBand: analysis.by_confidence_band,
       byAlphaMissenseClass: analysis.by_alphamissense_class,
+    },
+    conservation: {
+      variants: conservation.variants,
+      enrichment: {
+        all: matched['all residues'],
+        orderedSurface: matched['ordered and surface (pLDDT ≥ 70, RSA ≥ 0.2)'],
+      },
+      residues: conservation.residues,
     },
     validation: validation(comparisons),
     thresholds: { ipsae: CONFIDENT, plddt: MIN_PLDDT, contact: CONTACT },

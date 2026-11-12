@@ -11,9 +11,10 @@ one.
   search, every gene as a dot, and links to the blog.
 - **Blog:** the findings as charts (the pathogenic-versus-benign odds ratio
   under each control, by confidence band and within each AlphaMissense class,
-  and how AlphaMissense calls the variants at an interface); three worked
-  examples (VHL, GNAO1, APP695); and how the atlas connects to BioHackathon
-  Europe 2026 Project 9's GPCR work.
+  and how AlphaMissense calls the variants at an interface); how conservation
+  across 100 vertebrates bears on it; three worked examples (VHL, GNAO1,
+  APP695); and how the atlas connects to BioHackathon Europe 2026 Project 9's
+  GPCR work.
 - **Genes:** a searchable table of the 1,331 disease genes with a confident
   predicted partner. Each gene page lists its partners, a protein map and the
   ClinVar variants at an interface, each with its AlphaMissense score. It
@@ -45,7 +46,8 @@ one.
   an experimental GPCR–G protein interface**: the same, from the PDB complexes
   on the GPCRs page, one feature per structure and side, e.g. "DRD1–GNAS
   (7JVQ)".
-- All are bigBed. Alongside: NCBI RefSeq genes and UCSC's ClinVar track.
+- All are bigBed. Alongside: NCBI RefSeq genes, UCSC's ClinVar track and
+  UCSC's phyloP conservation from the 100-way vertebrate alignment.
 
 ## What we found (all 5,350 UniProt disease proteins)
 
@@ -67,6 +69,18 @@ one.
   often as the benign ones (1.1–1.9, 442 proteins); among those it calls
   likely pathogenic, 1.4× (1.0–2.0, 309 proteins). Too few are ambiguous to
   say (0.7×, 0.4–1.2, 128 proteins).
+- Conservation explains only part of it. Pathogenic variants favour conserved
+  bases: of the variants classified pathogenic or benign, 87% are pathogenic in
+  the top quarter of 100-way vertebrate phyloP, against 16% in the bottom
+  quarter. Comparing variants only within the same quarter takes the odds
+  ratio from 2.4× to 1.8× (1.5–2.3) over all residues, and from 3.3× to 2.9×
+  (2.2–3.7) on the folded surface.
+- The predicted interfaces are more conserved than the rest of the surface.
+  Against the same protein's other folded surface residues at no confident
+  interface, matched for exposure and pLDDT, the interface is more conserved in
+  85% of 3,609 confident complexes, and in 76–88% within each ipSAE band. That
+  is what real interfaces would show, but without a null of random surface
+  patches of the same size it is not a test of the predictions.
 - 26,588 classified missense variants sit at a confident interface: 2,533
   pathogenic, 23,233 of uncertain significance and 822 benign. Examples:
   VHL's 48 pathogenic variants at the elongin C interface, and GNAO1's at the
@@ -160,6 +174,16 @@ one.
   variant is mapped through that isoform to the canonical residue. Transcripts
   UniProt assigns to no isoform are used only when 95% of their variants match
   the canonical sequence, and every variant's wild-type residue must match.
+- **Conservation:** phyloP of every coding base from UCSC's 100-way
+  vertebrate alignment (multiz100way) bigWig, cached per protein in
+  `data/phylop100way/`. A variant takes its base's score; a residue takes the
+  mean over its codon. The matched odds ratio pools tables per protein and
+  quarter of the scored variants' phyloP, resampling proteins for the
+  interval. The interface comparison takes each confident complex's folded,
+  exposed interface residues against the protein's folded, exposed residues at
+  no confident interface, each residue against those in the same RSA fifth and
+  pLDDT band (70–90 or ≥ 90), and needs at least 5 matched interface residues
+  and 5 others.
 - **Experimental check:** SIFTS lists the PDB entries holding both proteins of
   a predicted pair. One is compared per pair: among those covering nearly the
   most of both proteins, the one with the fewest chains, leaving out entries of
@@ -207,6 +231,9 @@ one.
   AlphaMissense class, in `out/analysis.json`.
 - `pnpm experimental [workers]`: each predicted pair against a PDB entry
   holding both proteins, in `out/experimental.json`.
+- `pnpm conservation [workers]`: reads phyloP for every codon from UCSC's
+  bigWig by range requests, and writes the conservation-matched odds ratios
+  and the interface comparison to `out/conservation.json`.
 - `pnpm gpcr`: the experimental GPCR–G protein interfaces, as
   `site/jbrowse/gpcr_interfaces.bb`, `gpcr_interface_variants.bb` and
   `site/data/gpcr.json`.
@@ -245,6 +272,8 @@ Requires Node 24 or later, pnpm, and UCSC's `bedToBigBed`.
 - [ClinVar](https://www.ncbi.nlm.nih.gov/clinvar/) (NCBI) classifications.
 - [AlphaMissense](https://zenodo.org/records/10813168) predictions (Google
   DeepMind), CC-BY 4.0.
+- [UCSC Genome Browser](https://genome.ucsc.edu/) phyloP scores from the
+  100-way vertebrate alignment (multiz100way).
 - [UniProt](https://www.uniprot.org/) (CC-BY 4.0): the disease proteins, their
   isoforms and RefSeq cross-references.
 - [EBI Proteins API](https://www.ebi.ac.uk/proteins/api/doc/) protein → genome

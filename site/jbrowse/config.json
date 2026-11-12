@@ -99,6 +99,61 @@
   ],
   "tracks": [
     {
+      "type": "QuantitativeTrack",
+      "trackId": "hg38-phyloP100way",
+      "category": [
+        "Comparative Genomics"
+      ],
+      "name": "Basewise Conservation (phyloP) - 100-way vertebrate alignment",
+      "assemblyNames": [
+        "hg38"
+      ],
+      "metadata": {
+        "source": "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/phyloP100way/",
+        "addedByJBrowseTeam": true,
+        "ucsc": {
+          "altColor": "140,60,60",
+          "autoScale": "off",
+          "color": "60,60,140",
+          "configurable": "on",
+          "logoMaf": "multiz100way",
+          "longLabel": "100 vertebrates Basewise Conservation by PhyloP",
+          "maxHeightPixels": "100:50:11",
+          "noInherit": "on",
+          "parent": "cons100wayViewphyloP on",
+          "priority": "4",
+          "shortLabel": "Cons 100 Verts",
+          "spanList": "1",
+          "subGroups": "view=phyloP",
+          "track": "phyloP100way",
+          "type": "wig -20 7.532",
+          "viewLimits": "-0.5:4",
+          "windowingFunction": "mean",
+          "html": ""
+        }
+      },
+      "adapter": {
+        "type": "BigWigAdapter",
+        "uri": "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/phyloP100way/hg38.phyloP100way.bw"
+      },
+      "description": "100 vertebrates Basewise Conservation by PhyloP",
+      "displays": [
+        {
+          "type": "LinearWiggleDisplay",
+          "displayId": "hg38-phyloP100way-LinearWiggleDisplay",
+          "encoding": {
+            "y": {
+              "field": "score",
+              "scale": {
+                "domainMin": -0.5,
+                "domainMax": 4
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "trackId": "hg38-clinvarMain",
       "name": "ClinVar Variants - ClinVar SNVs",
       "type": "FeatureTrack",

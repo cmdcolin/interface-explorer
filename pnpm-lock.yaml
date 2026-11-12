@@ -166,9 +166,15 @@ importers:
 
   .:
     dependencies:
+      '@gmod/bbi':
+        specifier: ^12.2.0
+        version: 12.2.0
       g2p_mapper:
         specifier: ^2.3.1
         version: 2.3.1
+      generic-filehandle2:
+        specifier: ^2.5.1
+        version: 2.5.1
       p2s_mapper:
         specifier: ^3.3.0
         version: 3.3.0
@@ -452,6 +458,12 @@ packages:
 
   '@emnapi/wasi-threads@1.2.3':
     resolution: {integrity: sha512-ELEBe8PsLvvJ6QMr0zLt8ffvOHW/dc1m3CEzNMg7aJUv3bMaoDtw2TXyDAwkYBuroxxuHEwhRTLJSe5sya547g==}
+
+  '@gmod/bbi@12.2.0':
+    resolution: {integrity: sha512-eRgchEqwcalcXOg0u6BOtNV6HgL5KcxsjimY7xTsE6Rkxk929tw9m9Rb6IJ6XQYRCExGAlywWXp8nQ3K3lV6yQ==}
+
+  '@gmod/shared-read-cache@2.1.0':
+    resolution: {integrity: sha512-AyiUt0hiEGl7lWc1fuigbXR/RToIw3h72dalaRoSNau9WL9ux9rEfkcsXDYTgSDudehfAEQac1jTvn2zrfnELQ==}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -1109,6 +1121,9 @@ packages:
 
   g2p_mapper@2.3.1:
     resolution: {integrity: sha512-98h9iBRszDWUhTLVARBMZpJFrkmSZEvuL5jgTLHqXx8alnCzmTaoo5ptc7qRq89ppGYRDgGSGYOqSEb7rCPMvA==}
+
+  generic-filehandle2@2.5.1:
+    resolution: {integrity: sha512-+0F0k0xH4erZEB3xOVBdrlJi0hyURYb/CygF8QyqAjLsitmoZYl86pMfTZ91/w2Z1CPK610mBy93bxyiby1CHA==}
 
   get-caller-file@2.0.5:
     resolution: {integrity: sha512-DyFP3BM/3YHTQOCUL/w0OZHR0lpKeGrxotcHWcqNEdnltqFwXVfhEBQ94eIo34AfQpo0rGki4cyIiftY06h2Fg==}
@@ -2146,6 +2161,13 @@ snapshots:
     dependencies:
       tslib: 2.9.1
 
+  '@gmod/bbi@12.2.0':
+    dependencies:
+      '@gmod/shared-read-cache': 2.1.0
+      generic-filehandle2: 2.5.1
+
+  '@gmod/shared-read-cache@2.1.0': {}
+
   '@img/colour@1.1.0':
     optional: true
 
@@ -2758,6 +2780,8 @@ snapshots:
     optional: true
 
   g2p_mapper@2.3.1: {}
+
+  generic-filehandle2@2.5.1: {}
 
   get-caller-file@2.0.5: {}
 

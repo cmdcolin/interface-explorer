@@ -14,18 +14,21 @@
     "clinvar": "node src/clinvar.ts",
     "alphamissense": "node src/alphamissense.ts",
     "analyze": "node src/analyze.ts",
+    "conservation": "node src/conservation.ts",
     "experimental": "node src/experimental.ts",
     "gpcr": "node src/gpcr.ts",
     "tracks": "node src/tracks.ts",
     "pages": "node src/pages.ts",
     "isoforms": "node src/isoforms.ts",
-    "all": "pnpm atlas && pnpm clinvar && pnpm alphamissense && pnpm analyze && pnpm experimental && pnpm gpcr && pnpm tracks && pnpm pages && pnpm isoforms",
+    "all": "pnpm atlas && pnpm clinvar && pnpm alphamissense && pnpm analyze && pnpm experimental && pnpm conservation && pnpm gpcr && pnpm tracks && pnpm pages && pnpm isoforms",
     "test": "vitest run",
     "typecheck": "tsc --noEmit && astro check --tsconfig web/tsconfig.json",
     "format": "prettier --write src"
   },
   "dependencies": {
+    "@gmod/bbi": "^12.2.0",
     "g2p_mapper": "^2.3.1",
+    "generic-filehandle2": "^2.5.1",
     "p2s_mapper": "^3.3.0"
   },
   "devDependencies": {

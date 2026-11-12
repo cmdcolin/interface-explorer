@@ -25,20 +25,21 @@ const BAND_EDGES = {
   ipSAE: [0.6, 0.7, 0.8, 0.9, Infinity],
 }
 const METRIC = { ipTM: 'iptm', ipSAE: 'ipsae' } as const
-const CONFIDENT_BAND: Band = [CONFIDENT, Infinity]
+export const CONFIDENT_BAND: Band = [CONFIDENT, Infinity]
 const BOOTSTRAPS = 2000
-const SURFACE = 0.2
+export const SURFACE = 0.2
 const EXAMPLES = 25
 const SUMMARY_LABELS: Label[] = ['pathogenic', 'benign', 'uncertain']
 
 type Metric = (typeof METRIC)[keyof typeof METRIC]
 type Context = [number, number] | undefined
-type Keep = (context: Context, variant: ScoredVariant) => boolean
+export type Keep = (context: Context, variant: ScoredVariant) => boolean
 export type Band = [number, number]
 export type Table = [number, number, number, number]
 
 export interface ScoredVariant extends Variant {
   alphaMissense?: number
+  phylop?: number
 }
 
 export interface ProteinVariants extends AtlasProtein {
@@ -134,14 +135,13 @@ export function mantelHaenszel(rows: Table[]) {
   return !rows.length ? NaN : denominator ? numerator / denominator : Infinity
 }
 
-export function bootstrap(rows: Table[], seed = 0) {
+export function bootstrap(proteins: Table[][], seed = 0) {
   const random = seededRandom(seed)
   const values = Array.from({ length: BOOTSTRAPS }, () =>
     mantelHaenszel(
-      rows.flatMap(() => {
-        const row = rows[Math.floor(random() * rows.length)]
-        return row ? [row] : []
-      }),
+      proteins.flatMap(
+        () => proteins[Math.floor(random() * proteins.length)] ?? [],
+      ),
     ),
   )
   return [2.5, 97.5].map(percent =>
@@ -149,7 +149,12 @@ export function bootstrap(rows: Table[], seed = 0) {
   )
 }
 
-function enrichment(rows: Table[]) {
+export function enrichment(rows: Table[]) {
+  return stratifiedEnrichment(rows.map(row => [row]))
+}
+
+export function stratifiedEnrichment(proteins: Table[][]) {
+  const rows = proteins.flat()
   const [a, b, c, d] = rows.reduce<Table>(
     (sum, row) => [
       sum[0] + row[0],
@@ -160,12 +165,12 @@ function enrichment(rows: Table[]) {
     [0, 0, 0, 0],
   )
   return {
-    'proteins informative': rows.length,
+    'proteins informative': proteins.length,
     'pathogenic at interface': `${a}/${a + b}`,
     'benign at interface': `${c}/${c + d}`,
     'Mantel–Haenszel odds ratio': pythonRound(mantelHaenszel(rows), 2),
     '95% CI (bootstrap over proteins)':
-      rows.length > 2 ? bootstrap(rows) : null,
+      proteins.length > 2 ? bootstrap(proteins) : null,
   }
 }
 
