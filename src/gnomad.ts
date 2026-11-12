@@ -163,7 +163,7 @@ export async function main(workers = 4) {
   const gnomad = new BigBed({
     filehandle: new RemoteFile(GNOMAD, { fetch: patientFetch }),
   })
-  const atlas = readAtlas().filter(p => p.hetero)
+  const atlas = readAtlas().filter(p => p.hetero + p.homo > 0)
   const counted = (
     await boundedMap(
       atlas,

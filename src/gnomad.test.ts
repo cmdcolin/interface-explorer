@@ -84,6 +84,7 @@ describe('proteinTable', () => {
     length: 4,
     complexes: 1,
     hetero: 1,
+    homo: 0,
     interfaces: [
       {
         entity: 'AF-0',
