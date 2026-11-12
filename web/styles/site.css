@@ -1001,3 +1001,131 @@ h3 {
     gap: 8px;
   }
 }
+
+.architecture {
+  margin: 20px 0 8px;
+}
+
+.architecture-scroll {
+  overflow-x: auto;
+}
+
+.architecture svg {
+  display: block;
+  width: 100%;
+  min-width: 820px;
+  height: auto;
+  font-size: 12px;
+}
+
+.arch-heading {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  fill: var(--text-2);
+}
+
+.arch-box rect {
+  fill: var(--surface-2);
+  stroke: var(--border);
+}
+
+.arch-box.source rect {
+  fill: var(--surface);
+}
+
+.arch-box.file rect {
+  stroke-width: 1.5;
+}
+
+.arch-box.viewer rect {
+  stroke: var(--partner);
+  stroke-width: 1.5;
+}
+
+.arch-box.live rect {
+  fill: none;
+  stroke: var(--text-2);
+  stroke-dasharray: 4 3;
+}
+
+.arch-title {
+  font-size: 13px;
+  font-weight: 650;
+  fill: var(--text);
+}
+
+.arch-title.code,
+.arch-chip text,
+.arch-bus-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.arch-line {
+  font-size: 11.5px;
+  fill: var(--text-2);
+}
+
+.arch-chip rect {
+  fill: var(--interface);
+}
+
+.arch-chip text {
+  font-size: 11px;
+  fill: var(--chip-text);
+}
+
+.arch-edge,
+.arch-bus {
+  fill: none;
+  stroke: var(--text-2);
+  stroke-width: 1.25;
+}
+
+.arch-bus {
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.arch-edge.dashed {
+  stroke-dasharray: 4 3;
+}
+
+.arch-edge-label,
+.arch-bus-label {
+  font-size: 11px;
+  fill: var(--text-2);
+}
+
+.architecture figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.arch-key {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.arch-swatch {
+  display: inline-block;
+  width: 26px;
+  height: 12px;
+  border-radius: 6px;
+}
+
+.arch-swatch.chip {
+  background: var(--interface);
+}
+
+.arch-swatch.dashed {
+  height: 0;
+  border-radius: 0;
+  border-top: 1.5px dashed var(--text-2);
+}

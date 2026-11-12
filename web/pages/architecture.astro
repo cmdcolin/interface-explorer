@@ -1,0 +1,281 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { summary } from '../lib/data.ts'
+import { href } from '../lib/site.ts'
+
+const s = summary()
+const t = s.thresholds
+
+type Kind = 'source' | 'step' | 'file' | 'viewer' | 'live'
+
+interface Box {
+  id: string
+  col: number
+  row: number
+  span?: number
+  kind: Kind
+  title: string
+  chips?: string[]
+  lines?: string[]
+}
+
+const COLUMNS = [
+  { x: 16, w: 196, label: 'Sources' },
+  { x: 264, w: 204, label: 'Fetch and compute' },
+  { x: 532, w: 180, label: 'Combine' },
+  { x: 756, w: 156, label: 'Published files' },
+  { x: 950, w: 164, label: 'In the browser' },
+]
+const TOP = 60
+const PITCH = 72
+const GAP = 22
+const BUS = 500
+const WIDTH = 1140
+const HEIGHT = TOP + 9 * PITCH + 8
+
+const boxes: Box[] = [
+  { id: 'uniprot', col: 0, row: 0, kind: 'source', title: 'UniProt', lines: [`${s.proteins.toLocaleString()} disease proteins`] },
+  { id: 'afdb', col: 0, row: 1, kind: 'source', title: 'AlphaFold DB', lines: ['heterodimer models'] },
+  { id: 'ebi', col: 0, row: 2, kind: 'source', title: 'EBI Proteins API', lines: ['exons on hg38'] },
+  { id: 'clinvar', col: 0, row: 3, kind: 'source', title: 'ClinVar', lines: ['weekly variant_summary'] },
+  { id: 'am', col: 0, row: 4, kind: 'source', title: 'AlphaMissense', lines: ['every substitution'] },
+  { id: 'pdb', col: 0, row: 5, kind: 'source', title: 'RCSB PDB · PDBe SIFTS', lines: ['experimental complexes'] },
+  { id: 'ucsc', col: 0, row: 6, kind: 'source', title: 'UCSC phyloP 100-way', lines: ['hg38 bigWig'] },
+  { id: 'gpcrdb', col: 0, row: 7, kind: 'source', title: 'GPCRdb · PDBe', lines: ['receptor–G protein structures'] },
+  { id: 'afdbIso', col: 0, row: 8, kind: 'source', title: 'AlphaFold DB isoforms', lines: ['monomer models'] },
+
+  {
+    id: 'atlas',
+    col: 1,
+    row: 0,
+    span: 2,
+    kind: 'step',
+    title: 'atlas.ts',
+    lines: [`contacts ≤ ${t.contact} Å, ipSAE ≥ ${t.ipsae}`, `pLDDT ≥ ${t.plddt}, solvent exposure`],
+  },
+  { id: 'coords', col: 1, row: 2, kind: 'step', title: 'coordinates.ts', chips: ['g2p_mapper'], lines: ['residue → codon'] },
+  { id: 'clinvarStep', col: 1, row: 3, kind: 'step', title: 'clinvar.ts', lines: ['missense SNVs, canonical'] },
+  { id: 'amStep', col: 1, row: 4, kind: 'step', title: 'alphamissense.ts', lines: ['score each variant'] },
+  { id: 'exp', col: 1, row: 5, kind: 'step', title: 'experimental.ts', lines: ['predicted pair vs PDB'] },
+  { id: 'cons', col: 1, row: 6, kind: 'step', title: 'conservation.ts', chips: ['@gmod/bbi'], lines: ['per codon'] },
+  { id: 'gpcr', col: 1, row: 7, kind: 'step', title: 'gpcr.ts', chips: ['p2s_mapper'], lines: ['chain → UniProt'] },
+  { id: 'iso', col: 1, row: 8, kind: 'step', title: 'isoforms.ts', lines: ['rebuild, compare folds'] },
+
+  { id: 'tracks', col: 2, row: 0, span: 2, kind: 'step', title: 'tracks.ts', lines: ['BED → bigBed', 'JBrowse config'] },
+  { id: 'analyze', col: 2, row: 2, span: 2, kind: 'step', title: 'analyze.ts', lines: ['Mantel–Haenszel odds', 'ratios, resampled CIs'] },
+  { id: 'pages', col: 2, row: 4, span: 2, kind: 'step', title: 'pages.ts', chips: ['p2s_mapper'], lines: ['per-gene JSON'] },
+
+  { id: 'jbFiles', col: 3, row: 0, span: 2, kind: 'file', title: 'site/jbrowse/', lines: ['bigBed tracks', 'config.json'] },
+  {
+    id: 'data',
+    col: 3,
+    row: 2,
+    span: 7,
+    kind: 'file',
+    title: 'site/data/',
+    lines: ['genes/*.json', 'genes.json', 'leads.json', 'summary.json', 'gpcr.json', 'isoforms/*.json'],
+  },
+
+  { id: 'jbrowse', col: 4, row: 0, span: 2, kind: 'viewer', title: 'JBrowse 2', lines: ['Protein3d, MsaView', 'plugins'] },
+  { id: 'astro', col: 4, row: 2, span: 3, kind: 'viewer', title: 'Astro site', lines: ['astro build → static', 'gene, leads, isoform', 'pages, blog'] },
+  { id: 'prism', col: 4, row: 5, span: 2, kind: 'viewer', title: 'Prism 3D viewer', lines: ['Mol* v6 build,', 'site/prism/'] },
+  { id: 'live', col: 4, row: 7, span: 2, kind: 'live', title: 'Fetched live', lines: ['AlphaFold DB .cif', 'UCSC hg38 tracks'] },
+]
+
+function place(b: Box) {
+  const column = COLUMNS[b.col] ?? { x: 0, w: 0, label: '' }
+  const y = TOP + b.row * PITCH
+  const h = (b.span ?? 1) * PITCH - GAP
+  return { ...b, x: column.x, y, w: column.w, h, cy: y + h / 2 }
+}
+
+const byId = new Map(boxes.map(b => [b.id, place(b)] satisfies [string, ReturnType<typeof place>]))
+
+function missing(id: string): never {
+  throw new Error(`no box ${id}`)
+}
+
+function box(id: string) {
+  return byId.get(id) ?? missing(id)
+}
+
+function rowY(id: string, other: string) {
+  const a = box(id)
+  const b = box(other)
+  return Math.max(a.y, b.y) + (Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y)) / 2
+}
+
+function straight(from: string, to: string) {
+  const a = box(from)
+  const b = box(to)
+  const y = rowY(from, to)
+  return `M${a.x + a.w} ${y}H${b.x - 4}`
+}
+
+function down(from: string, to: string) {
+  const a = box(from)
+  const b = box(to)
+  const x = a.x + a.w / 2
+  return b.y > a.y ? `M${x} ${a.y + a.h}V${b.y - 4}` : `M${x} ${a.y}V${b.y + b.h + 4}`
+}
+
+const busIn = ['atlas', 'coords', 'clinvarStep', 'amStep', 'exp', 'cons']
+const busOut = ['tracks', 'analyze', 'pages']
+const busTop = box('atlas').cy
+const busBottom = box('cons').cy
+
+const arrows = [
+  ...[
+    ['uniprot', 'atlas'],
+    ['afdb', 'atlas'],
+    ['ebi', 'coords'],
+    ['clinvar', 'clinvarStep'],
+    ['am', 'amStep'],
+    ['pdb', 'exp'],
+    ['ucsc', 'cons'],
+    ['gpcrdb', 'gpcr'],
+    ['afdbIso', 'iso'],
+    ['gpcr', 'data'],
+    ['iso', 'data'],
+    ['tracks', 'jbFiles'],
+    ['pages', 'data'],
+    ['jbFiles', 'jbrowse'],
+    ['data', 'astro'],
+  ].map(([from = '', to = '']) => ({ d: straight(from, to), dashed: false })),
+  ...busOut.map(id => ({ d: `M${BUS} ${box(id).cy}H${box(id).x - 4}`, dashed: false })),
+  { d: down('analyze', 'pages'), dashed: false },
+  { d: down('astro', 'prism'), dashed: false },
+  { d: down('astro', 'jbrowse'), dashed: false },
+  { d: down('live', 'prism'), dashed: true },
+  {
+    d: `M${box('live').x + box('live').w} ${box('live').cy}H${WIDTH - 10}V${box('jbrowse').cy}H${box('jbrowse').x + box('jbrowse').w + 4}`,
+    dashed: true,
+  },
+]
+
+const busLines = busIn.map(id => `M${box(id).x + box(id).w} ${box(id).cy}H${BUS}`)
+
+const edgeLabels = [
+  { x: box('astro').x + box('astro').w / 2 + 6, y: box('prism').y - 7, text: 'embeds' },
+  { x: box('astro').x + box('astro').w / 2 - 6, y: box('jbrowse').y + box('jbrowse').h + 15, text: 'opens at a variant', anchor: 'end' },
+  { x: (box('iso').x + box('iso').w + box('data').x) / 2, y: box('gpcr').cy - 6, text: 'straight to the site', anchor: 'middle' },
+]
+
+const CHAR = 6.6
+
+function chipLayout(b: ReturnType<typeof place>) {
+  const chips = (b.chips ?? []).reduce<{ x: number; w: number; text: string }[]>((placed, text) => {
+    const last = placed.at(-1)
+    const x = last ? last.x + last.w + 6 : b.x + 10
+    return [...placed, { x, w: text.length * CHAR + 12, text }]
+  }, [])
+  const end = chips.at(-1)
+  return { chips, textX: end ? end.x + end.w + 6 : b.x + 10 }
+}
+
+const laidOut = [...byId.values()].map(b => ({ ...b, ...chipLayout(b) }))
+---
+
+<Layout title="How it works" nav="architecture" description="How the interface atlas is built: data sources, the Node pipeline and its libraries, and the static site and viewers it feeds.">
+  <h1>How it works</h1>
+  <p class="lede">
+    A Node pipeline pulls public data, finds which disease-protein residues touch a predicted partner, maps them to genome
+    codons, and writes JSON and bigBed files. Astro turns the JSON into a static site; JBrowse reads the bigBed tracks.
+  </p>
+
+  <figure class="architecture">
+    <div class="architecture-scroll">
+      <svg
+        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+        role="img"
+        aria-label="Architecture: UniProt, AlphaFold DB, EBI Proteins API, ClinVar, AlphaMissense, PDB, UCSC phyloP and GPCRdb feed Node scripts; their cached results in out/ are combined into bigBed tracks for JBrowse and per-gene JSON for the Astro site, which embeds the Prism 3D viewer."
+      >
+        <defs>
+          <marker id="arch-arrow" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0L8 4L0 8Z" fill="var(--text-2)" />
+          </marker>
+        </defs>
+        {
+          COLUMNS.map(c => (
+            <text class="arch-heading" x={c.x} y={34}>
+              {c.label}
+            </text>
+          ))
+        }
+        {busLines.map(d => <path class="arch-edge" d={d} />)}
+        <path class="arch-bus" d={`M${BUS} ${busTop}V${busBottom}`} />
+        <text class="arch-bus-label" x={BUS + 6} y={busBottom + 4}>out/</text>
+        {arrows.map(a => <path class={a.dashed ? 'arch-edge dashed' : 'arch-edge'} d={a.d} marker-end="url(#arch-arrow)" />)}
+        {
+          edgeLabels.map(l => (
+            <text class="arch-edge-label" x={l.x} y={l.y} text-anchor={l.anchor ?? 'start'}>
+              {l.text}
+            </text>
+          ))
+        }
+        {
+          laidOut.map(b => (
+            <g class={`arch-box ${b.kind}`}>
+              <rect x={b.x} y={b.y} width={b.w} height={b.h} rx="6" />
+              <text class={b.kind === 'step' || b.kind === 'file' ? 'arch-title code' : 'arch-title'} x={b.x + 10} y={b.y + 18}>
+                {b.title}
+              </text>
+              {b.chips.map(c => (
+                <g class="arch-chip">
+                  <rect x={c.x} y={b.y + 25} width={c.w} height="17" rx="8.5" />
+                  <text x={c.x + c.w / 2} y={b.y + 37.5} text-anchor="middle">
+                    {c.text}
+                  </text>
+                </g>
+              ))}
+              {(b.lines ?? []).map((line, i) => (
+                <text class="arch-line" x={i === 0 ? b.textX : b.x + 10} y={b.y + 38 + i * 15}>
+                  {line}
+                </text>
+              ))}
+            </g>
+          ))
+        }
+      </svg>
+    </div>
+    <figcaption>
+      <span class="arch-key"><span class="arch-swatch chip"></span>npm library</span>
+      <span class="arch-key"><span class="arch-swatch dashed"></span>fetched by the viewer at run time</span>
+      <span>
+        <code>pnpm all</code> runs the scripts in order; each caches its downloads under <code>data/</code> and its results
+        under <code>out/</code>.
+      </span>
+    </figcaption>
+  </figure>
+
+  <h2>The libraries</h2>
+  <ul>
+    <li>
+      <a href="https://www.npmjs.com/package/g2p_mapper"><code>g2p_mapper</code></a> turns a protein's coding exons from the EBI
+      Proteins API into a residue → hg38 codon map. That map places every interface residue on the genome, for the bigBed
+      tracks and the conservation lookup.
+    </li>
+    <li>
+      <a href="https://www.npmjs.com/package/p2s_mapper"><code>p2s_mapper</code></a> aligns sequences and summarises
+      positions. In the GPCR post its Needleman–Wunsch aligns PDB chains SIFTS does not map, and non-human proteins, to the
+      human UniProt sequence; on gene pages its position runs collapse residue lists into ranges such as 12–19, 23.
+    </li>
+    <li>
+      <a href="https://www.npmjs.com/package/@gmod/bbi"><code>@gmod/bbi</code></a> with
+      <a href="https://www.npmjs.com/package/generic-filehandle2"><code>generic-filehandle2</code></a> reads UCSC's
+      phyloP100way bigWig over HTTP range requests, fetching only the codons it needs rather than the whole genome.
+    </li>
+  </ul>
+
+  <h2>The viewers</h2>
+  <ul>
+    <li>
+      Gene pages embed <strong>Prism</strong>, a collaborator's Mol* v6 build, which loads the AlphaFold DB complex straight
+      from AlphaFold DB and colours it from the page's JSON.
+    </li>
+    <li>
+      <a href={href('jbrowse/')}>JBrowse 2</a> shows the atlas's bigBed tracks beside UCSC's hg38 ClinVar, RefSeq and phyloP
+      tracks, and its Protein3d plugin opens a variant inside its complex next to the genome.
+    </li>
+  </ul>
+</Layout>
