@@ -14,11 +14,12 @@
     "clinvar": "node src/clinvar.ts",
     "alphamissense": "node src/alphamissense.ts",
     "analyze": "node src/analyze.ts",
+    "experimental": "node src/experimental.ts",
     "gpcr": "node src/gpcr.ts",
     "tracks": "node src/tracks.ts",
     "pages": "node src/pages.ts",
     "isoforms": "node src/isoforms.ts",
-    "all": "pnpm atlas && pnpm clinvar && pnpm alphamissense && pnpm analyze && pnpm gpcr && pnpm tracks && pnpm pages && pnpm isoforms",
+    "all": "pnpm atlas && pnpm clinvar && pnpm alphamissense && pnpm analyze && pnpm experimental && pnpm gpcr && pnpm tracks && pnpm pages && pnpm isoforms",
     "test": "vitest run",
     "typecheck": "tsc --noEmit && astro check --tsconfig web/tsconfig.json",
     "format": "prettier --write src"

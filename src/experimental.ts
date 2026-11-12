@@ -1,0 +1,253 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { gunzipSync } from 'node:zlib'
+
+import { boundedMap } from './atlas.ts'
+import {
+  confidentResidues,
+  isConfident,
+  partnerName,
+  readAtlas,
+} from './atlasData.ts'
+import { download } from './cache.ts'
+import { CONTACT } from './constants.ts'
+import { withinDistance } from './contacts.ts'
+import { writeJson } from './json.ts'
+import { nanPercentile, pythonRound } from './numeric.ts'
+import { DATA, OUT } from './paths.ts'
+import { atoms, mmcif } from './pdbe.ts'
+import type { Atom } from './pdbe.ts'
+
+const SIFTS_URL =
+  'https://ftp.ebi.ac.uk/pub/databases/msd/sifts/flatfiles/tsv/pdb_chain_uniprot.tsv.gz'
+const SIFTS = join(DATA, 'sifts', 'pdb_chain_uniprot.tsv.gz')
+const ENTRIES_URL =
+  'https://files.wwpdb.org/pub/pdb/derived_data/index/entries.idx'
+const ENTRIES = join(DATA, 'sifts', 'entries.idx')
+export const EXPERIMENTAL = join(OUT, 'experimental.json')
+export const TRAINING_CUTOFF = '2021-09-30'
+const NEAR_BEST = 0.9
+const MAX_CHAINS = 60
+const RECOVERED = 0.5
+const PROGRESS_EVERY = 100
+
+type Coverage = Map<string, number>
+
+export interface Pair {
+  accession: string
+  gene: string
+  partner: string
+  partner_gene: string
+  entity: string
+  ipsae: number
+  predicted: number[]
+  firstDeposited: string
+}
+
+export function parseSifts(content: string) {
+  const byChain = new Map<string, number>()
+  for (const line of content.split('\n')) {
+    const [pdb, chain, accession, , , , , begin, end] = line.split('\t')
+    const length = Number(end) - Number(begin) + 1
+    if (pdb && chain && accession && Number.isFinite(length)) {
+      const key = `${accession}\t${pdb}\t${chain}`
+      byChain.set(key, (byChain.get(key) ?? 0) + length)
+    }
+  }
+  const coverage = new Map<string, Coverage>()
+  const chains = new Map<string, Set<string>>()
+  for (const [key, length] of byChain) {
+    const [accession = '', pdb = '', chain = ''] = key.split('\t')
+    const entries = coverage.get(accession) ?? new Map<string, number>()
+    entries.set(pdb, Math.max(entries.get(pdb) ?? 0, length))
+    coverage.set(accession, entries)
+    chains.set(pdb, (chains.get(pdb) ?? new Set<string>()).add(chain))
+  }
+  return {
+    coverage,
+    chains: new Map(chains.entries().map(([pdb, found]) => [pdb, found.size])),
+  }
+}
+
+export function sharedEntries(
+  own: Coverage = new Map(),
+  partner: Coverage = new Map(),
+) {
+  return [...own].flatMap(([pdb, covered]) => {
+    const other = partner.get(pdb)
+    return other === undefined ? [] : [{ pdb, covered: covered + other }]
+  })
+}
+
+export function chooseEntry(
+  shared: { pdb: string; covered: number }[],
+  chains: Map<string, number>,
+) {
+  const sized = shared
+    .map(entry => ({ ...entry, chains: chains.get(entry.pdb) ?? 0 }))
+    .filter(entry => entry.chains <= MAX_CHAINS)
+  const most = Math.max(...sized.map(entry => entry.covered))
+  return sized
+    .filter(entry => entry.covered >= NEAR_BEST * most)
+    .sort((a, b) => a.chains - b.chains || (a.pdb < b.pdb ? -1 : 1))[0]?.pdb
+}
+
+export function interfaceAgreement(
+  rows: Atom[],
+  accession: string,
+  partner: string,
+  predicted: number[],
+) {
+  const own = rows.filter(atom => atom.source?.accession === accession)
+  const other = rows.filter(atom => atom.source?.accession === partner)
+  const within = withinDistance(
+    own.map(atom => atom.xyz),
+    other.map(atom => atom.xyz),
+    CONTACT,
+  )
+  const observed = new Set(own.flatMap(atom => atom.source?.number ?? []))
+  const experimental = new Set(
+    own.flatMap((atom, i) => (within[i] ? (atom.source?.number ?? []) : [])),
+  )
+  const comparable = predicted.filter(residue => observed.has(residue))
+  return {
+    experimental: experimental.size,
+    predicted: comparable.length,
+    shared: comparable.filter(residue => experimental.has(residue)).length,
+  }
+}
+
+type Compared = Awaited<ReturnType<typeof compareEntry>>[number]
+
+function median(values: number[]) {
+  return pythonRound(nanPercentile(values, 50), 2)
+}
+
+export function summarise(
+  compared: Pick<Compared, 'experimental' | 'predicted' | 'shared'>[],
+) {
+  const touching = compared.filter(pair => pair.experimental > 0)
+  const recall = touching.map(pair => pair.shared / pair.experimental)
+  return {
+    pairs: compared.length,
+    touching: touching.length,
+    'median share of the experimental interface predicted': median(recall),
+    'median share of the predicted interface seen in the structure': median(
+      touching
+        .filter(pair => pair.predicted > 0)
+        .map(pair => pair.shared / pair.predicted),
+    ),
+    [`pairs with at least ${RECOVERED * 100}% of the experimental interface predicted`]:
+      recall.filter(share => share >= RECOVERED).length,
+  }
+}
+
+export function depositionDates(index: string) {
+  return new Map(
+    index.split('\n').flatMap(line => {
+      const [pdb, , date = ''] = line.split('\t')
+      const [, month, day, year] = /^(\d\d)\/(\d\d)\/(\d\d)$/.exec(date) ?? []
+      return pdb && year
+        ? [
+            [
+              pdb.toLowerCase(),
+              `${Number(year) < 70 ? '20' : '19'}${year}-${month}-${day}`,
+            ] satisfies [string, string],
+          ]
+        : []
+    }),
+  )
+}
+
+async function compareEntry(pdb: string, pairs: Pair[]) {
+  const rows = atoms(await mmcif(pdb))
+  return pairs.map(({ predicted, ...pair }) => ({
+    ...pair,
+    pdb,
+    ...interfaceAgreement(rows, pair.accession, pair.partner, predicted),
+  }))
+}
+
+function confidentPairs() {
+  return readAtlas().flatMap(protein =>
+    protein.interfaces.filter(isConfident).flatMap(complex =>
+      complex.partner
+        ? [
+            {
+              accession: protein.accession,
+              gene: protein.gene,
+              partner: complex.partner,
+              partner_gene: partnerName(complex),
+              entity: complex.entity,
+              ipsae: complex.ipsae ?? 0,
+              predicted: confidentResidues(complex, protein.length),
+            },
+          ]
+        : [],
+    ),
+  )
+}
+
+export async function main(workers = 4) {
+  await download(SIFTS_URL, SIFTS)
+  const { coverage, chains } = parseSifts(
+    gunzipSync(readFileSync(SIFTS)).toString('utf8'),
+  )
+  await download(ENTRIES_URL, ENTRIES)
+  const deposited = depositionDates(readFileSync(ENTRIES, 'utf8'))
+  const pairs = confidentPairs()
+  const located = pairs.map(pair => {
+    const shared = sharedEntries(
+      coverage.get(pair.accession),
+      coverage.get(pair.partner),
+    )
+    return {
+      pair: {
+        ...pair,
+        firstDeposited:
+          shared.flatMap(entry => deposited.get(entry.pdb) ?? []).sort()[0] ??
+          '',
+      } satisfies Pair,
+      shared: shared.length,
+      pdb: chooseEntry(shared, chains),
+    }
+  })
+  const byEntry = Map.groupBy(
+    located.flatMap(({ pair, pdb }) => (pdb ? [{ pair, pdb }] : [])),
+    ({ pdb }) => pdb,
+  )
+  const results = await boundedMap(
+    [...byEntry],
+    workers,
+    ([pdb, found]) =>
+      compareEntry(
+        pdb,
+        found.map(({ pair }) => pair),
+      ).catch((error: unknown) => ({ pdb, error: String(error) })),
+    finished => {
+      if (finished % PROGRESS_EVERY === 0) {
+        console.log(`${finished}/${byEntry.size}`)
+      }
+    },
+  )
+  const compared = results.flatMap(result => ('error' in result ? [] : result))
+  const summary = {
+    'confident predicted pairs': pairs.length,
+    'with both proteins in one PDB entry': located.filter(l => l.shared > 0)
+      .length,
+    [`only in entries of more than ${MAX_CHAINS} chains, left out`]:
+      located.filter(l => l.shared > 0 && !l.pdb).length,
+    all: summarise(compared),
+    [`no structure of the pair deposited by ${TRAINING_CUTOFF}`]: summarise(
+      compared.filter(pair => pair.firstDeposited > TRAINING_CUTOFF),
+    ),
+    failed: results.flatMap(result => ('error' in result ? [result] : [])),
+  }
+  writeJson(EXPERIMENTAL, { summary, pairs: compared }, 2)
+  console.log(JSON.stringify(summary, undefined, 2))
+}
+
+if (import.meta.main) {
+  const [workers] = process.argv.slice(2)
+  await main(workers ? Number(workers) : undefined)
+}

@@ -7,13 +7,14 @@ import { proteinInterfaces } from './atlas.ts'
 import { confidentResidues, isConfident, readAtlas } from './atlasData.ts'
 import type { Interface, ProteinInterfaces } from './atlasData.ts'
 import { getJson, getText } from './cache.ts'
-import { atomSiteRows, cifCategory } from './cif.ts'
+import { cifCategory } from './cif.ts'
 import { CONTACT } from './constants.ts'
 import { withinDistance } from './contacts.ts'
-import type { Point } from './contacts.ts'
 import { codingPositions, mergeBlocks } from './coordinates.ts'
 import { number, record, records, text, writeJson } from './json.ts'
 import { DATA, ROOT, SITE_DATA } from './paths.ts'
+import { atoms, mmcif } from './pdbe.ts'
+import type { Atom, Source } from './pdbe.ts'
 import { pythonRound } from './numeric.ts'
 import { COLOURS, bed12, partnerList, writeBigBed } from './tracks.ts'
 import { geneOf, sequenceOf } from './uniprot.ts'
@@ -81,20 +82,6 @@ const THREE_TO_ONE = new Map([
   ['PYL', 'O'],
   ['TER', '*'],
 ])
-
-export interface Source {
-  accession: string
-  number: number
-}
-
-export interface Atom {
-  chain: string
-  entity: string
-  seq: number
-  comp: string
-  source: Source | undefined
-  xyz: Point
-}
 
 interface Ortholog {
   accession: string
@@ -282,46 +269,12 @@ async function humanOrtholog(info: Awaited<ReturnType<typeof uniprot>>) {
   } satisfies Ortholog
 }
 
-function mmcif(pdb: string) {
-  return getText(
-    `https://www.ebi.ac.uk/pdbe/entry-files/download/${pdb.toLowerCase()}_updated.cif`,
-    join(DATA, 'pdbe', `${pdb.toLowerCase()}.cif.gz`),
-  )
-}
-
 function gAlphaEntities(cif: string) {
   return new Set(
     cifCategory(cif, 'entity')
       .filter(entity => G_ALPHA_ENTITY.test(entity.pdbx_description ?? ''))
       .map(entity => entity.id ?? ''),
   )
-}
-
-function atoms(cif: string) {
-  return atomSiteRows(cif)
-    .filter(
-      row =>
-        row.pdbx_PDB_model_num === '1' &&
-        row.type_symbol !== 'H' &&
-        row.label_seq_id !== '.' &&
-        row.label_seq_id !== '?',
-    )
-    .map((row): Atom => ({
-      chain: row.auth_asym_id ?? '',
-      entity: row.label_entity_id ?? '',
-      seq: Number(row.label_seq_id),
-      comp: row.label_comp_id ?? '',
-      source:
-        row.pdbx_sifts_xref_db_name === 'UNP' &&
-        row.pdbx_sifts_xref_db_num !== '?' &&
-        row.pdbx_sifts_xref_db_num !== '.'
-          ? {
-              accession: row.pdbx_sifts_xref_db_acc ?? '',
-              number: Number(row.pdbx_sifts_xref_db_num),
-            }
-          : undefined,
-      xyz: [Number(row.Cartn_x), Number(row.Cartn_y), Number(row.Cartn_z)],
-    }))
 }
 
 export function chainSequence(chainAtoms: Pick<Atom, 'seq' | 'comp'>[]) {

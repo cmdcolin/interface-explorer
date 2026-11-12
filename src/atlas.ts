@@ -305,7 +305,7 @@ async function processProtein(
   }
 }
 
-async function boundedMap<T, R>(
+export async function boundedMap<T, R>(
   items: T[],
   workers: number,
   work: (item: T) => Promise<R>,

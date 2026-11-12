@@ -81,6 +81,12 @@ one.
 - Conditions can separate by interface. All 14 pathogenic KRAS variants ClinVar
   lists for non-small cell lung carcinoma sit at a RasGAP interface (G12, G13,
   G60, Q61), against 5 of the 9 listed for Noonan syndrome 3.
+- The predictions match experiment where it exists. 859 of the 3,657 predicted
+  pairs have both proteins in one PDB entry, and in 745 of those the two
+  touch. The predicted interface covers a median 88% of the experimental one,
+  and 83% of the predicted residues the structure resolves are in it. For the
+  160 pairs with no structure deposited by AlphaFold's 30 September 2021
+  training cutoff, it is the same: 88% and 81%.
 - 98.8% of those variants' genomic positions fall inside their gene's
   interface codons, an independent check of the residue → codon mapping. The
   rest belong to proteins encoded by several identical genes (histones H3.3
@@ -152,6 +158,13 @@ one.
   variant is mapped through that isoform to the canonical residue. Transcripts
   UniProt assigns to no isoform are used only when 95% of their variants match
   the canonical sequence, and every variant's wild-type residue must match.
+- **Experimental check:** SIFTS lists the PDB entries holding both proteins of
+  a predicted pair. One is compared per pair: among those covering nearly the
+  most of both proteins, the one with the fewest chains, leaving out entries of
+  more than 60 chains. Residues within 5 Å of the partner in the deposited
+  coordinates are the experimental interface; predicted residues the structure
+  does not resolve are not counted against the prediction. Contacts made only
+  through crystal symmetry are missed.
 - **AlphaMissense:** the published pathogenicity of every substitution in the
   canonical proteins, joined to each variant by UniProt accession and change.
   Above 0.564 is likely pathogenic and below 0.34 likely benign.
@@ -188,6 +201,8 @@ one.
   a score for each variant in `out/clinvar.ndjson`.
 - `pnpm analyze`: the enrichment, overall, by confidence band and by
   AlphaMissense class, in `out/analysis.json`.
+- `pnpm experimental [workers]`: each predicted pair against a PDB entry
+  holding both proteins, in `out/experimental.json`.
 - `pnpm gpcr`: the experimental GPCR–G protein interfaces, as
   `site/jbrowse/gpcr_interfaces.bb`, `gpcr_interface_variants.bb` and
   `site/data/gpcr.json`.
