@@ -36,12 +36,6 @@ describe('architecture graph', () => {
     expect(ids.filter(id => !dot.includes(`${id} [`))).toEqual([])
   })
 
-  it('renders a themed SVG with no leftover placeholder colours', () => {
-    const svg = architectureSvg(numbers)
-    expect(svg).toContain('var(--text-2)')
-    expect(svg).not.toMatch(/#00000\d/)
-  })
-
   it('labels every stage', () => {
     const svg = architectureSvg(numbers)
     expect(

@@ -23,15 +23,6 @@ interface Numbers {
   plddt: number
 }
 
-const COLORS = {
-  text: ['#000001', 'var(--text)'],
-  text2: ['#000002', 'var(--text-2)'],
-  border: ['#000003', 'var(--border)'],
-  partner: ['#000004', 'var(--partner)'],
-} as const
-
-const color = (name: keyof typeof COLORS) => COLORS[name][0]
-
 export const COLUMNS = [
   'Sources',
   'Fetch and compute',
@@ -340,7 +331,7 @@ function nodeAttributes(node: Node) {
   return node.kind === 'file'
     ? 'shape=folder'
     : node.kind === 'viewer'
-      ? `color="${color('partner')}" penwidth=1.5`
+      ? 'color="#3f9b78" penwidth=1.5'
       : ''
 }
 
@@ -356,25 +347,15 @@ export function architectureDot(numbers: Numbers) {
   const all = nodes(numbers)
   return `digraph architecture {
   rankdir=LR
-  bgcolor=transparent
+  bgcolor=white
   nodesep=0.25
   ranksep=0.6
-  graph [fontname="Helvetica" fontsize=15 fontcolor="${color('text2')}" color="${color('border')}" style=rounded]
-  node [shape=box fontname="Helvetica" fontsize=14 color="${color('text2')}" fontcolor="${color('text')}"]
-  edge [fontname="Helvetica" fontsize=12 color="${color('text2')}" fontcolor="${color('text2')}" arrowsize=0.7]
+  graph [fontname="Helvetica" fontsize=15 color=gray style=rounded]
+  node [shape=box fontname="Helvetica" fontsize=14]
+  edge [fontname="Helvetica" fontsize=12 arrowsize=0.7]
   ${columns.map((ids, index) => cluster(ids, index, all)).join('\n  ')}
   ${edges.map(edge => `${edge.from} -> ${edge.to}${edge.label ? ` [label="${quote(edge.label)}"]` : ''};`).join('\n  ')}
 }`
-}
-
-function theme(svg: string) {
-  return Object.values(COLORS).reduce(
-    (out, [sentinel, variable]) =>
-      out
-        .replaceAll(`"${sentinel}"`, `"${variable}"`)
-        .replaceAll(`: ${sentinel}`, `: ${variable}`),
-    svg,
-  )
 }
 
 function bareSvg(svg: string) {
@@ -404,5 +385,5 @@ function renderDot(source: string) {
 }
 
 export function architectureSvg(numbers: Numbers) {
-  return bareSvg(theme(renderDot(architectureDot(numbers))))
+  return bareSvg(renderDot(architectureDot(numbers)))
 }

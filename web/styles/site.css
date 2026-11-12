@@ -1144,6 +1144,7 @@ h3 {
   width: 100%;
   min-width: 980px;
   height: auto;
+  border-radius: 8px;
 }
 
 .architecture svg text {
