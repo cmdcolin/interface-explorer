@@ -81,6 +81,7 @@ function atom(accession: string, number: number, x: number): Atom {
     chain: accession,
     entity: accession,
     seq: number,
+    auth: number,
     comp: 'ALA',
     source: { accession, number },
     sourceLetter: 'A',

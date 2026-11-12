@@ -190,6 +190,8 @@ export interface Side {
   accession: string
   identity: number
   residues: number[]
+  chain: string
+  auth: Record<string, number>
   differing: number[]
   chimera: boolean
   locus: string | null
@@ -218,6 +220,7 @@ export interface Complex {
   receptor: string
   receptorSide: Side & { afdb: Agreement | null }
   gProteins: Side[]
+  axis: number[]
 }
 
 export interface GAlpha {

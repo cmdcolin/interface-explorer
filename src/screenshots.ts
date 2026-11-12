@@ -23,6 +23,7 @@ export interface Shot {
   name: string
   url: (local: string) => string
   follow?: string
+  clip?: string
   height: number
   wait: number
 }
@@ -152,6 +153,23 @@ async function waitForLoaded(browser: Browser, session: string) {
   throw new Error('still loading after two minutes')
 }
 
+async function clipTo(browser: Browser, session: string, selector: string) {
+  const { result } = await browser.send(
+    'Runtime.evaluate',
+    {
+      expression: `(() => {
+        const box = document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect()
+        return { x: box.x + scrollX, y: box.y + scrollY, width: box.width, height: box.height, scale: 1 }
+      })()`,
+      returnByValue: true,
+    },
+    session,
+  )
+  return result && typeof result === 'object' && 'value' in result
+    ? result.value
+    : undefined
+}
+
 async function capture(
   browser: Browser,
   shot: Shot,
@@ -189,6 +207,8 @@ async function capture(
     {
       format: output.format,
       quality: output.format === 'jpeg' ? 85 : undefined,
+      clip: shot.clip ? await clipTo(browser, session, shot.clip) : undefined,
+      captureBeyondViewport: Boolean(shot.clip),
     },
     session,
   )

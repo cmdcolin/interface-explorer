@@ -14,6 +14,7 @@ export interface Atom {
   chain: string
   entity: string
   seq: number
+  auth: number
   comp: string
   source: Source | undefined
   sourceLetter: string
@@ -40,6 +41,7 @@ export function atoms(cif: string) {
       chain: row.auth_asym_id ?? '',
       entity: row.label_entity_id ?? '',
       seq: Number(row.label_seq_id),
+      auth: Number(row.auth_seq_id),
       comp: row.label_comp_id ?? '',
       source:
         row.pdbx_sifts_xref_db_name === 'UNP' &&

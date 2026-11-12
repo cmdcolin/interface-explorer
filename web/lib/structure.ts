@@ -53,7 +53,7 @@ export function structureData(gene: Gene) {
             entity: p.entity,
             chain: p.chain,
             residues: partnerResidues(p),
-            ...(side ? { side: { page: side.page, residues: side.residues, variants: side.variants } } : {}),
+            ...(side ? { side: { residues: side.residues, variants: side.variants } } : {}),
           } satisfies ScenePartner,
         ]
       : []

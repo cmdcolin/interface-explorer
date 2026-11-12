@@ -1,0 +1,50 @@
+---
+import { gpcr } from '../lib/data.ts'
+import { agreementText, gAlphaCell, receptorLinks, sideCell } from '../lib/gpcr.ts'
+
+const anchored = new Set<string>()
+const anchor = (gene: string) => {
+  const first = !anchored.has(gene)
+  anchored.add(gene)
+  return first ? gene : undefined
+}
+---
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Receptor</th><th>G protein</th><th>Structure</th><th>Receptor side</th><th>Gα side</th>
+        <th>AlphaFold DB covers, receptor side</th><th>Open</th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        gpcr().complexes.map(c => {
+          const r = c.receptorSide
+          return (
+            <tr id={anchor(r.gene)}>
+              <td class="nowrap">
+                {r.gene}
+                {c.species !== 'Human' && <span class="muted"> {c.species}</span>}
+              </td>
+              <td>
+                {c.g_subtype} <span class="muted">{c.g_note}</span>
+              </td>
+              <td class="nowrap">
+                <a href={`https://www.rcsb.org/structure/${c.pdb}`}>{c.pdb}</a>{' '}
+                <span class="muted">
+                  {c.method}, {c.resolution} Å
+                </span>
+              </td>
+              <td set:html={sideCell(r)} />
+              <td set:html={gAlphaCell(c.gProteins)} />
+              <td set:html={agreementText(r.afdb)} />
+              <td class="nowrap" set:html={receptorLinks(r.gene, c.pdb, r.locus)} />
+            </tr>
+          )
+        })
+      }
+    </tbody>
+  </table>
+</div>

@@ -1,132 +1,100 @@
 ---
-title: 'Interface atlas and Project 9: where our GPCR work meets yours'
+title: 'GPCRs and their G proteins: the disease variants are on Gαs'
 date: '2026-11-12'
 order: 0
-description: 'Receptor–G protein contacts from the 23 DataSet1 complexes, labelled with GPCRdb numbers, the Gαolf surface AlphaFold DB predicts for olfactory receptors, and how OR51E2’s cryo-EM structure bears it out.'
+description: 'In experimental receptor–G protein complexes, every pathogenic ClinVar variant at the interface is on the G protein, most at the tip of Gαs that inserts into the receptor.'
 hero: './heroes/project-9-gpcrs.jpg'
-heroAlt: 'The receptor-facing surfaces of Gαs and Gαi1: how many structures put a receptor at each residue, with ClinVar variants marked above'
+heroAlt: 'The dopamine D1 receptor holding Gαs in 7JVQ, seen side-on: the α5 helix of Gαs reaches up into the receptor, with its pathogenic ClinVar variants in red where they meet'
 ---
 
+import ComplexView from '../../components/ComplexView.astro'
+import GpcrComplexes from '../../components/GpcrComplexes.astro'
 import Html from '../../components/Html.astro'
 import { surfaceMap } from '../../lib/maps.ts'
 import { project9 } from '../../lib/project9.ts'
 
 export const p = project9()
 
-The interface atlas maps where human disease proteins touch their partners, from
-AlphaFold DB's predicted complexes and from experimental structures, and which
-ClinVar missense variants fall on those surfaces. For Project 9 it covers the
-{p.complexes} receptor–G protein complexes in DataSet1. Three places to start,
-depending on what you work on:
+BioHackathon Europe 2026 Project 9 picked {p.complexes} cryo-EM and X-ray
+structures of biogenic amine receptors bound to a G protein; we added one
+olfactory receptor, OR51E2. We took the residues within 5 Å across each
+receptor–Gα interface and placed the ClinVar missense variants on them.
 
-- **Alignments and activation (msa2d):** the [complexes on the GPCRs
-  page](../../gpcr/#complexes), where every receptor contact and variant now
-  carries its GPCRdb generic number.
-- **Olfactory receptors:** [GNAL](../../gene/GNAL/), the Gαolf gene, and its
-  predicted complexes with olfactory and trace amine receptors.
-- **3D viewers (iCn3D):** each complex on the GPCRs page opens in a 3D view
-  beside the genome.
+**{p.gAlphaPathogenic} pathogenic variants land on these interfaces, and all are
+on the G protein: {p.gnasPathogenic} on Gαs, {p.tipPathogenic.length} of them in
+its last {p.tip} residues**, the tip of the α5 helix that Gαs pushes into the
+receptor's cytoplasmic cavity. The receptor side has
+{p.receptorPathogenic || 'none'}.
 
-## One numbering for everyone
+<ComplexView view={p.featured.view}>
+  The dopamine D1 receptor (green, under a translucent surface) holding Gαs
+  (grey) in {p.featured.pdb}. Blue: residues within 5 Å of the other protein.
+  The {p.featured.pathogenic} Gαs residues with a pathogenic ClinVar variant are
+  red, uncertain ones orange. Hover a residue for its variants.
+</ComplexView>
 
-The team agreed on GPCRdb's generic numbering, so the GPCRs page now uses it.
-Each receptor residue within 5 Å of Gα is labelled with its GPCRdb number, e.g.
-[HTR1A](../../gpcr/#HTR1A)'s R225C, R225H and R225S all sit at 5.68x68. That
-covers {p.numbered} of the {p.contacts} contact residues; the other{' '}
-{p.contacts - p.numbered} lie in loops GPCRdb leaves unnumbered and are labelled
-{p.loops.join(' or ')}. Hover a complex's residue count for the full list.
-
-The msa2d pages count Gα contacts within 4 Å, so our sets should be a slightly
-larger superset of yours on the same structures. If yours are not, one of us has
-a mapping bug, and we would like to know.
-
-## Gαolf and the olfactory receptors
-
-Olfactory receptors signal through Gαolf, encoded by GNAL. AlphaFold DB has
-predicted GNAL complexes with {p.olfactory.length} olfactory receptors
-({p.olfactory.join(', ')}) and three trace amine receptors (TAAR2, TAAR5 and
-TAAR9). None is an OR4, so these do not test the OR4 models directly, but they
-do show the surface Gαolf offers an olfactory receptor.
-
-ClinVar has {p.gnalVariants.length} variants of uncertain significance on that
-surface:
-
-<table>
-  <thead>
-    <tr>
-      <th>Variant</th>
-      <th class="num">AlphaMissense</th>
-      <th>Olfactory receptors it contacts</th>
-    </tr>
-  </thead>
-  <tbody>
-    {p.gnalVariants.map(v => (
-      <tr>
-        <td>{v.change}</td>
-        <td class="num">{v.alphaMissense?.toFixed(2) ?? '—'}</td>
-        <td>{v.olfactory.join(', ')}</td>
-      </tr>
-    ))}
-  </tbody>
-</table>
-
-L380 is the second-to-last residue of Gαolf, at the tip of the α5 helix that
-inserts into the receptor's cytoplasmic cavity, so an arginine there is the one
-to look at first. Two things keep this modest:
-
-- GNAL is a disease gene because of dystonia (DYT25), through dopamine D1-type
-  signalling in the striatum, not because of smell. Several of these variants
-  were reported for dystonic disorders.
-- The olfactory receptor complexes have ipSAE {p.ipsaeRange.join('–')}, just
-  above the 0.6 threshold for a confident interface. V204E and L380R also
-  contact DRD5, ADRB1 and the TAARs: this is the face Gαolf turns to every
-  receptor, not one specific to olfactory receptors.
-
-## OR51E2: an olfactory receptor in experiment
-
-To test those predictions, we added one structure that is not in DataSet1:
-[OR51E2](../../gpcr/#OR51E2) bound to propionate with mini-Gs
-(<a href={`https://www.rcsb.org/structure/${p.or51e2.pdb}`}>{p.or51e2.pdb}</a>,
-cryo-EM, {p.or51e2.resolution} Å; Billesbølle et al., Nature 2023). Its{' '}
-{p.or51e2.residues} receptor residues within 5 Å of Gα all carry GPCRdb numbers,
-so they line up with the amine receptors. AlphaFold DB's
-OR51E2–{p.or51e2.partner} complex covers {p.or51e2.recall}% of them, and{' '}
-{p.or51e2.precision}% of the residues it predicts are among them: the predicted
-Gαolf face of an olfactory receptor matches the one seen with a Gs mimic,
-despite its borderline ipSAE.
-
-The mini-Gs is an engineered Gαs, not Gαolf, so this checks the receptor side of
-the prediction, not the Gαolf residues. ClinVar has {p.or51e2.variantCount}{' '}
-variants of uncertain significance on OR51E2's side of the interface:{' '}
-{p.or51e2.variants}.
-
-## Where AlphaFold DB can be checked against experiment
-
-Its DRD5–Golf complex covers {p.drd5Recall}% of the receptor residues DRD5 uses
-against Gs in the cryo-EM structure, and its GPCR complexes of Gαi1 cover{' '}
-{p.gnai1Recall}% of what the {p.gnai1Structures} Gαi1 complexes use. It has no
-GPCR complex of Gαs at all, so the {p.gnas?.counts.length} receptor-facing
-residues of Gαs below, and the ClinVar variants on them, come from experiment
-alone.
+## The tip of Gαs
 
 <Html html={p.gnas ? surfaceMap(p.gnas) : ''} />
 
 Bars: how many of the {p.gnas?.structures} Gαs structures put a receptor within
 5 Å of each residue. Marks above: ClinVar pathogenic (red) and uncertain
-(orange) missense. Every Gα is on the [GPCRs page](../../gpcr/).
+(orange). The pathogenic tip variants are {p.tipPathogenic.join(', ')}.
+AlphaFold DB has no complex of Gαs with a GPCR, so this surface comes from
+experiment alone.
 
-## What we are not claiming
+## The receptor side
 
-The receptor side of these complexes carries {p.uncertain} variants of uncertain
-significance and {p.benign} benign ones, mostly from gene-panel testing. Several
-generic positions are hit in more than one receptor, which is what{' '}
-{p.variants} variants spread over {p.positions} numbered contact positions would give
+The Project 9 receptors' contact residues carry {p.uncertain} variants of
+uncertain significance and {p.benign} benign ones, mostly from gene-panel
+testing. That says as much about ClinVar as about the interface: GNAS is a
+Mendelian disease gene (pseudohypoparathyroidism), and most amine receptors are
+not. Several GPCRdb positions are hit in more than one receptor, which is what{' '}
+{p.variants} variants spread over {p.positions} numbered positions would give
 anyway, so we have not ranked them as leads.
 
-## What would help
+## Where AlphaFold DB can be checked
 
+Its DRD5–Golf complex covers {p.drd5Recall}% of the receptor residues DRD5 uses
+against Gs in the cryo-EM structure, and its GPCR complexes of Gαi1 cover{' '}
+{p.gnai1Recall}% of what the {p.gnai1Structures} Gαi1 complexes use.
+
+## Gαolf and the olfactory receptors
+
+Olfactory receptors signal through Gαolf (GNAL). AlphaFold DB predicts GNAL
+complexes with {p.olfactory.length} olfactory receptors
+({p.olfactory.join(', ')}), at ipSAE {p.ipsaeRange.join('–')}, just above the
+0.6 threshold.
+
+OR51E2 bound to propionate with mini-Gs
+(<a href={`https://www.rcsb.org/structure/${p.or51e2.pdb}`}>{p.or51e2.pdb}</a>,
+cryo-EM, {p.or51e2.resolution} Å; Billesbølle et al., Nature 2023) tests the
+receptor side of those predictions: AlphaFold DB's
+OR51E2–{p.or51e2.partner} complex covers {p.or51e2.recall}% of the{' '}
+{p.or51e2.residues} receptor residues within 5 Å of Gα, and {p.or51e2.precision}%
+of the residues it predicts are among them. The mini-Gs is an engineered Gαs, so
+this does not test the Gαolf residues.
+
+On Gαolf's side, ClinVar has {p.gnalVariants.length} variants of uncertain
+significance; L380R, at the tip of α5 like the Gαs variants above, is the one to
+look at first. GNAL is a disease gene because of dystonia, not smell, and V204E
+and L380R also contact DRD5, ADRB1 and the TAARs, so this is the face Gαolf
+turns to every receptor. See [GNAL's page](../../gene/GNAL/).
+
+## For Project 9
+
+- **msa2d:** receptor contacts carry GPCRdb generic numbers ({p.numbered} of{' '}
+  {p.contacts}; the rest are in {p.loops.join(' or ')}). You count within 4 Å,
+  so ours should be a slightly larger superset on the same structures; if not,
+  one of us has a mapping bug. Your 4 Å lists would let us check.
 - **Olfactory receptor group:** whether your OR4 models put the same residues
-  against the G protein as OR51E2 does here; the GPCRdb numbers make that a
-  column-by-column comparison.
-- **msa2d:** your 4 Å receptor–Gα contact lists, to check against ours.
+  against the G protein as [OR51E2](#OR51E2) does; the GPCRdb numbers make that
+  a column-by-column comparison.
 - **iCn3D:** your interaction export for the same complexes.
+
+## All {p.all} complexes
+
+Hover a residue count for the residues and their GPCRdb numbers; "3D" opens the
+structure beside the genome in JBrowse.
+
+<GpcrComplexes />

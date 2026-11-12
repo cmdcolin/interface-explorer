@@ -1,5 +1,7 @@
 import { GPCR_TRACKS, locusUrl, pdbSpec, sessionUrl } from '../../src/links.ts'
+import { gpcr } from './data.ts'
 import { LABEL_KEYS, LABELS, clinvarHref, esc, residueCount } from './html.ts'
+import { pdbModel } from './scene.ts'
 import { JBROWSE } from './site.ts'
 import type { Agreement, Side, SideVariant } from './types.ts'
 
@@ -62,4 +64,34 @@ export function receptorLinks(gene: string, pdb: string, locus: string | null) {
   return locus
     ? `<a href="${locusUrl(locus, GPCR_TRACKS, JBROWSE)}">Genome</a> · ${structure}`
     : structure
+}
+
+function inStructure(side: Side, partner: string) {
+  return {
+    residues: side.residues.flatMap(position => side.auth[position] ?? []),
+    variants: side.variants.flatMap(v => {
+      const position = side.auth[v.position]
+      return position === undefined ? [] : [{ change: v.change, label: v.label, position, partners: [partner] }]
+    }),
+  }
+}
+
+export function complexView(pdb: string, gAlpha: string) {
+  const complex = gpcr().complexes.find(c => c.pdb === pdb)
+  const g = complex?.gProteins.find(side => side.gene === gAlpha)
+  const receptor = complex?.receptorSide
+  const own = g && receptor ? inStructure(g, receptor.gene) : undefined
+  return complex && g && receptor && own
+    ? {
+        partner: {
+          gene: receptor.gene,
+          entity: pdb,
+          chain: g.chain,
+          residues: own.residues,
+          side: inStructure(receptor, g.gene),
+        },
+        variants: own.variants,
+        model: pdbModel(pdb, receptor.chain, complex.axis),
+      }
+    : undefined
 }

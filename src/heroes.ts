@@ -44,9 +44,10 @@ await screenshots(
     },
     {
       name: 'project-9-gpcrs',
-      url: () => `${LIVE}gpcr/#GNAS`,
-      height: 700,
-      wait: 10,
+      url: local => `${local}blog/2026-11-12-project-9-gpcrs/`,
+      clip: '.complex-view .structure',
+      height: 1600,
+      wait: 25,
     },
   ],
   { dir: join(ROOT, 'web', 'content', 'blog', 'heroes'), format: 'jpeg' },

@@ -1,6 +1,9 @@
 import { gene, gpcr } from './data.ts'
+import { complexView } from './gpcr.ts'
 
 const OLFACTORY = /^OR\d/
+const TIP = 20
+const FEATURED = { pdb: '7JVQ', gAlpha: 'GNAS' }
 
 export function project9() {
   const data = gpcr()
@@ -19,6 +22,10 @@ export function project9() {
   )
   const gnai1 = data.gAlphas.find(g => g.gene === 'GNAI1')
   const drd5 = receptors.find(r => r.gene === 'DRD5')
+  const gnas = data.gAlphas.find(g => g.gene === 'GNAS')
+  const pathogenic = <V extends { label: string }>(list: V[]) => list.filter(v => v.label === 'pathogenic')
+  const gnasPathogenic = pathogenic(gnas?.variants ?? [])
+  const featured = data.complexes.find(c => c.pdb === FEATURED.pdb)
   const gnal = gene('GNAL')
   const olfactory = gnal.partners.filter(p => OLFACTORY.test(p.gene))
   const ipsae = olfactory.map(p => p.ipsae ?? 0)
@@ -50,7 +57,21 @@ export function project9() {
     gnai1Structures: gnai1?.structures ?? 0,
     gnai1Recall: Math.round((gnai1?.afdb?.recall ?? 0) * 100),
     drd5Recall: Math.round((drd5?.afdb?.recall ?? 0) * 100),
-    gnas: data.gAlphas.find(g => g.gene === 'GNAS'),
+    gnas,
+    gAlphaPathogenic: data.gAlphas.flatMap(g => pathogenic(g.variants)).length,
+    receptorPathogenic: pathogenic(data.complexes.flatMap(c => c.receptorSide.variants)).length,
+    all: data.complexes.length,
+    gnasPathogenic: gnasPathogenic.length,
+    tip: TIP,
+    tipPathogenic: gnasPathogenic
+      .filter(v => v.position > (gnas?.length ?? 0) - TIP)
+      .map(v => v.change),
+    featured: {
+      ...FEATURED,
+      receptor: featured?.receptorSide.gene,
+      pathogenic: pathogenic(featured?.gProteins.find(g => g.gene === FEATURED.gAlpha)?.variants ?? []).length,
+      view: complexView(FEATURED.pdb, FEATURED.gAlpha),
+    },
     olfactory: olfactory.map(p => p.gene),
     ipsaeRange: [Math.min(...ipsae), Math.max(...ipsae)].map(x => x.toFixed(2)),
     gnalVariants: gnal.variants

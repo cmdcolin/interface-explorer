@@ -867,6 +867,15 @@ h3 {
   background: var(--surface);
 }
 
+.complex-view {
+  margin: 16px 0 24px;
+}
+
+.complex-view figcaption {
+  margin-top: 8px;
+  color: var(--text-2);
+}
+
 .structure-status {
   margin: 0;
   padding: 16px;

@@ -8,7 +8,7 @@ import { JBROWSE, href } from '../lib/site.ts'
 interface Props {
   title?: string
   description?: string
-  nav?: 'genes' | 'leads' | 'isoforms' | 'gpcr' | 'blog' | 'about'
+  nav?: 'genes' | 'leads' | 'isoforms' | 'blog' | 'about'
   indexed?: boolean
   image?: ImageMetadata
 }
@@ -26,7 +26,6 @@ const links = [
   ['genes', 'Genes'],
   ['leads', 'Leads'],
   ['isoforms', 'Isoforms'],
-  ['gpcr', 'GPCRs'],
   ['blog', 'Blog'],
   ['about', 'About'],
 ] as const

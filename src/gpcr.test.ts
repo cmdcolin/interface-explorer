@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest'
 import { cifCategory } from './cif.ts'
 import {
   SWITCH,
+  axis,
   chainSequence,
   genericNumbers,
   residueMap,
@@ -172,4 +173,19 @@ describe('genericNumbers', () => {
       new Map(),
     )
   })
+})
+
+test('the axis is the unit vector from one centroid to the other', () => {
+  expect(
+    axis(
+      [
+        [0, 0, 0],
+        [2, 0, 0],
+      ],
+      [
+        [1, 0, 3],
+        [1, 0, 5],
+      ],
+    ),
+  ).toEqual([0, 0, 1])
 })

@@ -6,7 +6,13 @@ export interface ScenePartner {
   entity: string
   chain: string
   residues: number[]
-  side?: { page: string; residues: number[]; variants: SceneVariant[] }
+  side?: { residues: number[]; variants: SceneVariant[] }
+}
+
+export interface SceneModel {
+  url: string
+  partnerChain: string
+  up?: number[]
 }
 
 export interface SceneVariant {
@@ -43,6 +49,20 @@ export function otherChain(chain: string) {
   return chain === 'A' ? 'B' : 'A'
 }
 
+export function pdbModel(pdb: string, partnerChain: string, up: number[]) {
+  return { url: `https://www.ebi.ac.uk/pdbe/entry-files/download/${pdb.toLowerCase()}.bcif`, partnerChain, up }
+}
+
+export function sideways([x = 0, y = 0, z = 1]: number[]) {
+  const [a, b, c] = Math.abs(z) < 0.9 ? [y, -x, 0] : [0, z, -y]
+  const length = Math.hypot(a, b, c)
+  return [a / length, b / length, c / length]
+}
+
+function afdbModel(partner: ScenePartner) {
+  return { url: modelUrl(partner.entity), partnerChain: otherChain(partner.chain) }
+}
+
 function node(kind: string, params?: Record<string, unknown>, children?: Node[]): Node {
   return { kind, ...(params ? { params } : {}), ...(children ? { children } : {}) }
 }
@@ -65,7 +85,7 @@ export function sites(variants: SceneVariant[]) {
   return [...Map.groupBy(variants, v => v.position)]
     .map(([position, here]) => ({
       position,
-      residue: here[0]?.change[0] ?? '',
+      name: here[0]?.change.slice(0, -1) ?? '',
       label: LABEL_KEYS.find(label => here.some(v => v.label === label)) ?? 'benign',
       pathogenic: here.filter(v => v.label === 'pathogenic').length,
       byLabel: LABEL_KEYS.map(label => [label, here.filter(v => v.label === label).map(v => v.change)] as const).filter(
@@ -91,9 +111,9 @@ function siteNodes(chain: string, here: ReturnType<typeof sites>, colors: SceneC
     node('component', { selector: { auth_asym_id: chain, auth_seq_id: s.position } }, [
       node('representation', { type: 'ball_and_stick', size_factor: 1.3 }, [node('color', { color: colors[s.label] })]),
       node('tooltip', {
-        text: `${prefix}${s.residue}${s.position}: ${s.byLabel.map(([label, changes]) => `${label} ${changes.join(', ')}`).join('; ')}`,
+        text: `${prefix}${s.name}: ${s.byLabel.map(([label, changes]) => `${label} ${changes.join(', ')}`).join('; ')}`,
       }),
-      ...(labelled.has(s.position) ? [node('label', { text: `${prefix}${s.residue}${s.position}` })] : []),
+      ...(labelled.has(s.position) ? [node('label', { text: `${prefix}${s.name}` })] : []),
     ]),
   )
 }
@@ -105,9 +125,14 @@ function cartoon(base: string, highlight: ReturnType<typeof interfaceSelector>, 
   ])
 }
 
-export function scene(partner: ScenePartner, variants: SceneVariant[], colors: SceneColors) {
+export function scene(
+  partner: ScenePartner,
+  variants: SceneVariant[],
+  colors: SceneColors,
+  model: SceneModel = afdbModel(partner),
+) {
   const own = partner.chain
-  const other = otherChain(own)
+  const other = model.partnerChain
   const ownInterface = interfaceSelector(own, partner.residues)
   const otherInterface = interfaceSelector(other, partner.side?.residues ?? [])
   const structure = node('structure', { type: 'model' }, [
@@ -122,7 +147,7 @@ export function scene(partner: ScenePartner, variants: SceneVariant[], colors: S
     ...siteNodes(own, sites(variants.filter(v => v.partners.includes(partner.gene))), colors, '', LABELLED_SITES),
     ...siteNodes(other, sites(partner.side?.variants ?? []), colors, `${partner.gene} `, LABELLED_PARTNER_SITES),
     ...(ownInterface.length
-      ? [node('component', { selector: [...ownInterface, ...otherInterface] }, [node('focus', { radius_factor: 1.4 })])]
+      ? [node('component', { selector: [...ownInterface, ...otherInterface] }, [node('focus', { radius_factor: 1.4, ...(model.up ? { up: model.up, direction: sideways(model.up) } : {}) })])]
       : []),
   ])
   return {
@@ -130,7 +155,7 @@ export function scene(partner: ScenePartner, variants: SceneVariant[], colors: S
     metadata: { version: '1', title: `${partner.gene} complex` },
     root: node('root', {}, [
       node('canvas', { background_color: colors.background }),
-      node('download', { url: modelUrl(partner.entity) }, [node('parse', { format: 'bcif' }, [structure])]),
+      node('download', { url: model.url }, [node('parse', { format: 'bcif' }, [structure])]),
     ]),
   }
 }

@@ -1,0 +1,27 @@
+---
+import { href } from '../lib/site.ts'
+import type { complexView } from '../lib/gpcr.ts'
+
+interface Props {
+  view: ReturnType<typeof complexView>
+}
+
+const { view } = Astro.props
+---
+
+{
+  view && (
+    <figure class="complex-view">
+      <div class="structure" data-src={href('prism/prism-viewer.js')} data-view={JSON.stringify(view)}>
+        <p class="structure-status">Loading the 3D view…</p>
+      </div>
+      <figcaption>
+        <slot />
+      </figcaption>
+    </figure>
+  )
+}
+
+<script>
+  import '../scripts/complex.ts'
+</script>

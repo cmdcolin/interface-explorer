@@ -13,8 +13,9 @@ one.
   under each control, by confidence band and within each AlphaMissense class,
   and how AlphaMissense calls the variants at an interface); how conservation
   across 100 vertebrates bears on it; three worked examples (VHL, GNAO1,
-  APP695); and how the atlas connects to BioHackathon Europe 2026 Project 9's
-  GPCR work.
+  APP695); and the receptor–G protein complexes BioHackathon Europe 2026
+  Project 9 selected, in 3D, where every pathogenic variant at the interface is
+  on the G protein, with each complex's contacts and GPCRdb numbers.
 - **Genes:** a searchable table of the 1,331 disease genes with a confident
   predicted partner. Each gene page opens on its predicted complex in 3D,
   starting with the partner whose interface carries the most pathogenic
@@ -47,10 +48,6 @@ one.
   its predicted fold, and which pathogenic sites and partner interfaces it
   lacks. Each isoform opens superposed on the canonical model, linked to its own
   transcript.
-- **GPCRs:** experimental receptor–G protein interfaces from 23 cryo-EM and
-  X-ray complexes of biogenic amine receptors, plus the olfactory receptor
-  OR51E2, the receptor-facing surface of each Gα, and how AlphaFold DB's
-  predicted interfaces compare.
 - **JBrowse** at `/jbrowse/`, with the tracks below.
 
 ## Tracks
@@ -63,7 +60,7 @@ one.
   uncertain significance, grey is benign.
 - **Experimental GPCR–G protein interface codons** and **ClinVar missense at
   an experimental GPCR–G protein interface**: the same, from the PDB complexes
-  on the GPCRs page, one feature per structure and side, e.g. "DRD1–GNAS
+  in the GPCR blog post, one feature per structure and side, e.g. "DRD1–GNAS
   (7JVQ)".
 - All are bigBed. Alongside: NCBI RefSeq genes, UCSC's ClinVar track and
   UCSC's phyloP conservation from the 100-way vertebrate alignment.

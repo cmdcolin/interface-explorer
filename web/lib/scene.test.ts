@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { ranges, scene, sites } from './scene.ts'
+import { pdbModel, ranges, scene, sideways, sites } from './scene.ts'
 import type { SceneVariant } from './scene.ts'
 
 const partner = { gene: 'ELOC', entity: 'AF-1', chain: 'B', residues: [5, 6, 7, 9] }
@@ -42,7 +42,7 @@ test('a site takes its most severe label and lists the changes under each', () =
   expect(sites(variants.filter(v => v.partners.includes('ELOC')))).toEqual([
     {
       position: 5,
-      residue: 'R',
+      name: 'R5',
       label: 'pathogenic',
       pathogenic: 1,
       byLabel: [
@@ -50,7 +50,7 @@ test('a site takes its most severe label and lists the changes under each', () =
         ['uncertain', ['R5C']],
       ],
     },
-    { position: 9, residue: 'L', label: 'benign', pathogenic: 0, byLabel: [['benign', ['L9P']]] },
+    { position: 9, name: 'L9', label: 'benign', pathogenic: 0, byLabel: [['benign', ['L9P']]] },
   ])
 })
 
@@ -72,7 +72,6 @@ test("a partner that is a disease protein too gets its own interface and variant
       {
         ...partner,
         side: {
-          page: 'ELOC',
           residues: [100, 101],
           variants: [{ change: 'A100V', label: 'pathogenic', position: 100, partners: ['VHL'] }],
         },
@@ -84,4 +83,32 @@ test("a partner that is a disease protein too gets its own interface and variant
   expect(text).toContain('{"auth_asym_id":"A","beg_auth_seq_id":100,"end_auth_seq_id":101}')
   expect(text).toContain('"selector":{"auth_asym_id":"A","auth_seq_id":100}')
   expect(text).toContain('"text":"ELOC A100"')
+})
+
+test('an experimental structure loads from PDBe, with its own partner chain and numbering', () => {
+  const text = JSON.stringify(
+    scene(
+      { gene: 'DRD1', entity: '7JVQ', chain: 'A', residues: [370] },
+      [{ change: 'R385H', label: 'pathogenic', position: 370, partners: ['DRD1'] }],
+      colors,
+      pdbModel('7JVQ', 'R', [0, 0, 1]),
+    ),
+  )
+  expect(text).toContain('https://www.ebi.ac.uk/pdbe/entry-files/download/7jvq.bcif')
+  expect(text).toContain('{"selector":{"auth_asym_id":"R"}}')
+  expect(text).toContain('"selector":{"auth_asym_id":"A","auth_seq_id":370}')
+  expect(text).toContain('"text":"R385"')
+  expect(text).toContain('"up":[0,0,1],"direction":[0,1,0]')
+})
+
+test('the side view looks across the up axis', () => {
+  for (const up of [
+    [0, 0, 1],
+    [0.6, 0.8, 0],
+    [0.36, 0.48, 0.8],
+  ]) {
+    const d = sideways(up)
+    expect(Math.abs(d.reduce((sum, x, k) => sum + x * (up[k] ?? 0), 0))).toBeLessThan(1e-9)
+    expect(Math.hypot(...d)).toBeCloseTo(1)
+  }
 })

@@ -1,38 +1,11 @@
 import { scene } from '../lib/scene.ts'
-import type { SceneColors, ScenePartner, SceneVariant } from '../lib/scene.ts'
-
-interface PointerTarget {
-  target?: string
-}
-
-interface Observable<T> {
-  subscribe(next: (value: T) => void): unknown
-}
-
-interface PrismViewer {
-  api: { run(id: string, values?: Record<string, unknown>): Promise<{ ok: boolean }> }
-  events: { hover: Observable<PointerTarget>; click: Observable<PointerTarget> }
-}
-
-interface PrismModule {
-  createPrismViewer(options: { target: HTMLElement; spec: object }): Promise<PrismViewer>
-  DefaultPrismViewerSpec(): object
-}
+import type { ScenePartner, SceneVariant } from '../lib/scene.ts'
+import { colors, createViewer, loadScene, reportFailure } from './prism.ts'
+import type { PrismViewer } from './prism.ts'
 
 interface StructureData {
   partners: ScenePartner[]
   variants: SceneVariant[]
-}
-
-function isPrismModule(value: unknown): value is PrismModule {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'createPrismViewer' in value &&
-    typeof value.createPrismViewer === 'function' &&
-    'DefaultPrismViewerSpec' in value &&
-    typeof value.DefaultPrismViewerSpec === 'function'
-  )
 }
 
 function isStructureData(value: unknown): value is StructureData {
@@ -44,20 +17,6 @@ function isStructureData(value: unknown): value is StructureData {
     'variants' in value &&
     Array.isArray(value.variants)
   )
-}
-
-function colors(): SceneColors {
-  const style = getComputedStyle(document.documentElement)
-  const token = (name: string) => style.getPropertyValue(`--${name}`).trim()
-  return {
-    background: token('surface'),
-    chain: token('chain'),
-    partner: token('partner'),
-    interface: token('interface'),
-    pathogenic: token('pathogenic'),
-    uncertain: token('uncertain'),
-    benign: token('benign'),
-  }
 }
 
 function residueOf(target: string | undefined, chain: string) {
@@ -161,10 +120,7 @@ async function show(partner: ScenePartner) {
   current = partner
   markPartner(partner.gene)
   if (viewer && data) {
-    await viewer.api.run('load.mvs', {
-      data: JSON.stringify(scene(partner, data.variants, colors())),
-      format: 'mvsj',
-    })
+    await loadScene(viewer, scene(partner, data.variants, colors()))
   }
 }
 
@@ -191,37 +147,16 @@ function mapPosition(event: PointerEvent) {
 
 async function start() {
   if (host && data && current) {
-    const status = host.querySelector('.structure-status')
-    try {
-      const module: unknown = await import(/* @vite-ignore */ new URL(host.dataset.src ?? '', location.href).href)
-      if (isPrismModule(module)) {
-        const dark = matchMedia('(prefers-color-scheme: dark)').matches
-        viewer = await module.createPrismViewer({
-          target: host,
-          spec: {
-            ...module.DefaultPrismViewerSpec(),
-            options: {
-              canvas: { background: colors().background },
-              ui: { collapsed: true, showSequence: false, splash: false },
-            },
-            ui: { theme: dark ? 'dark' : 'light' },
-          },
-        })
-        const chainOf = () => current?.chain ?? 'A'
-        viewer.events.hover.subscribe(e => {
-          hovered = residueOf(e.target, chainOf())
-          showCursor(hovered ?? pinned)
-        })
-        await show(current)
-        if (pinned !== undefined) {
-          focus(pinned)
-        }
-      } else if (status) {
-        status.textContent = 'The 3D viewer did not load.'
-      }
-    } catch (error) {
-      if (status) {
-        status.textContent = `The 3D viewer did not load: ${error instanceof Error ? error.message : String(error)}`
+    viewer = await createViewer(host)
+    if (viewer) {
+      const chainOf = () => current?.chain ?? 'A'
+      viewer.events.hover.subscribe(e => {
+        hovered = residueOf(e.target, chainOf())
+        showCursor(hovered ?? pinned)
+      })
+      await show(current)
+      if (pinned !== undefined) {
+        focus(pinned)
       }
     }
   }
@@ -257,4 +192,4 @@ if (current) {
   markPartner(current.gene)
 }
 showCursor(pinned)
-void start()
+void start().catch(error => (host ? reportFailure(host, error) : undefined))

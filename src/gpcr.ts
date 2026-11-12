@@ -10,6 +10,7 @@ import { getJson, getText } from './cache.ts'
 import { cifCategory } from './cif.ts'
 import { CONTACT } from './constants.ts'
 import { withinDistance } from './contacts.ts'
+import type { Point } from './contacts.ts'
 import { codingPositions, mergeBlocks } from './coordinates.ts'
 import { number, record, records, text, writeJson } from './json.ts'
 import { DATA, ROOT, SITE_DATA } from './paths.ts'
@@ -89,6 +90,12 @@ interface Ortholog {
   sequence: string
   pairs: Map<number, number>
   identity: number
+}
+
+interface Contact {
+  letter: string
+  chain: string
+  auth: number
 }
 
 type Variants = Map<string, Variant[]>
@@ -421,12 +428,14 @@ function contacts(own: Atom[], other: Atom[]) {
     other.map(atom => atom.xyz),
     CONTACT,
   )
-  const residues = new Map<string, { source: Source; letter: string }>()
+  const residues = new Map<string, { source: Source } & Contact>()
   own.forEach((atom, i) => {
     if (within[i] && atom.source) {
       residues.set(sourceKey(atom.source), {
         source: atom.source,
         letter: seq1(atom.comp),
+        chain: atom.chain,
+        auth: atom.auth,
       })
     }
   })
@@ -434,17 +443,17 @@ function contacts(own: Atom[], other: Atom[]) {
 }
 
 function toHuman(
-  residues: { source: Source; letter: string }[],
+  residues: ({ source: Source } & Contact)[],
   orthologs: Map<string, Ortholog>,
 ) {
-  const byAccession = new Map<string, Map<number, string>>()
-  for (const { source, letter } of residues) {
+  const byAccession = new Map<string, Map<number, Contact>>()
+  for (const { source, ...contact } of residues) {
     const human = orthologs.get(source.accession)
     const position = human?.pairs.get(source.number)
     if (human && position) {
       byAccession.set(
         human.accession,
-        (byAccession.get(human.accession) ?? new Map()).set(position, letter),
+        (byAccession.get(human.accession) ?? new Map()).set(position, contact),
       )
     }
   }
@@ -455,7 +464,7 @@ const byNumber = (a: number, b: number) => a - b
 
 async function side(
   accession: string,
-  residues: Map<number, string>,
+  residues: Map<number, Contact>,
   orthologs: Map<string, Ortholog>,
   variants: Variants,
   partner: string | string[],
@@ -471,8 +480,16 @@ async function side(
     accession,
     identity: pythonRound(Math.min(...matching.map(o => o.identity)), 2),
     residues: [...residues.keys()].sort(byNumber),
+    chain: [...residues.values()][0]?.chain ?? '',
+    auth: Object.fromEntries(
+      [...residues]
+        .sort(([a], [b]) => a - b)
+        .map(([position, { auth }]) => [position, auth]),
+    ),
     differing: [...residues]
-      .filter(([position, letter]) => human?.sequence[position - 1] !== letter)
+      .filter(
+        ([position, { letter }]) => human?.sequence[position - 1] !== letter,
+      )
       .map(([position]) => position)
       .sort(byNumber),
     chimera,
@@ -681,6 +698,23 @@ async function structureAtoms(structure: Structure) {
     : []
 }
 
+function centroid(points: Point[]) {
+  return [0, 1, 2].map(
+    k =>
+      points.reduce((sum, point) => sum + (point[k] ?? 0), 0) / points.length,
+  )
+}
+
+export function axis(from: Point[], to: Point[]) {
+  const [a, b] = [centroid(from), centroid(to)]
+  const d = a.map((x, k) => (b[k] ?? 0) - x)
+  const length = Math.hypot(...d)
+  return d.map(x => pythonRound(x / length, 3))
+}
+
+const mapped = (chainAtoms: Atom[]) =>
+  chainAtoms.flatMap(atom => (atom.source ? [atom.xyz] : []))
+
 async function structureContacts({
   structure,
   receptorBase,
@@ -705,6 +739,7 @@ async function structureContacts({
     structure,
     chimera,
     orthologs,
+    axis: axis(mapped(gAtoms), mapped(receptorAtoms)),
     receptorHuman: [...orthologs].find(
       ([accession]) => accession.split('-')[0] === receptorBase,
     )?.[1],
@@ -718,6 +753,7 @@ async function interfaceRecord(
     structure,
     chimera,
     orthologs,
+    axis,
     receptorHuman,
     receptorSides,
     gSides,
@@ -764,6 +800,7 @@ async function interfaceRecord(
       afdb: await receptorAgreement(atlas, receptor, gGenes),
     },
     gProteins,
+    axis,
   }
 }
 

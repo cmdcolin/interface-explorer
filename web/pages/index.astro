@@ -32,7 +32,7 @@ const tiles = [
 <Layout>
   <script is:inline>
     const [, page, arg] = location.hash.split('/')
-    const routes = { gene: 'gene', isoforms: 'isoforms', gpcr: 'gpcr', genes: 'genes', leads: 'leads', about: 'about' }
+    const routes = { gene: 'gene', isoforms: 'isoforms', gpcr: 'blog/2026-11-12-project-9-gpcrs', genes: 'genes', leads: 'leads', about: 'about' }
     if (location.hash.startsWith('#/') && routes[page]) {
       location.replace(`${routes[page]}/${arg ? `${arg}/` : ''}`)
     }

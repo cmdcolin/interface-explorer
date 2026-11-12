@@ -17,7 +17,7 @@ await screenshots(
       height: 1000,
       wait: 2,
     },
-    { name: 'gpcr', url: local => `${local}gpcr/`, height: 1000, wait: 2 },
+    { name: 'gpcr', url: local => `${local}blog/2026-11-12-project-9-gpcrs/`, height: 1000, wait: 2 },
     {
       name: 'variant3d',
       url: local => `${local}gene/VHL/`,
