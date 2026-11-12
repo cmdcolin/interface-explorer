@@ -42,6 +42,15 @@ Across all 5,350 UniProt disease proteins.
   Against the same protein's other folded surface residues at no confident
   interface, matched for exposure and pLDDT, the interface is more conserved in
   85% of 3,595 confident complexes, and in 76–88% within each ipSAE band.
+- The general population agrees, weakly. In gnomAD v4.1 exomes, interface
+  residues carry 56,459 missense variants to 25,327 synonymous, against
+  237,523 to 97,600 on the other folded surface. Within each protein, the
+  missense-to-synonymous ratio at the interface is 0.93 times that of the
+  other folded surface (Mantel–Haenszel, 95% CI 0.91–0.95, 1,317 proteins),
+  and 0.90, 0.94, 0.91 and 0.88 from the lowest ipSAE band to the highest. The
+  synonymous variants at the same residues control for mutation rate and
+  coverage. The effect is small, since the rest of the surface is also
+  constrained.
 - That is not what any patch of surface would show. Ranked among patches of
   its size from the same protein's other folded surface, the interface beats
   the median one in 82% of 2,339 complexes, against 47% for a random patch

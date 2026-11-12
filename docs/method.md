@@ -37,6 +37,18 @@
   within 25 Å of the interface's centre. Chance is measured by ranking a
   random patch the same way, taken out of the surface in the interface's
   place, which needs room for both, so the tests cover fewer complexes.
+- **Population constraint:** the gnomAD v4.1 exomes bigBed from UCSC, read by
+  range requests for every codon and cached per protein in `data/gnomad/`. A
+  residue counts the single-nucleotide variants at its codon's bases that
+  passed filters, were seen at least once and are annotated missense or
+  synonymous; each variant counts once, whatever its frequency. For each
+  protein, the missense and synonymous counts at the folded, exposed interface
+  residues of its confident complexes are set against those at its folded,
+  exposed residues at no confident interface, as one table, and the
+  Mantel–Haenszel odds ratio pools the proteins, resampling them for the
+  interval. A ratio under 1 means fewer missense variants than synonymous
+  ones at the interface than elsewhere on the surface. gnomAD's annotation is
+  not transcript-specific.
 - **Experimental check:** SIFTS lists the PDB entries holding both proteins of
   a predicted pair. One is compared per pair: among those covering nearly the
   most of both proteins, the one with the fewest chains, leaving out entries of

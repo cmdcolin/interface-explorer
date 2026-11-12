@@ -18,6 +18,9 @@
 - `pnpm conservation [workers]`: reads phyloP for every codon from UCSC's
   bigWig by range requests, and writes the conservation-matched odds ratios
   and the interface comparison to `out/conservation.json`.
+- `pnpm gnomad [workers]`: reads gnomAD v4.1 exome variants for every codon
+  from UCSC's bigBed by range requests, and writes the missense-to-synonymous
+  odds ratios, interface against other surface, to `out/gnomad.json`.
 - `pnpm gpcr`: the experimental GPCR–G protein interfaces, as
   `site/jbrowse/gpcr_interfaces.bb`, `gpcr_interface_variants.bb` and
   `site/data/gpcr.json`.

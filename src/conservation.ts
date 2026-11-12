@@ -48,7 +48,7 @@ export const CONSERVATION = join(OUT, 'conservation.json')
 const ATTEMPTS = 7
 const MIN_RESIDUES = 5
 const VERY_CONFIDENT = 90
-const IPSAE_BANDS = bands([CONFIDENT, 0.7, 0.8, 0.9, Infinity])
+export const IPSAE_BANDS = bands([CONFIDENT, 0.7, 0.8, 0.9, Infinity])
 const QUARTERS = [0, 1, 2, 3]
 
 type CodonScores = (number | null)[][]
@@ -72,7 +72,7 @@ export interface Located extends SurfaceResidue {
   centre: Point
 }
 
-async function patientFetch(
+export async function patientFetch(
   input: string | Request,
   init?: RequestInit,
   attempt = 0,
@@ -470,11 +470,11 @@ function patchSummaries(complexes: { ipsae: number; ranks: Ranks }[]) {
   }
 }
 
-function inBand(score: number, [low, high]: Band) {
+export function inBand(score: number, [low, high]: Band) {
   return score >= low && score < high
 }
 
-function bandName([low, high]: Band) {
+export function bandName([low, high]: Band) {
   return high === Infinity ? `ipSAE ≥ ${low}` : `ipSAE ${low}–${high}`
 }
 

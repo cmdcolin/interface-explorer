@@ -31,7 +31,7 @@ const PITCH = 72
 const GAP = 22
 const BUS = 500
 const WIDTH = 1140
-const HEIGHT = TOP + 9 * PITCH + 8
+const HEIGHT = TOP + 10 * PITCH + 8
 
 const boxes: Box[] = [
   { id: 'uniprot', col: 0, row: 0, kind: 'source', title: 'UniProt', lines: [`${s.proteins.toLocaleString()} disease proteins`] },
@@ -41,8 +41,9 @@ const boxes: Box[] = [
   { id: 'am', col: 0, row: 4, kind: 'source', title: 'AlphaMissense', lines: ['every substitution'] },
   { id: 'pdb', col: 0, row: 5, kind: 'source', title: 'RCSB PDB · PDBe SIFTS', lines: ['experimental complexes'] },
   { id: 'ucsc', col: 0, row: 6, kind: 'source', title: 'UCSC phyloP 100-way', lines: ['hg38 bigWig'] },
-  { id: 'gpcrdb', col: 0, row: 7, kind: 'source', title: 'GPCRdb · PDBe', lines: ['receptor–G protein structures'] },
-  { id: 'afdbIso', col: 0, row: 8, kind: 'source', title: 'AlphaFold DB isoforms', lines: ['monomer models'] },
+  { id: 'gnomadSource', col: 0, row: 7, kind: 'source', title: 'gnomAD v4.1 exomes', lines: ['hg38 bigBed'] },
+  { id: 'gpcrdb', col: 0, row: 8, kind: 'source', title: 'GPCRdb · PDBe', lines: ['receptor–G protein structures'] },
+  { id: 'afdbIso', col: 0, row: 9, kind: 'source', title: 'AlphaFold DB isoforms', lines: ['monomer models'] },
 
   {
     id: 'atlas',
@@ -58,8 +59,9 @@ const boxes: Box[] = [
   { id: 'amStep', col: 1, row: 4, kind: 'step', title: 'alphamissense.ts', lines: ['score each variant'] },
   { id: 'exp', col: 1, row: 5, kind: 'step', title: 'experimental.ts', lines: ['predicted pair vs PDB'] },
   { id: 'cons', col: 1, row: 6, kind: 'step', title: 'conservation.ts', chips: ['@gmod/bbi'], lines: ['per codon'] },
-  { id: 'gpcr', col: 1, row: 7, kind: 'step', title: 'gpcr.ts', chips: ['p2s_mapper'], lines: ['chain → UniProt'] },
-  { id: 'iso', col: 1, row: 8, kind: 'step', title: 'isoforms.ts', lines: ['rebuild, compare folds'] },
+  { id: 'gnomad', col: 1, row: 7, kind: 'step', title: 'gnomad.ts', chips: ['@gmod/bbi'], lines: ['variant counts'] },
+  { id: 'gpcr', col: 1, row: 8, kind: 'step', title: 'gpcr.ts', chips: ['p2s_mapper'], lines: ['chain → UniProt'] },
+  { id: 'iso', col: 1, row: 9, kind: 'step', title: 'isoforms.ts', lines: ['rebuild, compare folds'] },
 
   { id: 'tracks', col: 2, row: 0, span: 2, kind: 'step', title: 'tracks.ts', lines: ['BED → bigBed', 'JBrowse config'] },
   { id: 'analyze', col: 2, row: 2, span: 2, kind: 'step', title: 'analyze.ts', lines: ['Mantel–Haenszel odds', 'ratios, resampled CIs'] },
@@ -70,7 +72,7 @@ const boxes: Box[] = [
     id: 'data',
     col: 3,
     row: 2,
-    span: 7,
+    span: 8,
     kind: 'file',
     title: 'site/data/',
     lines: ['genes/*.json', 'genes.json', 'leads.json', 'summary.json', 'gpcr.json', 'isoforms/*.json'],
@@ -119,10 +121,10 @@ function down(from: string, to: string) {
   return b.y > a.y ? `M${x} ${a.y + a.h}V${b.y - 4}` : `M${x} ${a.y}V${b.y + b.h + 4}`
 }
 
-const busIn = ['atlas', 'coords', 'clinvarStep', 'amStep', 'exp', 'cons']
+const busIn = ['atlas', 'coords', 'clinvarStep', 'amStep', 'exp', 'cons', 'gnomad']
 const busOut = ['tracks', 'analyze', 'pages']
 const busTop = box('atlas').cy
-const busBottom = box('cons').cy
+const busBottom = box('gnomad').cy
 
 const arrows = [
   ...[
@@ -133,6 +135,7 @@ const arrows = [
     ['am', 'amStep'],
     ['pdb', 'exp'],
     ['ucsc', 'cons'],
+    ['gnomadSource', 'gnomad'],
     ['gpcrdb', 'gpcr'],
     ['afdbIso', 'iso'],
     ['gpcr', 'data'],
@@ -188,7 +191,7 @@ const laidOut = [...byId.values()].map(b => ({ ...b, ...chipLayout(b) }))
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         role="img"
-        aria-label="Architecture: UniProt, AlphaFold DB, EBI Proteins API, ClinVar, AlphaMissense, PDB, UCSC phyloP and GPCRdb feed Node scripts; their cached results in out/ are combined into bigBed tracks for JBrowse and per-gene JSON for the Astro site, which embeds the Prism 3D viewer."
+        aria-label="Architecture: UniProt, AlphaFold DB, EBI Proteins API, ClinVar, AlphaMissense, PDB, UCSC phyloP, gnomAD and GPCRdb feed Node scripts; their cached results in out/ are combined into bigBed tracks for JBrowse and per-gene JSON for the Astro site, which embeds the Prism 3D viewer."
       >
         <defs>
           <marker id="arch-arrow" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -263,7 +266,10 @@ const laidOut = [...byId.values()].map(b => ({ ...b, ...chipLayout(b) }))
     <li>
       <a href="https://www.npmjs.com/package/@gmod/bbi"><code>@gmod/bbi</code></a> with
       <a href="https://www.npmjs.com/package/generic-filehandle2"><code>generic-filehandle2</code></a> reads UCSC's
-      phyloP100way bigWig over HTTP range requests, fetching only the codons it needs rather than the whole genome.
+      phyloP100way bigWig and gnomAD v4.1 exomes bigBed over HTTP range requests, fetching only the codons it needs rather
+      than the whole genome. For gnomAD that is the missense and synonymous variants seen at each residue's codon, whose
+      ratio at the predicted interface against the rest of the folded surface checks the interfaces against the general
+      population.
     </li>
   </ul>
 
