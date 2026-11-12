@@ -304,6 +304,16 @@ tr:hover td {
   color: var(--text-2);
 }
 
+.generic {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+}
+
+.tip {
+  text-decoration: underline dotted;
+  cursor: help;
+}
+
 .site-footer {
   border-top: 1px solid var(--border);
   padding: 16px max(16px, calc((100% - 1048px) / 2));

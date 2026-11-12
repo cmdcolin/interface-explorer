@@ -12,7 +12,7 @@ import { CONTACT } from './constants.ts'
 import { withinDistance } from './contacts.ts'
 import type { Point } from './contacts.ts'
 import { codingPositions, mergeBlocks } from './coordinates.ts'
-import { record, records, text, writeJson } from './json.ts'
+import { number, record, records, text, writeJson } from './json.ts'
 import { DATA, ROOT, SITE_DATA } from './paths.ts'
 import { pythonRound } from './numeric.ts'
 import { COLOURS, bed12, partnerList, writeBigBed } from './tracks.ts'
@@ -193,6 +193,7 @@ async function fetchUniprot(accession: string) {
   )
   return {
     accession,
+    id: (text(entry.uniProtkbId) ?? '').toLowerCase(),
     gene: geneOf(entry).toUpperCase(),
     sequence: fasta.split(/\r?\n/).slice(1).join(''),
   }
@@ -202,6 +203,30 @@ function uniprot(accession: string) {
   const cached = uniprotCache.get(accession) ?? fetchUniprot(accession)
   uniprotCache.set(accession, cached)
   return cached
+}
+
+export function genericNumbers(rows: unknown, sequence: string) {
+  return new Map(
+    records(rows).flatMap(row => {
+      const position = number(row.sequence_number)
+      const label =
+        text(row.display_generic_number) ?? text(row.protein_segment)
+      return position !== undefined &&
+        label &&
+        row.amino_acid === sequence[position - 1]
+        ? [[position, label]]
+        : []
+    }),
+  )
+}
+
+async function gpcrdbNumbering(accession: string) {
+  const { id, sequence } = await uniprot(accession)
+  const rows = await getJson(
+    `https://gpcrdb.org/services/residues/extended/${id}/`,
+    join(DATA, 'gpcrdb', `${id}.json`),
+  )
+  return genericNumbers(rows, sequence)
 }
 
 async function humanCandidates(gene: string) {
@@ -768,10 +793,19 @@ async function interfaceRecord(
     variants,
     gGenes,
   )
+  const numbering = receptorAccession
+    ? await gpcrdbNumbering(receptorAccession)
+    : new Map<number, string>()
   return {
     ...complexFields(structure),
     receptorSide: {
       ...receptor,
+      generic: Object.fromEntries(
+        receptor.residues.flatMap(position => {
+          const label = numbering.get(position)
+          return label ? [[position, label]] : []
+        }),
+      ),
       afdb: await receptorAgreement(atlas, receptor, gGenes),
     },
     gProteins,

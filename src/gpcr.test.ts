@@ -4,6 +4,7 @@ import { cifCategory } from './cif.ts'
 import {
   SWITCH,
   chainSequence,
+  genericNumbers,
   residueMap,
   segmentPath,
   seq1,
@@ -132,4 +133,43 @@ test('window identity is the share of matches around a residue', () => {
   expect(windowIdentity(matches, 0)).toBe(1)
   expect(windowIdentity(matches, 5)).toBeCloseTo(6 / 11)
   expect(windowIdentity(matches, 11)).toBe(0)
+})
+
+describe('genericNumbers', () => {
+  const row = (
+    sequence_number: number,
+    amino_acid: string,
+    protein_segment: string,
+    display_generic_number: string | null,
+  ) => ({
+    sequence_number,
+    amino_acid,
+    protein_segment,
+    display_generic_number,
+  })
+
+  test('takes the generic number, or the segment where there is none', () => {
+    expect(
+      genericNumbers(
+        [
+          row(1, 'D', 'TM3', '3.49x49'),
+          row(2, 'R', 'TM3', '3.50x50'),
+          row(3, 'Y', 'ICL2', null),
+        ],
+        'DRY',
+      ),
+    ).toEqual(
+      new Map([
+        [1, '3.49x49'],
+        [2, '3.50x50'],
+        [3, 'ICL2'],
+      ]),
+    )
+  })
+
+  test('skips residues that differ from the sequence', () => {
+    expect(genericNumbers([row(2, 'K', 'TM3', '3.50x50')], 'DRY')).toEqual(
+      new Map(),
+    )
+  })
 })

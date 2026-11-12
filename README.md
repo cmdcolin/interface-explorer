@@ -160,7 +160,10 @@ one.
   engineered chimeric Gα chains map to no gene: each is split into segments by
   the human Gα it matches best, favouring the Gα the structure is annotated
   with, so a mini-Gq gives its α5 helix to GNAQ and its scaffold to GNAS. Only
-  receptor–Gα contacts are counted, not those with Gβγ.
+  receptor–Gα contacts are counted, not those with Gβγ. Receptor residues carry
+  GPCRdb's generic number (e.g. 3.50x50), or their segment (e.g. ICL3) where it
+  has none, taken from GPCRdb's residue table for the human receptor wherever
+  its residue matches UniProt's.
 - **Isoforms:** each isoform's sequence is rebuilt from UniProt's
   alternative-sequence edits and must equal its AlphaFold DB model's sequence;
   that gives each isoform residue its canonical position. A replaced stretch

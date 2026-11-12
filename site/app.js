@@ -915,9 +915,9 @@ function variantCounts(variants) {
     .join(', ')
 }
 
-function variantDetails(variants, differing = []) {
+function variantDetails(variants, differing = [], generic = {}) {
   return variants.length
-    ? `<details><summary>${variantCounts(variants)}</summary>${variants.map(v => `<a href="https://www.ncbi.nlm.nih.gov/clinvar/variation/${v.variation}/">${esc(v.change)}</a>${differing.includes(v.position) ? '<span title="The structure has a different residue here than the human protein">*</span>' : ''} <span class="muted">${LABELS[v.label]}</span>`).join(', ')}</details>`
+    ? `<details><summary>${variantCounts(variants)}</summary>${variants.map(v => `<a href="https://www.ncbi.nlm.nih.gov/clinvar/variation/${v.variation}/">${esc(v.change)}</a>${differing.includes(v.position) ? '<span title="The structure has a different residue here than the human protein">*</span>' : ''}${generic[v.position] ? ` <span class="generic" title="GPCRdb generic number">${esc(generic[v.position])}</span>` : ''} <span class="muted">${LABELS[v.label]}</span>`).join(', ')}</details>`
     : '—'
 }
 
@@ -933,7 +933,9 @@ function agreementText(afdb, partial) {
 
 function sideCell(side) {
   const differing = side.differing.length
-  return `${residueCount(side.residues.length)}${differing ? ` <span class="muted" title="Residues ${side.differing.join(', ')} differ from the human protein in this structure">(${differing} not as in human)</span>` : ''}<br />${variantDetails(side.variants, side.differing)}`
+  const generic = side.generic ?? {}
+  const count = residueCount(side.residues.length)
+  return `${side.generic ? `<span class="tip" title="Residue (GPCRdb generic number): ${esc(side.residues.map(r => (generic[r] ? `${r} (${generic[r]})` : r)).join(', '))}">${count}</span>` : count}${differing ? ` <span class="muted" title="Residues ${side.differing.join(', ')} differ from the human protein in this structure">(${differing} not as in human)</span>` : ''}<br />${variantDetails(side.variants, side.differing, generic)}`
 }
 
 function gAlphaCell(gProteins) {
@@ -1022,7 +1024,8 @@ async function gpcrPage() {
       SIFTS maps most of them to a single gene. ${data.complexes.filter(c => c.gProteins.some(g => g.chimera)).length} are chimeras it maps to none:
       each of their segments is assigned to the human Gα whose sequence it carries, so a mini-Gq contributes its Gαq α5 helix to GNAQ and its scaffold to GNAS.
       Non-human receptors and G proteins are aligned to the human protein before mapping to codons; a residue that differs from the human one is still mapped, and marked.
-      Only receptor–Gα contacts are counted, not those with Gβγ. The Gα-side comparison sets these amine-receptor structures against AlphaFold DB's
+      Only receptor–Gα contacts are counted, not those with Gβγ. Receptor residues and variants carry
+      <a href="https://docs.gpcrdb.org/generic_numbering.html">GPCRdb generic numbers</a> (e.g. 3.50x50), or their loop's name where GPCRdb gives none, so the same position can be compared across receptors. The Gα-side comparison sets these amine-receptor structures against AlphaFold DB's
       complexes with other GPCRs, so the share of predicted residues seen here is a lower bound.
     </p>`
 }
