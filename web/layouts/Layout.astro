@@ -45,7 +45,17 @@ const links = [
   </head>
   <body>
     <header class="site-header">
-      <a class="brand" href={href()}>Interface atlas</a>
+      <div class="brand-group">
+        <a class="brand" href={href()}>Interface atlas</a>
+        <a
+          class="event-badge"
+          href="https://biohackathon-europe.org/"
+          style={`--logo: url(${href('biohackathon-logo.svg')})`}
+        >
+          <span class="event-logo" role="img" aria-label="BioHackathon Europe"></span>
+          2026 project
+        </a>
+      </div>
       <nav>
         {
           links.map(([key, label]) => (
@@ -61,6 +71,10 @@ const links = [
       <slot />
     </main>
     <footer class="site-footer">
+      <p class="event-note" style={`--logo: url(${href('biohackathon-logo.svg')})`}>
+        <span class="event-logo" role="img" aria-label="BioHackathon Europe"></span>
+        Interface atlas is a <a href="https://biohackathon-europe.org/">BioHackathon Europe 2026</a> project.
+      </p>
       Prototype. Predicted complexes from
       <a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a> (CC-BY 4.0),
       variants from <a href="https://www.ncbi.nlm.nih.gov/clinvar/">ClinVar</a> (NCBI),

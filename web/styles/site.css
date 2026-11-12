@@ -66,6 +66,45 @@ a {
   text-decoration: none;
 }
 
+.brand-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+
+.event-logo {
+  display: inline-block;
+  height: 1.4em;
+  aspect-ratio: 1436 / 614;
+  vertical-align: middle;
+  background-color: currentColor;
+  mask: var(--logo) center / contain no-repeat;
+}
+
+.event-badge {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-2);
+  text-decoration: none;
+}
+
+.event-note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0 8px;
+  font-weight: 650;
+  color: var(--text);
+}
+
 .site-header nav {
   display: flex;
   flex-wrap: wrap;
