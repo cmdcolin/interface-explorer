@@ -1,4 +1,7 @@
 ---
+import type { ImageMetadata } from 'astro'
+import { getImage } from 'astro:assets'
+
 import '../styles/site.css'
 import { JBROWSE, href } from '../lib/site.ts'
 
@@ -7,14 +10,18 @@ interface Props {
   description?: string
   nav?: 'genes' | 'leads' | 'isoforms' | 'gpcr' | 'blog' | 'about'
   indexed?: boolean
+  image?: ImageMetadata
 }
 
 const DEFAULT_DESCRIPTION =
   'ClinVar missense variants at predicted protein–protein interfaces of human disease genes, each one opened on the genome beside the 3D complex.'
-const { title, description = DEFAULT_DESCRIPTION, nav, indexed = true } = Astro.props
+const { title, description = DEFAULT_DESCRIPTION, nav, indexed = true, image } = Astro.props
 const fullTitle = title ? `${title} · Interface atlas` : 'Interface atlas'
 const canonical = new URL(Astro.url.pathname, Astro.site)
-const image = new URL(href('preview.jpg'), Astro.site)
+const preview = image
+  ? (await getImage({ src: image, width: 1400, height: 800, format: 'jpg' })).src
+  : href('preview.jpg')
+const previewUrl = new URL(preview, Astro.site)
 const links = [
   ['genes', 'Genes'],
   ['leads', 'Leads'],
@@ -37,7 +44,7 @@ const links = [
     <meta property="og:title" content={title ?? 'Interface atlas: disease variants cluster where proteins touch'} />
     <meta property="og:description" content={description} />
     {indexed && <meta property="og:url" content={canonical} />}
-    <meta property="og:image" content={image} />
+    <meta property="og:image" content={previewUrl} />
     <meta property="og:image:width" content="1400" />
     <meta property="og:image:height" content="800" />
     <meta name="twitter:card" content="summary_large_image" />

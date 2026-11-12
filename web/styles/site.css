@@ -800,6 +800,10 @@ h3 {
 }
 
 .posts li {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 16px;
+  align-items: start;
   margin: 0 0 20px;
 }
 
@@ -978,5 +982,32 @@ h3 {
 @media (max-width: 640px) {
   .structure {
     height: 360px;
+  }
+}
+
+.post-hero {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 16px 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.post-thumb img,
+.post-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 7 / 4;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+@media (max-width: 640px) {
+  .posts li {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 }

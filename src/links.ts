@@ -78,7 +78,12 @@ export function variantSpec(
   )
 }
 
-export function pdbSpec(gene: string, pdbId: string, locus?: string | null) {
+export function pdbSpec(
+  gene: string,
+  pdbId: string,
+  locus?: string | null,
+  tracks = GPCR_TRACKS,
+) {
   return {
     views: [
       {
@@ -88,7 +93,7 @@ export function pdbSpec(gene: string, pdbId: string, locus?: string | null) {
         connectedView: {
           assembly: 'hg38',
           ...(locus ? { loc: locus } : {}),
-          tracks: GPCR_TRACKS,
+          tracks,
         },
       },
     ],

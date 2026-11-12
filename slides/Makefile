@@ -5,7 +5,7 @@ $(deck).pdf: $(deck).tex $(shots)
 	latexmk -lualatex -interaction=nonstopmode -halt-on-error -outdir=build $<
 	cp build/$(deck).pdf $@
 
-$(shots) &: shots.ts
+$(shots) &: shots.ts ../src/screenshots.ts
 	cd .. && pnpm build
 	node shots.ts
 

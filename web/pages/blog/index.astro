@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets'
+
 import Layout from '../../layouts/Layout.astro'
 import { posts } from '../../lib/posts.ts'
 import { href } from '../../lib/site.ts'
@@ -17,9 +19,14 @@ const all = await posts()
     {
       all.map(post => (
         <li>
-          <a href={href(`blog/${post.id}/`)}>{post.data.title}</a>
-          <time datetime={post.data.date}>{post.data.date}</time>
-          <p class="muted">{post.data.description}</p>
+          <a class="post-thumb" href={href(`blog/${post.id}/`)} tabindex="-1" aria-hidden="true">
+            <Image src={post.data.hero} alt="" widths={[240, 480]} sizes="240px" />
+          </a>
+          <div>
+            <a href={href(`blog/${post.id}/`)}>{post.data.title}</a>
+            <time datetime={post.data.date}>{post.data.date}</time>
+            <p class="muted">{post.data.description}</p>
+          </div>
         </li>
       ))
     }
