@@ -19,7 +19,7 @@ const { Content } = await render(post)
     <p><a href={href('blog/')}>← All posts</a></p>
     <h1>{post.data.title}</h1>
     <time datetime={post.data.date}>{post.data.date}</time>
-    <Image
+    {!post.data.heroInPost && <Image
       class="post-hero"
       src={post.data.hero}
       alt={post.data.heroAlt}
@@ -27,7 +27,7 @@ const { Content } = await render(post)
       sizes="(max-width: 1080px) calc(100vw - 32px), 1048px"
       loading="eager"
       fetchpriority="high"
-    />
+    />}
     <Content />
   </article>
 </Layout>

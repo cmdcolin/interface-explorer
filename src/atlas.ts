@@ -162,11 +162,7 @@ export function partnerIdentity(
         }
 }
 
-async function complexInterface(
-  accession: string,
-  entry: Record<string, unknown>,
-) {
-  const entity = text(entry.modelEntityId) ?? fail("KeyError: 'modelEntityId'")
+export async function complexChains(entity: string, accession: string) {
   const chains = records(
     await getJson(
       `${ALPHAFOLD_API}/prediction/${entity}`,
@@ -182,8 +178,23 @@ async function complexInterface(
           await getText(cifUrl, join(DATA, 'cif', `${entity}.cif.gz`)),
         )
       : new Map<string, ChainAtom[]>()
-  const ownAtoms = atoms.get(text(own?.chainId) ?? '')
-  const partnerAtoms = atoms.get(text(partner?.chainId) ?? '')
+  return {
+    own,
+    partner,
+    ownAtoms: atoms.get(text(own?.chainId) ?? ''),
+    partnerAtoms: atoms.get(text(partner?.chainId) ?? ''),
+  }
+}
+
+async function complexInterface(
+  accession: string,
+  entry: Record<string, unknown>,
+) {
+  const entity = text(entry.modelEntityId) ?? fail("KeyError: 'modelEntityId'")
+  const { own, partner, ownAtoms, partnerAtoms } = await complexChains(
+    entity,
+    accession,
+  )
   const offset = (number(own?.uniprotStart) || 1) - 1
   return ownAtoms && partnerAtoms
     ? [

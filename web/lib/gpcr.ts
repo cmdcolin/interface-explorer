@@ -1,9 +1,10 @@
 import { GPCR_TRACKS, locusUrl, pdbSpec, sessionUrl } from '../../src/links.ts'
-import { gpcr } from './data.ts'
+import { gene as readGene, gpcr } from './data.ts'
 import { LABEL_KEYS, LABELS, clinvarHref, esc, residueCount } from './html.ts'
-import { pdbModel } from './scene.ts'
+import { modelUrl, otherChain, pdbModel } from './scene.ts'
+import { structureData } from './structure.ts'
 import { JBROWSE } from './site.ts'
-import type { Agreement, Complex, Side, SideVariant } from './types.ts'
+import type { Agreement, Complex, LabelAnchors, Side, SideVariant } from './types.ts'
 
 const GPCRDB = 'GPCRdb generic number'
 const CGN = 'common Gα numbering, CGN'
@@ -76,6 +77,20 @@ export function receptorLinks(gene: string, pdb: string, locus: string | null) {
     : structure
 }
 
+export const ALPHA5 = 'G.H5.'
+
+export function alpha5(side: Side) {
+  return side.residues.filter(position => side.generic?.[position]?.startsWith(ALPHA5))
+}
+
+export function gpcrRegions(anchors: LabelAnchors, receptor: string, gAlpha: string, gAlphaChain: string, helix: number[]) {
+  return [
+    { text: receptor, at: anchors.receptor },
+    { text: gAlpha, at: anchors.gAlpha },
+    ...(helix.length ? [{ text: 'α5 helix', at: { chain: gAlphaChain, residues: helix } }] : []),
+  ]
+}
+
 function inStructure(side: Side, partner: string) {
   return {
     residues: side.residues.flatMap(position => side.auth[position] ?? []),
@@ -102,6 +117,36 @@ export function complexView(pdb: string, gAlpha: string) {
         },
         variants: own.variants,
         model: pdbModel(pdb, receptor.chain, complex.axis),
+        regions: gpcrRegions(
+          complex.anchors,
+          `${complex.receptor} receptor`,
+          `G${complex.g_subtype}`,
+          g.chain,
+          alpha5(g).flatMap(position => g.auth[position] ?? []),
+        ),
+      }
+    : undefined
+}
+
+export function predictedView(pdb: string, gAlphaName: string) {
+  const complex = gpcr().complexes.find(c => c.pdb === pdb)
+  const predicted = complex?.gAlphaAfdb
+  const receptorGene = complex?.receptorSide.gene
+  const data = predicted ? structureData(readGene(predicted.partner)) : undefined
+  const partner = data?.partners.find(p => p.gene === receptorGene)
+  const cgn = predicted ? (gpcr().cgn[predicted.partner]?.labels ?? {}) : {}
+  return predicted && receptorGene && data && partner
+    ? {
+        partner,
+        variants: data.variants,
+        model: { url: modelUrl(partner.entity), partnerChain: otherChain(partner.chain), up: predicted.axis },
+        regions: gpcrRegions(
+          predicted.anchors,
+          receptorGene,
+          gAlphaName,
+          partner.chain,
+          partner.residues.filter(position => cgn[position]?.startsWith(ALPHA5)),
+        ),
       }
     : undefined
 }

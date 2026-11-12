@@ -1,14 +1,8 @@
 import { scene } from '../lib/scene.ts'
-import type { SceneModel, ScenePartner, SceneVariant } from '../lib/scene.ts'
+import type { SceneView } from '../lib/scene.ts'
 import { colors, createViewer, loadScene, reportFailure } from './prism.ts'
 
-interface ComplexView {
-  partner: ScenePartner
-  variants: SceneVariant[]
-  model: SceneModel
-}
-
-function isComplexView(value: unknown): value is ComplexView {
+function isComplexView(value: unknown): value is SceneView {
   return (
     typeof value === 'object' &&
     value !== null &&
@@ -26,7 +20,7 @@ for (const host of document.querySelectorAll<HTMLElement>('.complex-view .struct
   if (isComplexView(parsed)) {
     void createViewer(host)
       .then(viewer =>
-        viewer ? loadScene(viewer, scene(parsed.partner, parsed.variants, colors(), parsed.model)) : undefined,
+        viewer ? loadScene(viewer, scene(parsed.partner, parsed.variants, colors(), parsed.model, parsed.regions)) : undefined,
       )
       .catch(error => reportFailure(host, error))
   }

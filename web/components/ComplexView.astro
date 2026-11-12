@@ -1,9 +1,9 @@
 ---
 import { href } from '../lib/site.ts'
-import type { SceneModel, ScenePartner, SceneVariant } from '../lib/scene.ts'
+import type { SceneView } from '../lib/scene.ts'
 
 interface Props {
-  view?: { partner: ScenePartner; variants: SceneVariant[]; model: SceneModel }
+  view?: SceneView
 }
 
 const { view } = Astro.props

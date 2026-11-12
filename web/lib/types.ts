@@ -236,8 +236,15 @@ export interface Agreement {
   precision: number
 }
 
+export interface LabelAnchors {
+  receptor: number[]
+  gAlpha: number[]
+}
+
 export interface PredictedGAlpha extends Agreement {
   accession: string
+  axis: number[]
+  anchors: LabelAnchors
   identity: number
   distances: Record<number, number>
   experimental: number[]
@@ -260,6 +267,7 @@ export interface Complex {
   gProteins: Side[]
   gAlphaAfdb: PredictedGAlpha | null
   axis: number[]
+  anchors: LabelAnchors
 }
 
 export interface GAlpha {

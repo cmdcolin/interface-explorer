@@ -46,10 +46,10 @@ await screenshots(
     },
     {
       name: 'project-9-gpcrs',
-      url: local => `${local}gpcr/7JVQ/`,
-      clip: '.complex-view .structure',
-      height: 1600,
-      wait: 25,
+      url: local => `${local}figures/gpcrs/`,
+      clip: '.hero-figure',
+      height: 1000,
+      wait: 35,
     },
     {
       name: 'the-partner-is-itself',

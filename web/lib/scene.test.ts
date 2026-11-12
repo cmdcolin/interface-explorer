@@ -6,6 +6,7 @@ import type { SceneVariant } from './scene.ts'
 const partner = { gene: 'ELOC', entity: 'AF-1', chain: 'B', residues: [5, 6, 7, 9] }
 const colors = {
   background: '#fff',
+  text: '#000',
   chain: '#ccc',
   partner: '#0a0',
   interface: '#00f',

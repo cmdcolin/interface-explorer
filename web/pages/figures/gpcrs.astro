@@ -1,0 +1,51 @@
+---
+import ComplexView from '../../components/ComplexView.astro'
+import Layout from '../../layouts/Layout.astro'
+import { complexView, predictedView } from '../../lib/gpcr.ts'
+import { project9 } from '../../lib/project9.ts'
+import type { SceneView } from '../../lib/scene.ts'
+
+const p = project9()
+const whole = (view: SceneView | undefined) => view && { ...view, model: { ...view.model, frame: 'complex' as const } }
+---
+
+<Layout title="GPCR hero figure" indexed={false}>
+  <div class="hero-figure">
+    <ComplexView view={whole(complexView(p.featured.pdb, 'GNAS'))}>
+      <strong>Experiment</strong> ({p.featured.pdb}): disease variants (red) where Gαs meets the receptor
+    </ComplexView>
+    <ComplexView view={whole(complexView(p.or51e2.pdb, 'GNAS'))}>
+      <strong>Experiment</strong> ({p.or51e2.pdb}): a smell receptor holding a Gαs mimic
+    </ComplexView>
+    <ComplexView view={whole(predictedView(p.or51e2.pdb, 'Gαolf'))}>
+      <strong>AlphaFold</strong>: the same pair, predicted, finds {p.or51e2.golf.recall}% of those Gα contacts
+    </ComplexView>
+  </div>
+</Layout>
+
+<style>
+  .hero-figure {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 24px;
+    width: 1360px;
+    max-width: none;
+    margin-left: calc(50% - 680px);
+    background: var(--surface);
+  }
+
+  .hero-figure :global(.complex-view) {
+    margin: 0;
+  }
+
+  .hero-figure :global(.structure) {
+    height: 680px;
+  }
+
+  .hero-figure :global(.complex-view figcaption) {
+    margin-top: 12px;
+    color: var(--text);
+    font-size: 19px;
+  }
+</style>

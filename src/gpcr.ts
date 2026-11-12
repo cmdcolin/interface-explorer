@@ -3,7 +3,7 @@ import { join } from 'node:path'
 
 import { needlemanWunsch } from 'p2s_mapper'
 
-import { proteinInterfaces } from './atlas.ts'
+import { complexChains, proteinInterfaces } from './atlas.ts'
 import { confidentResidues, isConfident, readAtlas } from './atlasData.ts'
 import type { Interface, ProteinInterfaces } from './atlasData.ts'
 import { getJson, getText } from './cache.ts'
@@ -609,6 +609,7 @@ async function predictedInterfaces(
     .toSorted((a, b) => (b.ipsae ?? 0) - (a.ipsae ?? 0))
     .filter(complex => isConfident(complex) && partners(complex))
     .map(complex => ({
+      entity: complex.entity,
       partner: complex.partner_gene || complex.partner || '',
       accession: complex.partner ?? '',
       residues: new Set(confidentResidues(complex)),
@@ -650,6 +651,19 @@ export function mappedResidues(residues: number[], pairs: Map<number, number>) {
   })
 }
 
+async function predictedFrame(entity: string, gAccession: string) {
+  const { ownAtoms = [], partnerAtoms = [] } = await complexChains(
+    entity,
+    gAccession,
+  )
+  const gPoints = ownAtoms.map(atom => atom.coord)
+  const receptorPoints = partnerAtoms.map(atom => atom.coord)
+  return {
+    axis: axis(gPoints, receptorPoints),
+    anchors: labelAnchors(gPoints, receptorPoints),
+  }
+}
+
 async function predictedGAlpha(
   atlas: Atlas,
   receptorAccession: string,
@@ -688,6 +702,7 @@ async function predictedGAlpha(
   const own = predictions.find(p => p.accession === receptorAccession)
   return own && experimental.size && own.residues.size
     ? {
+        ...(await predictedFrame(own.entity, accession)),
         ...agreement(experimental, own.residues, gene),
         accession,
         identity: pythonRound(Math.min(...identities), 2),
@@ -847,6 +862,25 @@ export function axis(from: Point[], to: Point[]) {
   return d.map(x => pythonRound(x / length, 3))
 }
 
+const END_DEPTH = 8
+const LABEL_GAP = 6
+
+export function outerEnd(points: Point[], direction: number[]) {
+  const along = (point: Point) =>
+    point.reduce((sum, x, k) => sum + x * (direction[k] ?? 0), 0)
+  const far = Math.max(...points.map(along))
+  const cap = centroid(points.filter(point => along(point) > far - END_DEPTH))
+  return cap.map((x, k) => pythonRound(x + (direction[k] ?? 0) * LABEL_GAP, 1))
+}
+
+export function labelAnchors(gPoints: Point[], receptorPoints: Point[]) {
+  const up = axis(gPoints, receptorPoints)
+  return {
+    receptor: outerEnd(receptorPoints, up),
+    gAlpha: outerEnd(gPoints, up.map(x => -x)),
+  }
+}
+
 const mapped = (chainAtoms: Atom[]) =>
   chainAtoms.flatMap(atom => (atom.source ? [atom.xyz] : []))
 
@@ -879,6 +913,7 @@ async function structureContacts({
     chimera,
     orthologs,
     axis: axis(mapped(gAtoms), mapped(receptor)),
+    anchors: labelAnchors(mapped(gAtoms), mapped(receptor)),
     receptorHuman: [...orthologs].find(
       ([accession]) => accession.split('-')[0] === receptorBase,
     )?.[1],
@@ -897,6 +932,7 @@ async function interfaceRecord(
     chimera,
     orthologs,
     axis,
+    anchors,
     receptorHuman,
     receptorSides,
     gSides,
@@ -957,6 +993,7 @@ async function interfaceRecord(
         )
       : null,
     axis,
+    anchors,
   }
 }
 

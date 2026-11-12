@@ -34,6 +34,7 @@ export function colors(): SceneColors {
   const token = (name: string) => style.getPropertyValue(`--${name}`).trim()
   return {
     background: token('surface'),
+    text: token('text'),
     chain: token('chain'),
     partner: token('partner'),
     interface: token('interface'),
@@ -84,6 +85,10 @@ export async function createViewer(host: HTMLElement) {
   }
 }
 
-export function loadScene(viewer: PrismViewer, scene: object) {
-  return viewer.api.run('load.mvs', { data: JSON.stringify(scene), format: 'mvsj' })
+const OFF = { name: 'off', params: {} }
+
+export async function loadScene(viewer: PrismViewer, scene: object) {
+  const loaded = await viewer.api.run('load.mvs', { data: JSON.stringify(scene), format: 'mvsj' })
+  await viewer.api.run('canvas.settings', { section: 'camera', values: { helper: { axes: OFF, scale: OFF } } })
+  return loaded
 }

@@ -1,9 +1,9 @@
 import { gene, gpcr } from './data.ts'
+import { ALPHA5 } from './gpcr.ts'
 import { cgnName } from './maps.ts'
 import type { Agreement } from './types.ts'
 
 const OLFACTORY = /^OR\d/
-const ALPHA5 = 'G.H5.'
 const FEATURED = { pdb: '7JVQ', gAlpha: 'GNAS' }
 
 export function project9() {

@@ -2,9 +2,9 @@
 title: 'GPCRs and their G proteins: the disease variants are on Gαs'
 date: '2026-11-12'
 order: 0
-description: 'In experimental receptor–G protein complexes, every pathogenic ClinVar variant at the interface is on the G protein, most at the tip of Gαs that inserts into the receptor.'
+description: 'Where a receptor grabs its G protein, every pathogenic ClinVar variant in the experimental structures is on the G protein, most at the tip of Gαs that pushes into the receptor. And for a smell receptor, AlphaFold predicts the same grip the experiment shows.'
 hero: './heroes/project-9-gpcrs.jpg'
-heroAlt: 'The dopamine D1 receptor holding Gαs in 7JVQ, seen side-on: the α5 helix of Gαs reaches up into the receptor, with its pathogenic ClinVar variants in red where they meet'
+heroAlt: 'Three receptor–G protein complexes side by side, receptor in green above, Gα in grey below, the α5 helix of Gα labelled where it pushes up into the receptor: the dopamine D1 receptor with Gαs (7JVQ) with red disease variants where they meet; the smell receptor OR51E2 with a Gαs mimic (8F76); and AlphaFold’s prediction of OR51E2 with Gαolf, gripping the same way'
 ---
 
 import GpcrComplexes from '../../components/GpcrComplexes.astro'
@@ -12,38 +12,52 @@ import Html from '../../components/Html.astro'
 import { summary } from '../../lib/data.ts'
 import { surfaceMap } from '../../lib/maps.ts'
 import { project9 } from '../../lib/project9.ts'
-import Shot from '../../components/Shot.astro'
-import { href } from '../../lib/site.ts'
-import featuredShot from './heroes/project-9-gpcrs.jpg'
+import { geneHref, href } from '../../lib/site.ts'
 
 export const p = project9()
 export const t = summary().thresholds
 
-BioHackathon Europe 2026 Project 9 picked {p.complexes} cryo-EM and X-ray
-structures of biogenic amine receptors bound to a G protein; we added one
-olfactory receptor, OR51E2. We took the residues within 5 Å across each
-receptor–Gα interface and placed the ClinVar missense variants on them.
+G protein-coupled receptors (GPCRs) are the cell's most common sensors. They
+sit in the cell membrane and answer to hormones, neurotransmitters, many drugs
+and, in the nose, smells. When a receptor catches its signal outside the cell,
+it changes shape inside and grabs a G protein, which passes the message on.
+The part of the G protein that does the grabbing is its Gα subunit: the end of
+one helix, α5, pushes up into a pocket that opens on the receptor's inner face.
 
-**{p.gAlphaPathogenic} pathogenic variants land on these interfaces, and all are
-on the G protein: {p.gnasPathogenic} on Gαs, {p.alpha5Pathogenic.length} of them on
-its C-terminal α5 helix**, the helix Gαs pushes into the receptor's cytoplasmic
-cavity. The receptor side has
+BioHackathon Europe 2026 Project 9 picked {p.complexes} experimental
+structures (cryo-EM and X-ray) of receptors for dopamine, serotonin,
+adrenaline and histamine, each caught holding a G protein; we added one smell
+receptor, OR51E2. In each structure we took the residues of each protein within
+5 Å of the other, the contact surface, and placed on them the missense
+variants (single amino-acid changes) that ClinVar collects from clinical
+genetic testing.
+
+**{p.gAlphaPathogenic} variants classed as pathogenic land on these contact
+surfaces, and all are on the G protein: {p.gnasPathogenic} on Gαs,
+{p.alpha5Pathogenic.length} of them on its α5 helix.** The receptor side has{' '}
 {p.receptorPathogenic || 'none'}.
 
-<Shot
-  src={featuredShot}
-  alt="The dopamine D1 receptor in green holding grey Gαs in 7JVQ, the α5 helix reaching up into the receptor with red pathogenic variants where they meet"
-  href={href(`gpcr/${p.featured.pdb}/`)}
->
-  The dopamine D1 receptor (green, under a translucent surface) holding Gαs
-  (grey) in {p.featured.pdb}. Blue: residues within 5 Å of the other protein.
-  The {p.featured.pathogenic} Gαs residues with a pathogenic ClinVar variant are
-  red, uncertain ones orange.
-</Shot>
+How to read the figure above:
+
+- Green: the receptor, under a see-through surface. Grey: the Gα protein
+  (the rest of the G protein is left out).
+- Blue: residues within 5 Å of the other protein.
+- Red and orange balls: residues with a pathogenic or an uncertain ClinVar
+  variant.
+- Left, <a href={href(`gpcr/${p.featured.pdb}/`)}>the dopamine D1 receptor
+  holding Gαs</a>, where the red variants cluster on α5. Middle and right, the
+  smell receptor check further down: <a href={href(`gpcr/${p.or51e2.pdb}/`)}>the
+  experiment</a> and <a href={`${geneHref('GNAL')}?partner=OR51E2`}>AlphaFold's
+  prediction</a>. Each link opens the complex in 3D.
 
 ## The tip of Gαs
 
 <Html html={p.gnas ? surfaceMap(p.gnas, p.gnasLabels) : ''} />
+
+Gαs, from the gene GNAS, is a known disease protein: its variants cause
+pseudohypoparathyroidism, in which the body stops answering to parathyroid
+hormone. The map shows where along Gαs those variants fall relative to the
+receptor contacts.
 
 Bars: how many of the {p.gnas?.structures} Gαs structures put a receptor within
 5 Å of each residue. Marks above: ClinVar pathogenic (red) and uncertain
@@ -58,11 +72,11 @@ experiment alone.
 
 ## The receptor side
 
-The Project 9 receptors' contact residues have {p.uncertain} variants of
-uncertain significance and {p.benign} benign ones, mostly from gene-panel
-testing. The count reflects ClinVar as much as the interface: GNAS is a
-Mendelian disease gene (pseudohypoparathyroidism), and most amine receptors are
-not. Some GPCRdb positions have variants in more than one receptor, but{' '}
+Why the gap between the two sides? Partly it is ClinVar: GNAS is a classic
+inherited-disease gene, so clinics test it and report what they find, while
+most amine receptors are not. The Project 9 receptors' contact residues have{' '}
+{p.uncertain} variants of uncertain significance and {p.benign} benign ones,
+mostly from gene-panel testing. Some GPCRdb positions have variants in more than one receptor, but{' '}
 {p.variants} variants over {p.positions} numbered positions would produce that
 by chance, so we have not ranked them as leads.
 
@@ -74,10 +88,18 @@ complexes use.
 
 ## Gαolf and the olfactory receptors
 
-Olfactory receptors signal through Gαolf (GNAL). AlphaFold DB predicts GNAL
-complexes with {p.olfactory.length} olfactory receptors
-({p.olfactory.join(', ')}), at ipSAE {p.ipsaeRange.join('–')}, just above the
-{t.ipsae} threshold.
+Smell (olfactory) receptors do not use Gαs but a near twin, Gαolf, from the
+gene GNAL. No experiment has caught a smell receptor holding Gαolf, but
+AlphaFold DB predicts such pairs: GNAL complexes with {p.olfactory.length}{' '}
+olfactory receptors ({p.olfactory.join(', ')}). Its confidence in each
+contact, the ipSAE score, is {p.ipsaeRange.join('–')}, just above the{' '}
+{t.ipsae} cutoff we use, so these predictions need checking.
+
+OR51E2 is the one smell receptor with an experimental structure, holding
+mini-Gs, an engineered Gαs, so it can check them. Below, "finds" (recall) is
+the share of the experiment's contact residues the prediction also puts in
+contact, and "on it" (precision) the share of the prediction's contact
+residues that the experiment confirms.
 
 OR51E2 bound to propionate with mini-Gs
 (<a href={`https://www.rcsb.org/structure/${p.or51e2.pdb}`}>{p.or51e2.pdb}</a>,

@@ -13,6 +13,7 @@ export interface SceneModel {
   url: string
   partnerChain: string
   up?: number[]
+  frame?: 'interface' | 'complex'
 }
 
 export interface SceneVariant {
@@ -22,8 +23,21 @@ export interface SceneVariant {
   partners: string[]
 }
 
+export interface SceneRegion {
+  text: string
+  at: number[] | { chain: string; residues: number[] }
+}
+
+export interface SceneView {
+  partner: ScenePartner
+  variants: SceneVariant[]
+  model: SceneModel
+  regions?: SceneRegion[]
+}
+
 export interface SceneColors {
   background: string
+  text: string
   chain: string
   partner: string
   interface: string
@@ -122,6 +136,31 @@ function siteNodes(chain: string, here: ReturnType<typeof sites>, colors: SceneC
   )
 }
 
+const REGION_LABEL_SIZE = 6
+const REGION_LABEL_OFFSET = 3
+
+function regionLabels(regions: SceneRegion[], colors: SceneColors) {
+  return regions.length
+    ? [
+        node(
+          'primitives',
+          { label_color: colors.text },
+          regions.map(region =>
+            node('primitive', {
+              kind: 'label',
+              position: Array.isArray(region.at)
+                ? region.at
+                : { expressions: interfaceSelector(region.at.chain, region.at.residues) },
+              text: region.text,
+              label_size: REGION_LABEL_SIZE,
+              label_offset: REGION_LABEL_OFFSET,
+            }),
+          ),
+        ),
+      ]
+    : []
+}
+
 function cartoon(base: string, highlight: ReturnType<typeof interfaceSelector>, colors: SceneColors) {
   return node('representation', { type: 'cartoon' }, [
     node('color', { color: base }),
@@ -134,6 +173,7 @@ export function scene(
   variants: SceneVariant[],
   colors: SceneColors,
   model: SceneModel = afdbModel(partner),
+  regions: SceneRegion[] = [],
 ) {
   const own = partner.chain
   const other = model.partnerChain
@@ -150,8 +190,20 @@ export function scene(
     ]),
     ...siteNodes(own, sites(variants.filter(v => v.partners.includes(partner.gene))), colors, '', LABELLED_SITES),
     ...siteNodes(other, sites(partner.side?.variants ?? []), colors, `${partner.gene} `, LABELLED_PARTNER_SITES),
+    ...regionLabels(regions, colors),
     ...(ownInterface.length
-      ? [node('component', { selector: [...ownInterface, ...otherInterface] }, [node('focus', { radius_factor: 1.4, ...(model.up ? { up: model.up, direction: sideways(model.up) } : {}) })])]
+      ? [
+          node(
+            'component',
+            {
+              selector:
+                model.frame === 'complex'
+                  ? [{ auth_asym_id: own }, { auth_asym_id: other }]
+                  : [...ownInterface, ...otherInterface],
+            },
+            [node('focus', { radius_factor: model.frame === 'complex' ? 0.72 : 1.4, ...(model.up ? { up: model.up, direction: sideways(model.up) } : {}) })],
+          ),
+        ]
       : []),
   ])
   return {

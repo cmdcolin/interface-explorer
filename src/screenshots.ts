@@ -158,6 +158,29 @@ async function waitForLoaded(browser: Browser, session: string) {
   throw new Error('still loading after two minutes')
 }
 
+const HIDE_VIEWER_CONTROLS = `(() => {
+  const inside = e => [...(e.shadowRoot ? below(e.shadowRoot) : [])]
+  const below = root => [...root.querySelectorAll('*')].flatMap(e => [e, ...inside(e)])
+  for (const host of document.querySelectorAll('.structure')) {
+    const all = [...below(host), ...inside(host)]
+    const canvases = all.filter(e => e instanceof HTMLCanvasElement)
+    const area = c => c.getBoundingClientRect().width * c.getBoundingClientRect().height
+    const main = canvases.toSorted((a, b) => area(b) - area(a))[0]
+    host.style.setProperty('visibility', 'hidden', 'important')
+    for (const e of all) {
+      e.style?.setProperty('visibility', e === main ? 'visible' : 'hidden', 'important')
+    }
+  }
+})()`
+
+async function hideViewerControls(browser: Browser, session: string) {
+  await browser.send(
+    'Runtime.evaluate',
+    { expression: HIDE_VIEWER_CONTROLS },
+    session,
+  )
+}
+
 async function clipTo(browser: Browser, session: string, selector: string) {
   const { result } = await browser.send(
     'Runtime.evaluate',
@@ -207,6 +230,8 @@ async function capture(
   }
   await sleep(shot.wait * 1000)
   await waitForLoaded(browser, session)
+  await hideViewerControls(browser, session)
+  await sleep(500)
   const { data } = await browser.send(
     'Page.captureScreenshot',
     {
