@@ -29,17 +29,24 @@ const tiles = [
     }
   </script>
   <section class="hero">
-    <div class="hero-top">
-      <div>
-        <h1>Explore pathogenic variants at protein interfaces</h1>
-        <p class="lede">
-          See which <a href="https://alphafold.ebi.ac.uk/">AlphaFold</a> predicted partner a ClinVar missense variant
-          touches, in 3D and on the genome. Within the same disease protein, a pathogenic variant is <strong>{odds(s.enrichment.all).toFixed(1)}×</strong> as likely as a benign one to sit on an interface.
-        </p>
-        <Fragment set:html={interfaceDiagram()} />
-      </div>
-      <Fragment set:html={shareFigure(s.enrichment.all)} />
-    </div>
+    <h1>Explore pathogenic variants at protein interfaces</h1>
+    <p class="lede">
+      See which <a href="https://alphafold.ebi.ac.uk/">AlphaFold</a> predicted partner a ClinVar missense variant touches,
+      in 3D and on the genome.
+    </p>
+    <figure class="tour">
+      <video controls preload="none" poster={href('preview.jpg')} width="1280" height="720">
+        <source src={href('tour.mp4')} type="video/mp4" />
+      </video>
+      <figcaption>
+        A tour in 80 seconds: find a gene, turn its predicted complex in 3D, follow a variant from the protein map to the
+        structure, and open it beside the genome in JBrowse.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>What's in it</h2>
     <div class="tiles">
       {
         tiles.map(([value, label, link]) => (
@@ -50,15 +57,16 @@ const tiles = [
         ))
       }
     </div>
-    <figure class="tour">
-      <video controls preload="none" poster={href('preview.jpg')} width="1280" height="720">
-        <source src={href('tour.mp4')} type="video/mp4" />
-      </video>
-      <figcaption>
-        A tour in 80 seconds: find a gene, turn its predicted complex in 3D, follow a variant from the protein map to the
-        structure, and open it beside the genome in JBrowse.
-      </figcaption>
-    </figure>
+    <div class="evidence">
+      <div>
+        <p class="lede">
+          Within the same disease protein, a pathogenic variant is <strong>{odds(s.enrichment.all).toFixed(1)}×</strong> as
+          likely as a benign one to sit on an interface.
+        </p>
+        <Fragment set:html={interfaceDiagram()} />
+      </div>
+      <Fragment set:html={shareFigure(s.enrichment.all)} />
+    </div>
   </section>
 
   <section>

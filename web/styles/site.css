@@ -748,7 +748,7 @@ h3 {
   }
 }
 
-.hero-top {
+.evidence {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
   gap: 16px 48px;
