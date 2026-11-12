@@ -2,6 +2,8 @@ import { join } from 'node:path'
 
 import { getText } from './cache.ts'
 import { atomSiteRows } from './cif.ts'
+import { CONTACT } from './constants.ts'
+import { neighbourGrid, squaredDistance } from './contacts.ts'
 import type { Point } from './contacts.ts'
 import { DATA } from './paths.ts'
 
@@ -55,4 +57,23 @@ export function atoms(cif: string) {
       sourceLetter: row.pdbx_sifts_xref_db_res ?? '',
       xyz: [Number(row.Cartn_x), Number(row.Cartn_y), Number(row.Cartn_z)],
     }))
+}
+
+export function contactChains(own: Atom[], other: Atom[]) {
+  const near = neighbourGrid(other, atom => atom.xyz, CONTACT)
+  const limit = CONTACT * CONTACT
+  const counts = new Map<string, number>()
+  for (const atom of own) {
+    for (const neighbour of near(atom.xyz)) {
+      if (squaredDistance(atom.xyz, neighbour.xyz) < limit) {
+        const key = `${atom.chain}\t${neighbour.chain}`
+        counts.set(key, (counts.get(key) ?? 0) + 1)
+      }
+    }
+  }
+  const [chain = '', partner = ''] = (
+    [...counts].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))[0]?.[0] ??
+    ''
+  ).split('\t')
+  return { own: chain, other: partner }
 }

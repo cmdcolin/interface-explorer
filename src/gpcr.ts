@@ -14,7 +14,7 @@ import type { Point } from './contacts.ts'
 import { codingPositions, mergeBlocks } from './coordinates.ts'
 import { number, record, records, text, writeJson } from './json.ts'
 import { DATA, ROOT, SITE_DATA } from './paths.ts'
-import { atoms, mmcif } from './pdbe.ts'
+import { atoms, contactChains, mmcif } from './pdbe.ts'
 import type { Atom, Source } from './pdbe.ts'
 import { pythonRound } from './numeric.ts'
 import { COLOURS, bed12, partnerList, writeBigBed } from './tracks.ts'
@@ -870,18 +870,22 @@ async function structureContacts({
       ),
     ),
   )
+  const touching = contactChains(receptorAtoms, gAtoms).own
+  const receptor = touching
+    ? receptorAtoms.filter(atom => atom.chain === touching)
+    : receptorAtoms
   return {
     structure,
     chimera,
     orthologs,
-    axis: axis(mapped(gAtoms), mapped(receptorAtoms)),
+    axis: axis(mapped(gAtoms), mapped(receptor)),
     receptorHuman: [...orthologs].find(
       ([accession]) => accession.split('-')[0] === receptorBase,
     )?.[1],
-    receptorSides: toHuman(contacts(receptorAtoms, gAtoms), orthologs),
-    gSides: toHuman(contacts(gAtoms, receptorAtoms), orthologs),
+    receptorSides: toHuman(contacts(receptor, gAtoms), orthologs),
+    gSides: toHuman(contacts(gAtoms, receptor), orthologs),
     gDistances: distancesToHuman(
-      nearestResidues(gAtoms, receptorAtoms),
+      nearestResidues(gAtoms, receptor),
       orthologs,
     ),
   }

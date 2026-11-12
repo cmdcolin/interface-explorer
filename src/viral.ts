@@ -7,7 +7,7 @@ import { boundedMap } from './atlas.ts'
 import { readAtlas } from './atlasData.ts'
 import { download, getJson } from './cache.ts'
 import { CONTACT } from './constants.ts'
-import { neighbourGrid, squaredDistance, withinDistance } from './contacts.ts'
+import { withinDistance } from './contacts.ts'
 import {
   ENTRIES,
   ENTRIES_URL,
@@ -19,7 +19,7 @@ import {
 } from './experimental.ts'
 import { number, record, records, text, writeJson } from './json.ts'
 import { DATA, OUT, SITE_DATA } from './paths.ts'
-import { atoms, mmcif } from './pdbe.ts'
+import { atoms, contactChains, mmcif } from './pdbe.ts'
 import type { Atom } from './pdbe.ts'
 import {
   accessionOf,
@@ -152,25 +152,6 @@ export function touching(own: Atom[], other: Atom[]) {
   ].sort((a, b) => a - b)
 }
 
-export function touchingPair(own: Atom[], other: Atom[]) {
-  const near = neighbourGrid(other, atom => atom.xyz, CONTACT)
-  const limit = CONTACT * CONTACT
-  const counts = new Map<string, number>()
-  for (const atom of own) {
-    for (const neighbour of near(atom.xyz)) {
-      if (squaredDistance(atom.xyz, neighbour.xyz) < limit) {
-        const key = `${atom.chain}\t${neighbour.chain}`
-        counts.set(key, (counts.get(key) ?? 0) + 1)
-      }
-    }
-  }
-  const [chain = '', viralChain = ''] = (
-    [...counts].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))[0]?.[0] ??
-    ''
-  ).split('\t')
-  return { chain, viralChain }
-}
-
 interface Candidate {
   accession: string
   gene: string
@@ -267,19 +248,17 @@ async function entryContacts(pdb: string, candidates: Candidate[]) {
     const human = trustworthy(separate.own, sequence)
     const pair =
       human.length && separate.other.length
-        ? touchingPair(human, separate.other)
-        : { chain: '', viralChain: '' }
-    const ownChain = human.filter(atom => atom.chain === pair.chain)
-    const otherChain = separate.other.filter(
-      atom => atom.chain === pair.viralChain,
-    )
+        ? contactChains(human, separate.other)
+        : { own: '', other: '' }
+    const ownChain = human.filter(atom => atom.chain === pair.own)
+    const otherChain = separate.other.filter(atom => atom.chain === pair.other)
     const residues = ownChain.length ? touching(ownChain, otherChain) : []
     return {
       key: `${accession}\t${viral.accession}`,
       pdb,
       fused: separate.fused,
-      chain: pair.chain,
-      viralChain: pair.viralChain,
+      chain: pair.own,
+      viralChain: pair.other,
       residues,
       viralResidues: residues.length ? touching(otherChain, ownChain) : [],
       resolved: [
