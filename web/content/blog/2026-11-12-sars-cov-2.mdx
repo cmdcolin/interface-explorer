@@ -4,7 +4,7 @@ date: '2026-11-12'
 order: 4
 description: "The PDB entries that hold both a SARS-CoV-2 protein and a human disease protein, which of them actually touch, and the ClinVar variants on the contact."
 hero: './heroes/sars-cov-2.jpg'
-heroAlt: "Two panels: ISG15 held by the SARS-CoV-2 papain-like protease, and 14-3-3ζ with the nucleoprotein peptide in its groove, each with its contact residues in blue and the ClinVar variants on them marked"
+heroAlt: "The explorer's table of SARS-CoV-2 proteins on human disease proteins, each row with its PDB entry, contact residues and the ClinVar variants on them, beside a small illustration of the virus"
 ---
 
 import Html from '../../components/Html.astro'
@@ -27,6 +27,8 @@ export const viralHref = pdb => href(`viral/${pdb}/`)
 export const v = viralContacts()
 export const pdb = id => `https://www.rcsb.org/structure/${id.toUpperCase()}`
 export const etv6 = v.apart.find(pair => pair.gene === 'ETV6')
+
+<p class="hero-credit"><small>Virus illustration in the hero by Alissa Eckert and Dan Higgins, <a href="https://phil.cdc.gov/Details.aspx?pid=23312">CDC</a>, public domain.</small></p>
 
 AlphaFold DB's predicted complexes, which the rest of the explorer is built on,
 pair only human proteins. The PDB, though, has experimental structures of

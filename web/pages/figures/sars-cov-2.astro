@@ -1,49 +1,87 @@
 ---
-import ComplexView from '../../components/ComplexView.astro'
+import { Image } from 'astro:assets'
+
+import virion from '../../content/blog/sources/cdc-sars-cov-2.jpg'
 import Layout from '../../layouts/Layout.astro'
-import { contactView, viralContacts } from '../../lib/viral.ts'
+import { viralContacts } from '../../lib/viral.ts'
 
 const v = viralContacts()
-const panels = [
-  { gene: 'ISG15', label: 'ISG15, held by the papain-like protease' },
-  { gene: 'YWHAZ', label: '14-3-3ζ, with the nucleoprotein in its groove' },
-].flatMap(panel => {
-  const contact = v.byGene(panel.gene)
-  return contact ? [{ ...panel, contact }] : []
-})
+const rows = v.contacts.filter(c => c.variants.length).slice(0, 7)
 ---
 
 <Layout title="SARS-CoV-2 hero figure" indexed={false}>
   <div class="hero-figure">
-    {panels.map(panel => (
-      <ComplexView view={contactView(panel.contact)}>{panel.label}</ComplexView>
-    ))}
+    <Image class="virion" src={virion} alt="" width={520} />
+    <div class="card">
+      <h2>Where SARS-CoV-2 holds a human disease protein</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Gene</th>
+            <th>Viral protein</th>
+            <th>Entry</th>
+            <th class="num">Residues</th>
+            <th>ClinVar on them</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(c => (
+            <tr>
+              <td>{c.gene}</td>
+              <td>{c.protein}</td>
+              <td>{c.pdb}</td>
+              <td class="num">{c.residues.length}</td>
+              <td>
+                {c.variants.map(variant => (
+                  <>
+                    <span>{variant.change}</span>{' '}
+                    <span class={`count ${variant.label}`}>{variant.label}</span>{' '}
+                  </>
+                ))}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   </div>
 </Layout>
 
 <style>
   .hero-figure {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    padding: 24px;
+    position: relative;
     width: 1360px;
     max-width: none;
     margin-left: calc(50% - 680px);
+    padding: 112px 48px 48px;
     background: var(--surface);
   }
 
-  .hero-figure :global(.complex-view) {
-    margin: 0;
+  .virion {
+    position: absolute;
+    right: 40px;
+    top: 8px;
+    z-index: 1;
+    width: 200px;
+    height: auto;
+    mix-blend-mode: multiply;
   }
 
-  .hero-figure :global(.structure) {
-    height: 620px;
+  .card {
+    position: relative;
+    padding: 24px 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 6px 24px rgb(0 0 0 / 12%);
   }
 
-  .hero-figure :global(.complex-view figcaption) {
-    margin-top: 12px;
-    color: var(--text-1);
+  h2 {
+    margin: 0 0 12px;
+    font-size: 26px;
+  }
+
+  table {
     font-size: 19px;
   }
 </style>

@@ -70,7 +70,7 @@ await screenshots(
       url: local => `${local}figures/sars-cov-2/`,
       clip: '.hero-figure',
       height: 1000,
-      wait: 35,
+      wait: 2,
     },
   ],
   { dir: join(ROOT, 'web', 'content', 'blog', 'heroes'), format: 'jpeg' },
