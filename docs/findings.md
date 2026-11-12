@@ -33,6 +33,13 @@ Across all 5,350 UniProt disease proteins.
   ipSAE 0.7–0.8, 2.3× (95% CI 1.9–3.0), 1,115 proteins;
   ipSAE 0.8–0.9, 2.2× (95% CI 1.8–2.7), 1,105 proteins;
   ipSAE ≥ 0.9, 1.8× (95% CI 1.3–2.6), 1,083 proteins.
+- Not every pair has an experiment behind it. IntAct or BioGRID report
+  1,162 of the 3,462 pairs binding directly and 947 only in the same
+  complex; for the other 1,353 the prediction is the only evidence.
+  Against residues at no interface, the interfaces of pairs that
+  neither IntAct nor BioGRID reports, 1.9× (95% CI 1.5–2.4), 1,094 proteins;
+  IntAct or BioGRID report only in the same complex, 2.2× (95% CI 1.8–2.9), 1,108 proteins;
+  IntAct or BioGRID report binding directly, 2.4× (95% CI 1.9–3.0), 1,116 proteins.
 - The interface adds little beyond AlphaMissense. Within AlphaMissense's
   evidence bands, as calibrated for clinical use by Bergquist et al. 2025
   ([Genet Med 27:101402](https://doi.org/10.1016/j.gim.2025.101402)):

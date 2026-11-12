@@ -94,6 +94,8 @@ function biogridRow({
   b = 'Q00987|Q9XXXX',
 } = {}) {
   const fields = Array.from({ length: 37 }, () => '-')
+  fields[1] = '7157'
+  fields[2] = '1019'
   fields[11] = system
   fields[12] = type
   fields[14] = publication
@@ -157,11 +159,23 @@ test('IntAct rows that are not evidence of two human proteins binding are skippe
     { negative: 'true' },
     { taxa: 'taxid:10090(mouse)' },
     { b: 'chebi:"CHEBI:15422"' },
-    { b: 'uniprotkb:P04637' },
   ]
   for (const row of skipped) {
     expect(intactReport(intactRow(row), PARENTS)).toBeUndefined()
   }
+})
+
+test('a protein reported binding itself is a homodimer pair', () => {
+  expect(
+    intactReport(intactRow({ b: 'uniprotkb:P04637' }), PARENTS)?.accessions,
+  ).toEqual(['P04637', 'P04637'])
+  const self = biogridRow({ a: 'P04637|P11111', b: 'P04637|P11111' })
+  self[1] = '7157'
+  self[2] = '7157'
+  expect(biogridReports(self).map(r => r.accessions)).toEqual([
+    ['P04637', 'P04637'],
+    ['P11111', 'P11111'],
+  ])
 })
 
 test('BioGRID gives one report per pair of Swiss-Prot accessions', () => {

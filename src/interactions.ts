@@ -126,7 +126,6 @@ export function intactReport(
     ancestors.some(ancestor => descendsFrom(parents, term, ancestor))
   return a &&
     b &&
-    a !== b &&
     isHuman(fields[9] ?? '') &&
     isHuman(fields[10] ?? '') &&
     fields[35] !== 'true' &&
@@ -155,27 +154,28 @@ export function biogridReports(fields: string[]): Report[] {
   const accessionsOf = (field = '') =>
     field === '-' ? [] : field.split('|').filter(Boolean)
   const [publicationType = '', publication = ''] = (fields[14] ?? '').split(':')
+  const own = accessionsOf(fields[23])
+  const pairs: [string, string][] =
+    fields[1] === fields[2]
+      ? own.map(a => [a, a])
+      : own.flatMap(a =>
+          accessionsOf(fields[26]).flatMap(b =>
+            a === b ? [] : [[a, b] satisfies [string, string]],
+          ),
+        )
   return evidence &&
     fields[12] === 'physical' &&
     fields[15] === HUMAN &&
     fields[16] === HUMAN
-    ? accessionsOf(fields[23]).flatMap(a =>
-        accessionsOf(fields[26]).flatMap(b =>
-          a === b
-            ? []
-            : [
-                {
-                  accessions: [a, b] satisfies [string, string],
-                  evidence,
-                  method: fields[11] ?? '',
-                  publication:
-                    publicationType === 'PUBMED'
-                      ? publication
-                      : `${publicationType.toLowerCase()}:${publication}`,
-                },
-              ],
-        ),
-      )
+    ? pairs.map(accessions => ({
+        accessions,
+        evidence,
+        method: fields[11] ?? '',
+        publication:
+          publicationType === 'PUBMED'
+            ? publication
+            : `${publicationType.toLowerCase()}:${publication}`,
+      }))
     : []
 }
 
