@@ -10,8 +10,8 @@ import { DATA, OUT } from './paths.ts'
 
 export const INTERACTIONS = join(OUT, 'interactions.json')
 const INTACT_URL =
-  'https://ftp.ebi.ac.uk/pub/databases/intact/current/psimitab/species/Human.zip'
-const INTACT = join(DATA, 'intact', 'Human.zip')
+  'https://ftp.ebi.ac.uk/pub/databases/intact/current/psimitab/intact.zip'
+const INTACT = join(DATA, 'intact', 'intact.zip')
 const BIOGRID_URL =
   'https://downloads.thebiogrid.org/Download/BioGRID/Latest-Release/BIOGRID-ORGANISM-LATEST.tab3.zip'
 const BIOGRID = join(DATA, 'biogrid', 'organism.tab3.zip')

@@ -14,7 +14,7 @@
   no PDB entry holds together are marked "paralogs, no structure of both".
   Proteins without a UniProt location are never marked. Neither mark removes a
   pair from the analysis.
-- **Reported pairs:** IntAct's human PSI-MITAB and BioGRID's human physical
+- **Reported pairs:** IntAct's PSI-MITAB and BioGRID's human physical
   interactions, joined to each predicted pair by UniProt accession (isoforms
   and chains taken to their canonical entry). A pair is "direct" when any
   report is: in IntAct, an interaction type under direct interaction or a

@@ -12,7 +12,7 @@
 - `pnpm alphamissense`: downloads AlphaMissense's 1.2 GB
   `AlphaMissense_aa_substitutions.tsv.gz` and writes `out/alphamissense.json`,
   a score for each variant in `out/clinvar.ndjson`.
-- `pnpm interactions`: downloads IntAct's human MITAB, BioGRID's organism
+- `pnpm interactions`: downloads IntAct's full MITAB, BioGRID's organism
   release and the PSI-MI ontology, and writes `out/interactions.json`: each
   predicted pair either database reports, as direct or same-complex, with its
   publications and methods.
