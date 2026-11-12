@@ -36,16 +36,21 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Add JBrowse Web
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Add JBrowse Web under our own config and tracks
         run: |
           curl -sSL -o jbrowse.zip https://github.com/GMOD/jbrowse-components/releases/download/v5.0.0-beta.21/jbrowse-web-v5.0.0-beta.21.zip
-          mkdir -p _site/jbrowse
-          unzip -q jbrowse.zip -d _site/jbrowse
-          rm -rf _site/jbrowse/test_data
-          cp -r site/. _site/
+          unzip -q -n jbrowse.zip -d site/jbrowse
+          rm -rf site/jbrowse/test_data
+      - run: pnpm build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: dist
       - id: deployment
         uses: actions/deploy-pages@v4

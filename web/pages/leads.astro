@@ -1,0 +1,75 @@
+---
+import { complexSpec, genomeUrl, sessionUrl } from '../../src/links.ts'
+import Layout from '../layouts/Layout.astro'
+import { leadRows, summary } from '../lib/data.ts'
+import { amCell, clinvarHref, conditionCell, esc } from '../lib/html.ts'
+import { JBROWSE, geneHref, href } from '../lib/site.ts'
+import { sortableTable } from '../lib/table.ts'
+
+const s = summary()
+const am = s.alphaMissense
+const leads = leadRows()
+const table = sortableTable({
+  id: 'leads',
+  rows: leads,
+  sortBy: 3,
+  noun: 'variants',
+  placeholder: 'Filter genes, conditions or partners',
+  search: lead => [lead.gene, lead.change, ...lead.partners, ...lead.knownConditions],
+  columns: [
+    { label: 'Gene', cell: lead => `<a href="${geneHref(lead.page)}">${esc(lead.gene)}</a>`, sort: lead => lead.gene },
+    {
+      label: 'Change',
+      cell: lead => `<a href="${clinvarHref(lead.variation)}" title="${esc(lead.review)}">${esc(lead.change)}</a>`,
+      sort: lead => lead.position,
+    },
+    {
+      label: 'Condition of the pathogenic variant',
+      cell: lead => conditionCell(lead.knownConditions),
+      sort: lead => lead.knownConditions[0] ?? '',
+    },
+    { label: 'AlphaMissense', num: true, cell: lead => amCell(lead.alphaMissense, am), sort: lead => lead.alphaMissense ?? -1 },
+    { label: 'Pathogenic at this residue', cell: lead => lead.sameResidue.map(esc).join(', '), sort: lead => lead.sameResidue.length },
+    {
+      label: 'Other pathogenic residues on the interface',
+      num: true,
+      cell: lead => lead.pathogenicResidues,
+      sort: lead => lead.pathogenicResidues,
+    },
+    {
+      label: 'Touches',
+      cell: lead =>
+        `<span class="muted">${esc(lead.partners.slice(0, 2).join(', '))}${lead.partners.length > 2 ? ` +${lead.partners.length - 2}` : ''}</span>`,
+      sort: lead => lead.partners.join(', '),
+    },
+    {
+      label: 'Open',
+      cell: lead => {
+        const loc = `chr${lead.chrom}:${lead.pos - 30}-${lead.pos + 30}`
+        const variant = `chr${lead.chrom}:${lead.pos}${lead.allele ? ` ${lead.allele}` : ''}`
+        return `<span class="nowrap"><a href="${genomeUrl(lead.chrom, lead.pos - 30, lead.pos + 30, JBROWSE)}">Genome</a> · <a href="${sessionUrl(complexSpec(lead.gene, lead.entity, loc, variant), JBROWSE)}">3D</a></span>`
+      },
+      sort: lead => lead.pos,
+    },
+  ],
+})
+---
+
+<Layout title="Leads" nav="leads">
+  <h1>Leads</h1>
+  <p class="lede">
+    {leads.length.toLocaleString()} ClinVar variants of uncertain significance, in {s.leads.genes.toLocaleString()} genes,
+    that change a residue at a confident predicted interface where a different substitution is already classified pathogenic.
+  </p>
+  <p class="note">
+    A pathogenic substitution at the same residue is evidence clinical guidelines already count towards pathogenicity; the
+    interface adds a hypothesis for why the residue matters. These are leads, not classifications: a milder substitution at
+    the same residue can be harmless. AlphaMissense above {am.likelyPathogenic} is likely pathogenic. See
+    <a href={href('about/')}>About</a>.
+  </p>
+  <Fragment set:html={table} />
+</Layout>
+
+<script>
+  import '../scripts/table.ts'
+</script>

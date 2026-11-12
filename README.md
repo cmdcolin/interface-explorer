@@ -7,10 +7,13 @@ one.
 
 **Live:** https://cmdcolin.github.io/interface-atlas/
 
-- **Start page:** the findings as charts: the pathogenic-versus-benign odds
-  ratio under each control, by confidence band and within each AlphaMissense
-  class; the variants at an interface and how AlphaMissense calls them; every
-  gene as a dot; and three worked examples (VHL, GNAO1, APP695).
+- **Start page:** the headline share of variants at an interface, a gene
+  search, every gene as a dot, and links to the blog.
+- **Blog:** the findings as charts (the pathogenic-versus-benign odds ratio
+  under each control, by confidence band and within each AlphaMissense class,
+  and how AlphaMissense calls the variants at an interface); three worked
+  examples (VHL, GNAO1, APP695); and how the atlas connects to BioHackathon
+  Europe 2026 Project 9's GPCR work.
 - **Genes:** a searchable table of the 1,331 disease genes with a confident
   predicted partner. Each gene page lists its partners, a protein map and the
   ClinVar variants at an interface, each with its AlphaMissense score. It
@@ -199,9 +202,16 @@ one.
   [g2p_mapper](https://github.com/GMOD/g2p_mapper) and sequence alignment from
   [p2s_mapper](https://github.com/GMOD/p2s_mapper), the libraries behind the
   JBrowse protein3d plugin.
-- The site is `site/index.html`, `app.js` and `style.css`, also with no build
-  step. On push, GitHub Actions unzips JBrowse Web 5.0.0-beta.21 into
-  `/jbrowse/` and deploys `site/` to Pages.
+- The site is an [Astro](https://astro.build/) site in `web/`, prebuilt from
+  the JSON in `site/data/`: a page per gene and per isoform set, and Markdown
+  (MDX) blog posts in `web/content/blog/` whose numbers and charts are drawn
+  from the same data. `site/` is its public folder, so the data and JBrowse
+  tracks are served as they are. `pnpm dev` serves it, `pnpm build` writes
+  `dist/`. The JBrowse session links are built in `src/links.ts`, shared with
+  the pipeline. On push, GitHub Actions unzips JBrowse Web 5.0.0-beta.21 into
+  `site/jbrowse/` beside our config and tracks, builds, and deploys `dist/` to
+  Pages. Links from the old single-page site (`#/gene/VHL`) redirect to the
+  new pages.
 - A summary deck is in `slides/`: `make` there builds
   `interface-atlas-summary.pdf` with LuaLaTeX, and `make screenshots` retakes
   its screenshots with headless Chrome.

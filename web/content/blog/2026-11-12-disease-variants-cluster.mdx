@@ -1,0 +1,94 @@
+---
+title: 'Disease variants cluster where proteins touch'
+date: '2026-11-12'
+order: 1
+description: 'Within the same protein, pathogenic missense variants land on a predicted interface more than twice as often as benign ones, and the effect survives the obvious confounders.'
+---
+
+import Html from '../../components/Html.astro'
+import {
+  alphaMissenseRows,
+  callBars,
+  compositionBar,
+  confidenceRows,
+  forestPlot,
+  odds,
+  shareFigure,
+} from '../../lib/charts.ts'
+import { summary } from '../../lib/data.ts'
+import { percent } from '../../lib/html.ts'
+
+export const s = summary()
+export const e = s.enrichment
+export const v = s.variantsAtInterface
+export const am = s.alphaMissense.calls
+
+We mapped every confident AlphaFold DB predicted complex of a human disease
+protein back to the genome, codon by codon, and asked which ClinVar missense
+variants land on an interface. Within the same protein, the odds of landing on
+one are **{odds(e.all).toFixed(1)}×** as high for a pathogenic variant as for a
+benign one.
+
+<Html html={shareFigure(e.all)} />
+
+## It is not just folded versus disordered
+
+Interfaces lie in folded regions, where pathogenic variants concentrate anyway.
+Restricting the comparison to folded residues, then to folded residues on the
+surface, leaves the effect standing: among exposed residues the odds ratio is
+{odds(e.orderedSurface).toFixed(1)}×.
+
+<Html
+  html={forestPlot([
+    { label: 'All residues', e: e.all },
+    { label: `Folded only (pLDDT ≥ ${s.thresholds.plddt})`, e: e.ordered },
+    { label: 'Folded and surface-exposed', e: e.orderedSurface },
+  ])}
+/>
+
+### It holds at every confidence level
+
+Interfaces grouped by the complex's ipSAE, each against residues at no
+interface.
+
+<Html html={forestPlot(confidenceRows(s))} />
+
+### It adds modestly to AlphaMissense
+
+The same comparison among variants AlphaMissense puts in one class. It sees one
+protein at a time, not the partner.
+
+<Html html={forestPlot(alphaMissenseRows(s))} />
+
+Mantel–Haenszel odds ratios across proteins; lines are 95% intervals from
+resampling proteins, and the dashed line marks no difference. Hover a row for
+the number of proteins behind it.
+
+## {v.uncertain.toLocaleString()} variants of uncertain significance sit at an interface
+
+Most variants at an interface have no verdict yet. Each one now has a
+structural hypothesis: the partner it may disturb.
+
+<Html html={compositionBar(v)} />
+
+### How many does AlphaMissense call likely pathogenic?
+
+<Html html={callBars(am)} />
+
+Share of scored variants at an interface with AlphaMissense above
+{s.alphaMissense.likelyPathogenic}. The uncertain ones fall between the known
+pathogenic and benign: {am.uncertain.likelyPathogenic.toLocaleString()} of them
+score likely pathogenic.
+
+### The strongest leads
+
+{s.leads.variants.toLocaleString()} of the uncertain variants, in
+{s.leads.genes.toLocaleString()} genes, change an interface residue where a
+different substitution is already classified pathogenic. They are on the
+[Leads](../../leads/) page.
+
+## Caveats
+
+Only {percent(s.withPartner, s.proteins)} of disease proteins have any predicted
+partner, and the complexes are predictions: an interface variant is a lead, not a
+mechanism. The method is on the [About](../../about/) page.

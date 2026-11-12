@@ -1,0 +1,56 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { geneRows, summary } from '../lib/data.ts'
+import { esc, percent } from '../lib/html.ts'
+import { geneHref, href } from '../lib/site.ts'
+import { sortableTable } from '../lib/table.ts'
+
+const s = summary()
+const genes = geneRows()
+const table = sortableTable({
+  id: 'genes',
+  rows: genes,
+  sortBy: 6,
+  noun: 'genes',
+  placeholder: 'Filter genes or partners',
+  search: g => [g.gene, g.topPartner],
+  columns: [
+    { label: 'Gene', cell: g => `<a href="${geneHref(g.page)}">${esc(g.gene)}</a>`, sort: g => g.gene },
+    { label: 'Partners', num: true, cell: g => g.partners, sort: g => g.partners },
+    { label: 'Most confident partner', cell: g => esc(g.topPartner), sort: g => g.topPartner },
+    { label: 'ipSAE', num: true, cell: g => g.bestIpsae.toFixed(2), sort: g => g.bestIpsae },
+    {
+      label: 'Interface residues',
+      num: true,
+      cell: g => `${g.interfaceResidues} <span class="muted">/ ${g.length}</span>`,
+      sort: g => g.interfaceResidues,
+    },
+    { label: 'Pathogenic', num: true, cell: g => g.pathogenic, sort: g => g.pathogenic },
+    { label: 'Uncertain', num: true, cell: g => g.uncertain, sort: g => g.uncertain },
+    { label: 'Benign', num: true, cell: g => g.benign, sort: g => g.benign },
+  ],
+})
+---
+
+<Layout title="Genes" nav="genes">
+  <h1>Genes</h1>
+  <p class="lede">
+    The {genes.length.toLocaleString()} disease genes with a confident predicted partner in
+    <a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a>, and the ClinVar missense variants at their interfaces.
+    Pick a gene to see its partners and variants, or open them on the genome.
+  </p>
+  <p class="note">
+    Covers all {s.proteins.toLocaleString()} reviewed human proteins with a UniProt disease annotation. Only
+    {percent(s.withPartner, s.proteins)} have any predicted partner, and the complexes are predictions.{
+      s.unmapped
+        ? ` ${s.unmapped} more genes with a partner are left out because their coding coordinates don't map to hg38.`
+        : ''
+    }
+    See <a href={href('about/')}>About</a>.
+  </p>
+  <Fragment set:html={table} />
+</Layout>
+
+<script>
+  import '../scripts/table.ts'
+</script>

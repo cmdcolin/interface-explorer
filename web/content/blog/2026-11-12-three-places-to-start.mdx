@@ -1,0 +1,45 @@
+---
+title: 'Three places to start: VHL, GNAO1 and APP'
+date: '2026-11-12'
+order: 2
+description: 'A tumour suppressor whose pathogenic variants line one interface, a G protein whose variants fall in two, and an isoform that loses a whole domain of partners.'
+---
+
+import Html from '../../components/Html.astro'
+import { appCase, geneCase, gnao1, isoformTotals, vhl } from '../../lib/cases.ts'
+
+export const VHL = vhl()
+export const GNAO1 = gnao1()
+export const isoforms = isoformTotals()
+
+Each example opens like every gene in the atlas: its codons on the genome beside
+its residues in the predicted complex.
+
+## VHL and elongin C
+
+{VHL.counts.pathogenic} pathogenic variants of the von Hippel–Lindau tumour
+suppressor sit on the {VHL.interfaceResidues} residues that hold elongin C, with
+{VHL.counts.uncertain} uncertain ones among them.
+
+<Html html={geneCase('VHL')} />
+
+## GNAO1, Gβ and the RGS proteins
+
+Gαo's {GNAO1.counts.pathogenic} pathogenic interface variants fall in two
+patches: the N-terminal helix that binds Gβ (L13P, I19M, L23F) and the switch
+regions that bind RGS proteins (T182I, Q205P, R206).
+
+<Html html={geneCase('GNAO1')} />
+
+## APP695, the neuronal isoform of APP
+
+Splicing changes interfaces too. APP695 (P05067-4) has no Kunitz inhibitor
+domain, so it lacks most of APP's predicted interfaces with the proteases KLK11,
+KLK14 and prostasin; APP751 (P05067-8) keeps the domain and lacks none. Across
+{isoforms.genes.toLocaleString()} disease genes and
+{isoforms.alternativeIsoforms.toLocaleString()} modelled isoforms,
+{isoforms.lackingInterface.toLocaleString()} isoforms lack half or more of a
+partner interface, and {isoforms.genesLackingPathogenic.toLocaleString()} genes
+have an isoform missing a residue with a pathogenic variant.
+
+<Html html={appCase()} />

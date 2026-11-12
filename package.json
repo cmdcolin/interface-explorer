@@ -7,6 +7,9 @@
     "node": ">=24"
   },
   "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
     "atlas": "node src/atlas.ts",
     "clinvar": "node src/clinvar.ts",
     "alphamissense": "node src/alphamissense.ts",
@@ -17,7 +20,7 @@
     "isoforms": "node src/isoforms.ts",
     "all": "pnpm atlas && pnpm clinvar && pnpm alphamissense && pnpm analyze && pnpm gpcr && pnpm tracks && pnpm pages && pnpm isoforms",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && astro check --tsconfig web/tsconfig.json",
     "format": "prettier --write src"
   },
   "dependencies": {
@@ -25,7 +28,10 @@
     "p2s_mapper": "^3.3.0"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@astrojs/mdx": "^8.1.4",
     "@types/node": "^24.0.0",
+    "astro": "^7.4.10",
     "prettier": "^3.9.10",
     "typescript": "^6.0.3",
     "vitest": "^5.1.0"

@@ -1,0 +1,112 @@
+---
+title: 'Interface atlas and Project 9: where our GPCR work meets yours'
+date: '2026-11-12'
+order: 0
+description: 'Receptor–G protein contacts from the 23 DataSet1 complexes, labelled with GPCRdb numbers, and the Gαolf surface AlphaFold DB predicts for olfactory receptors.'
+---
+
+import Html from '../../components/Html.astro'
+import { surfaceMap } from '../../lib/maps.ts'
+import { project9 } from '../../lib/project9.ts'
+
+export const p = project9()
+
+The interface atlas maps where human disease proteins touch their partners, from
+AlphaFold DB's predicted complexes and from experimental structures, and which
+ClinVar missense variants fall on those surfaces. For Project 9 it covers the
+{p.complexes} receptor–G protein complexes in DataSet1. Three places to start,
+depending on what you work on:
+
+- **Alignments and activation (msa2d):** the [complexes on the GPCRs
+  page](../../gpcr/#complexes), where every receptor contact and variant now
+  carries its GPCRdb generic number.
+- **Olfactory receptors:** [GNAL](../../gene/GNAL/), the Gαolf gene, and its
+  predicted complexes with olfactory and trace amine receptors.
+- **3D viewers (iCn3D):** each complex on the GPCRs page opens in a 3D view
+  beside the genome.
+
+## One numbering for everyone
+
+The team agreed on GPCRdb's generic numbering, so the GPCRs page now uses it.
+Each receptor residue within 5 Å of Gα is labelled with its GPCRdb number, e.g.
+[HTR1A](../../gpcr/#HTR1A)'s R225C, R225H and R225S all sit at 5.68x68. That
+covers {p.numbered} of the {p.contacts} contact residues; the other{' '}
+{p.contacts - p.numbered} lie in loops GPCRdb leaves unnumbered and are labelled
+{p.loops.join(' or ')}. Hover a complex's residue count for the full list.
+
+The msa2d pages count Gα contacts within 4 Å, so our sets should be a slightly
+larger superset of yours on the same structures. If yours are not, one of us has
+a mapping bug, and we would like to know.
+
+## Gαolf and the olfactory receptors
+
+Olfactory receptors signal through Gαolf, encoded by GNAL. AlphaFold DB has
+predicted GNAL complexes with {p.olfactory.length} olfactory receptors
+({p.olfactory.join(', ')}) and three trace amine receptors (TAAR2, TAAR5 and
+TAAR9). None is an OR4, so these do not test the OR4 models directly, but they
+do show the surface Gαolf offers an olfactory receptor.
+
+ClinVar has {p.gnalVariants.length} variants of uncertain significance on that
+surface:
+
+<table>
+  <thead>
+    <tr>
+      <th>Variant</th>
+      <th class="num">AlphaMissense</th>
+      <th>Olfactory receptors it contacts</th>
+    </tr>
+  </thead>
+  <tbody>
+    {p.gnalVariants.map(v => (
+      <tr>
+        <td>{v.change}</td>
+        <td class="num">{v.alphaMissense?.toFixed(2) ?? '—'}</td>
+        <td>{v.olfactory.join(', ')}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+L380 is the second-to-last residue of Gαolf, at the tip of the α5 helix that
+inserts into the receptor's cytoplasmic cavity, so an arginine there is the one
+to look at first. Two things keep this modest:
+
+- GNAL is a disease gene because of dystonia (DYT25), through dopamine D1-type
+  signalling in the striatum, not because of smell. Several of these variants
+  were reported for dystonic disorders.
+- The olfactory receptor complexes have ipSAE {p.ipsaeRange.join('–')}, just
+  above the 0.6 threshold for a confident interface. V204E and L380R also
+  contact DRD5, ADRB1 and the TAARs: this is the face Gαolf turns to every
+  receptor, not one specific to olfactory receptors.
+
+## Where AlphaFold DB can be checked against experiment
+
+Its DRD5–Golf complex covers {p.drd5Recall}% of the receptor residues DRD5 uses
+against Gs in the cryo-EM structure, and its GPCR complexes of Gαi1 cover{' '}
+{p.gnai1Recall}% of what the {p.gnai1Structures} Gαi1 complexes use. It has no
+GPCR complex of Gαs at all, so the {p.gnas?.counts.length} receptor-facing
+residues of Gαs below, and the ClinVar variants on them, come from experiment
+alone.
+
+<Html html={p.gnas ? surfaceMap(p.gnas) : ''} />
+
+Bars: how many of the {p.gnas?.structures} Gαs structures put a receptor within
+5 Å of each residue. Marks above: ClinVar pathogenic (red) and uncertain
+(orange) missense. Every Gα is on the [GPCRs page](../../gpcr/).
+
+## What we are not claiming
+
+The receptor side of these complexes carries {p.uncertain} variants of uncertain
+significance and {p.benign} benign ones, mostly from gene-panel testing. Several
+generic positions are hit in more than one receptor, which is what{' '}
+{p.variants} variants spread over {p.positions} numbered contact positions would give
+anyway, so we have not ranked them as leads.
+
+## What would help
+
+- **Olfactory receptor group:** an experimental olfactory receptor–G protein
+  structure, such as OR51E2's, would let us test the Gαolf predictions above the
+  way DRD5 tests them.
+- **msa2d:** your 4 Å receptor–Gα contact lists, to check against ours.
+- **iCn3D:** your interaction export for the same complexes.

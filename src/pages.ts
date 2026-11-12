@@ -139,6 +139,8 @@ export function geneRecord(
   }
 }
 
+export type GenePage = ReturnType<typeof geneRecord> & { page: string }
+
 export function leads(gene: ReturnType<typeof geneRecord>) {
   const pathogenic = gene.variants.filter(v => v.label === 'pathogenic')
   return gene.variants

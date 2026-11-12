@@ -1,0 +1,95 @@
+---
+import { ISOFORM_TRACKS, isoformSpec, locusUrl, sessionUrl } from '../../../src/links.ts'
+import Layout from '../../layouts/Layout.astro'
+import { geneRows, isoform, isoformIndex } from '../../lib/data.ts'
+import { esc } from '../../lib/html.ts'
+import { editText, isoformMap } from '../../lib/maps.ts'
+import { JBROWSE, geneHref, href } from '../../lib/site.ts'
+import type { Isoform } from '../../lib/types.ts'
+
+export function getStaticPaths() {
+  return isoformIndex().genes.map(row => ({ params: { page: row.page } }))
+}
+
+const record = isoform(Astro.params.page ?? '')
+const canonical = record.canonical
+const atlasGene = geneRows().find(g => g.accession === record.accession)
+
+function interfaceLossCell(interfaceLost: Isoform['interfaceLost']) {
+  const entries = Object.entries(interfaceLost)
+  const most = entries.filter(([, [lost, total]]) => lost >= total / 2).length
+  return entries.length
+    ? `<details><summary>${most ? `${most} lose half or more` : 'under half each'}</summary>${entries
+        .map(([partner, [lost, total]]) => `${esc(partner)} <span class="muted">${lost} of ${total}</span>`)
+        .join(', ')}</details>`
+    : '—'
+}
+
+const rows = record.isoforms
+  .map(
+    i => `<tr>
+      <td class="nowrap">${esc(i.accession)}${i.name && !i.accession.endsWith(`-${i.name}`) ? ` <span class="muted">${esc(i.name)}</span>` : ''}</td>
+      <td class="num">${i.length}</td>
+      <td class="num">${i.meanPlddt}</td>
+      <td class="wide">${i.edits.map(e => esc(editText(e))).join('; ')}</td>
+      <td class="num">${i.foldedChanged}</td>
+      <td class="num">${i.unfolded}</td>
+      <td>${i.pathogenicLost.length ? `<details><summary>${i.pathogenicLost.length}</summary>${i.pathogenicChanges.map(esc).join(', ')}</details>` : '0'}</td>
+      <td>${interfaceLossCell(i.interfaceLost)}</td>
+      <td class="nowrap">${i.refseq[0] ? `<a href="https://www.ncbi.nlm.nih.gov/nuccore/${esc(i.refseq[0])}">${esc(i.refseq[0])}</a>${i.refseq.length > 1 ? ` <span class="muted" title="${esc(i.refseq.slice(1).join(', '))}">+${i.refseq.length - 1}</span>` : ''}` : '—'}</td>
+      <td class="nowrap"><a href="${sessionUrl(isoformSpec(record, i.refseq[0], [{ url: i.cif }, { url: canonical.cif }]), JBROWSE)}">3D vs canonical</a> · <a href="https://alphafold.ebi.ac.uk/entry/${esc(i.model)}">AFDB</a></td>
+    </tr>`,
+  )
+  .join('')
+---
+
+<Layout
+  title={`${record.gene} isoforms`}
+  description={`How the ${record.isoforms.length + 1} AlphaFold DB-modelled isoforms of ${record.gene} differ from the canonical protein: fold, pathogenic sites and partner interfaces.`}
+  nav="isoforms"
+>
+  <p><a href={href('isoforms/')}>← All isoforms</a></p>
+  <h1>{record.gene} isoforms</h1>
+  <p class="lede">
+    UniProt <a href={`https://www.uniprot.org/uniprotkb/${record.accession}/entry#sequences`}>{record.accession}</a>
+    describes {record.described} isoforms; AlphaFold DB models {record.isoforms.length + 1} of them. The canonical isoform,
+    {canonical.accession}, is {record.length} residues with mean pLDDT {canonical.meanPlddt}.
+  </p>
+  <div class="actions">
+    {
+      record.locus && (
+        <a class="button primary" href={locusUrl(record.locus, ISOFORM_TRACKS, JBROWSE)}>
+          Transcripts on the genome
+        </a>
+      )
+    }
+    <a class="button" href={sessionUrl(isoformSpec(record, canonical.refseq[0], [{ url: canonical.cif }]), JBROWSE)}>
+      Canonical in 3D
+    </a>
+    {atlasGene && <a class="button" href={geneHref(atlasGene.page)}>Interface atlas page</a>}
+  </div>
+  <h2>Isoforms on the canonical sequence</h2>
+  <p class="muted">
+    Each row places an isoform's residues at the canonical positions they share, colored by that isoform's own model.
+  </p>
+  <Fragment set:html={isoformMap(record)} />
+  <h2>How each isoform differs</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Isoform</th><th class="num">Length</th><th class="num">Mean pLDDT</th><th>Differs from canonical</th>
+          <th class="num">Folded residues missing or replaced</th><th class="num">Shared residues losing confidence</th>
+          <th>Pathogenic sites absent</th><th>Partner interface residues absent</th><th>RefSeq</th><th>Structure</th>
+        </tr>
+      </thead>
+      <tbody set:html={rows} />
+    </table>
+  </div>
+  <p class="note">
+    "Losing confidence" counts shared residues whose pLDDT falls from ≥ 70 on the canonical model to &lt; 50 on the
+    isoform's: a hint that the isoform does not keep that part folded, though pLDDT is a prediction's confidence, not a
+    measurement. "3D vs canonical" opens the isoform's model superposed on the canonical one, linked to the isoform's own
+    transcript.
+  </p>
+</Layout>

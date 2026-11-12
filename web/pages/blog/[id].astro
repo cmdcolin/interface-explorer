@@ -1,0 +1,23 @@
+---
+import { render } from 'astro:content'
+
+import Layout from '../../layouts/Layout.astro'
+import { posts } from '../../lib/posts.ts'
+import { href } from '../../lib/site.ts'
+
+export async function getStaticPaths() {
+  return (await posts()).map(post => ({ params: { id: post.id }, props: { post } }))
+}
+
+const { post } = Astro.props
+const { Content } = await render(post)
+---
+
+<Layout title={post.data.title} description={post.data.description} nav="blog">
+  <article class="post">
+    <p><a href={href('blog/')}>← All posts</a></p>
+    <h1>{post.data.title}</h1>
+    <time datetime={post.data.date}>{post.data.date}</time>
+    <Content />
+  </article>
+</Layout>

@@ -1,0 +1,133 @@
+---
+import { sessionUrl, variantSpec } from '../../src/links.ts'
+import Layout from '../layouts/Layout.astro'
+import { geneScatter, odds, shareFigure } from '../lib/charts.ts'
+import { gene, geneRows, summary } from '../lib/data.ts'
+import { percent } from '../lib/html.ts'
+import { posts } from '../lib/posts.ts'
+import { JBROWSE, geneHref, href } from '../lib/site.ts'
+
+const s = summary()
+const genes = geneRows()
+const vhl = gene('VHL')
+const shown = vhl.variants.find(v => v.label === 'pathogenic')
+const shownPartner = shown && vhl.partners.find(p => shown.partners.includes(p.gene))
+const heroLink = shown ? sessionUrl(variantSpec(vhl, shown), JBROWSE) : JBROWSE
+const examples = ['VHL', 'GNAO1', 'MLH1', 'SDHB'].flatMap(name => genes.filter(g => g.page === name))
+const all = await posts()
+const tiles = [
+  [s.proteins, 'human disease proteins checked', href('about/')],
+  [
+    s.withPartner,
+    `have a confident predicted partner (${percent(s.withPartner, s.proteins)}), ${s.partners.toLocaleString()} interfaces in all`,
+    href('genes/'),
+  ],
+  [s.variantsAtInterface.uncertain, 'variants of uncertain significance sit on those interfaces', href('genes/')],
+  [s.leads.variants, 'of them change a residue where another substitution is pathogenic', href('leads/')],
+] as const
+---
+
+<Layout>
+  <script is:inline>
+    const [, page, arg] = location.hash.split('/')
+    const routes = { gene: 'gene', isoforms: 'isoforms', gpcr: 'gpcr', genes: 'genes', leads: 'leads', about: 'about' }
+    if (location.hash.startsWith('#/') && routes[page]) {
+      location.replace(`${routes[page]}/${arg ? `${arg}/` : ''}`)
+    }
+  </script>
+  <section class="hero">
+    <div class="hero-top">
+      <div>
+        <h1>Disease variants cluster where proteins touch</h1>
+        <p class="lede">
+          We mapped every confident <a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a> predicted complex of a human
+          disease protein back to the genome, codon by codon, and asked which ClinVar missense variants land on an
+          interface. Within the same protein, the odds of landing on one are <strong>{odds(s.enrichment.all).toFixed(1)}×</strong>
+          as high for a pathogenic variant as for a benign one.
+        </p>
+        <div class="actions">
+          {shown && <a class="button primary" href={heroLink}>See {vhl.gene} {shown.change} in 3D beside the genome</a>}
+          <a class="button" href={href('leads/')}>{s.leads.variants.toLocaleString()} strongest leads</a>
+        </div>
+        <form class="search" id="gene-search">
+          <input
+            type="search"
+            list="gene-names"
+            placeholder="Jump to a gene, e.g. VHL"
+            aria-label="Jump to a gene"
+            autocomplete="off"
+          />
+          <datalist id="gene-names">{genes.map(g => <option value={g.gene} data-url={geneHref(g.page)} />)}</datalist>
+          <button class="button">Open</button>
+          <span class="muted" id="gene-search-miss"></span>
+        </form>
+        <p class="examples muted">
+          Try {
+            examples.map((g, index) => (
+              <>
+                {index > 0 && ' · '}
+                <a href={geneHref(g.page)}>{g.gene}</a>
+              </>
+            ))
+          }
+        </p>
+      </div>
+      <Fragment set:html={shareFigure(s.enrichment.all)} />
+    </div>
+    <div class="tiles">
+      {
+        tiles.map(([value, label, link]) => (
+          <a class="tile" href={link}>
+            <div class="value">{value.toLocaleString()}</div>
+            <div class="label">{label}</div>
+          </a>
+        ))
+      }
+    </div>
+    <a class="hero-shot" href={heroLink}>
+      <img
+        src={href('preview.jpg')}
+        width="1400"
+        height="800"
+        loading="lazy"
+        alt={`JBrowse with the VHL codon on the genome on the left, under interface and ClinVar tracks, and the same residue highlighted in the predicted VHL–${shownPartner?.gene ?? ''} complex on the right`}
+      />
+      <span>
+        Every variant opens like this: its codon on the genome beside its residue in the predicted complex. Here, a
+        pathogenic {vhl.gene} variant against {shownPartner?.gene}.
+      </span>
+    </a>
+  </section>
+
+  <section>
+    <h2>Read more</h2>
+    <div class="post-cards">
+      {
+        all.map(post => (
+          <a class="post-card" href={href(`blog/${post.id}/`)}>
+            <strong>{post.data.title}</strong>
+            <span class="muted">{post.data.description}</span>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <section>
+    <h2>Every gene in the atlas</h2>
+    <p class="lede">
+      One dot per gene, {genes.length.toLocaleString()} in all. Genes high up have known pathogenic variants at an interface;
+      genes far right have many unresolved ones on the same surface. Click a dot to open the gene, or
+      <a href={href('genes/')}>browse the table</a>.
+    </p>
+    <Fragment set:html={geneScatter(genes)} />
+  </section>
+  <p class="note">
+    Only {percent(s.withPartner, s.proteins)} of disease proteins have any predicted partner, and the complexes are
+    predictions: an interface variant is a lead, not a mechanism.
+  </p>
+</Layout>
+
+<script>
+  import '../scripts/home.ts'
+</script>

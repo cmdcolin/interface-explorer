@@ -1,0 +1,75 @@
+---
+import '../styles/site.css'
+import { JBROWSE, href } from '../lib/site.ts'
+
+interface Props {
+  title?: string
+  description?: string
+  nav?: 'genes' | 'leads' | 'isoforms' | 'gpcr' | 'blog' | 'about'
+  indexed?: boolean
+}
+
+const DEFAULT_DESCRIPTION =
+  'ClinVar missense variants at predicted protein–protein interfaces of human disease genes, each one opened on the genome beside the 3D complex.'
+const { title, description = DEFAULT_DESCRIPTION, nav, indexed = true } = Astro.props
+const fullTitle = title ? `${title} · Interface atlas` : 'Interface atlas'
+const canonical = new URL(Astro.url.pathname, Astro.site)
+const image = new URL(href('preview.jpg'), Astro.site)
+const links = [
+  ['genes', 'Genes'],
+  ['leads', 'Leads'],
+  ['isoforms', 'Isoforms'],
+  ['gpcr', 'GPCRs'],
+  ['blog', 'Blog'],
+  ['about', 'About'],
+] as const
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {indexed && <link rel="canonical" href={canonical} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title ?? 'Interface atlas: disease variants cluster where proteins touch'} />
+    <meta property="og:description" content={description} />
+    {indexed && <meta property="og:url" content={canonical} />}
+    <meta property="og:image" content={image} />
+    <meta property="og:image:width" content="1400" />
+    <meta property="og:image:height" content="800" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href={`${JBROWSE}favicon.ico`} />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href={href()}>Interface atlas</a>
+      <nav>
+        {
+          links.map(([key, label]) => (
+            <a href={href(`${key}/`)} aria-current={nav === key ? 'page' : undefined}>
+              {label}
+            </a>
+          ))
+        }
+        <a href={JBROWSE}>Genome browser</a>
+      </nav>
+    </header>
+    <main id="app">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      Prototype. Predicted complexes from
+      <a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a> (CC-BY 4.0),
+      variants from <a href="https://www.ncbi.nlm.nih.gov/clinvar/">ClinVar</a> (NCBI),
+      proteins and isoforms from <a href="https://www.uniprot.org/">UniProt</a>,
+      experimental structures from <a href="https://www.rcsb.org/">RCSB PDB</a> and
+      <a href="https://www.ebi.ac.uk/pdbe/">PDBe</a>, selected with <a href="https://gpcrdb.org/">GPCRdb</a>,
+      gene coordinates via the <a href="https://www.ebi.ac.uk/proteins/api/doc/">EBI Proteins API</a>,
+      viewer <a href="https://jbrowse.org/jb2/">JBrowse 2</a>.
+      <a href="https://github.com/cmdcolin/interface-atlas">Source</a>.
+    </footer>
+  </body>
+</html>

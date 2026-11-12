@@ -6,10 +6,12 @@ $(deck).pdf: $(deck).tex $(shots)
 	cp build/$(deck).pdf $@
 
 $(shots) &: shots.ts
+	cd .. && pnpm build
 	node shots.ts
 
 .PHONY: screenshots clean
 screenshots:
+	cd .. && pnpm build
 	node shots.ts
 
 clean:

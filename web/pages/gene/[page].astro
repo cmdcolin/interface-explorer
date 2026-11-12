@@ -1,0 +1,132 @@
+---
+import {
+  complexSpec,
+  geneLocus,
+  genomeUrl,
+  sessionUrl,
+  variantPartner,
+  variantSpec,
+} from '../../../src/links.ts'
+import Layout from '../../layouts/Layout.astro'
+import { gene as readGene, geneRows, isoformIndex, summary } from '../../lib/data.ts'
+import { LABEL_KEYS, amCell, chip, clinvarHref, conditionCell, esc } from '../../lib/html.ts'
+import { proteinMap, variantData } from '../../lib/maps.ts'
+import { JBROWSE, href, isoformHref } from '../../lib/site.ts'
+
+export function getStaticPaths() {
+  return geneRows().map(row => ({ params: { page: row.page } }))
+}
+
+const gene = readGene(Astro.params.page ?? '')
+const am = summary().alphaMissense
+const isoformRow = isoformIndex().genes.find(r => r.accession === gene.accession)
+const locus = geneLocus(gene)
+const pad = Math.round((gene.end - gene.start) * 0.05) + 200
+const conditions = [...Map.groupBy(gene.variants.flatMap(v => v.conditions), name => name)]
+  .map(([name, uses]) => [name, uses.length] as const)
+  .sort((a, b) => b[1] - a[1])
+const description = `${gene.gene}: ${gene.interfaceResidues} residues at a predicted interface with ${gene.partners.length} partner${gene.partners.length === 1 ? '' : 's'}, and the ${gene.variants.length} ClinVar missense variants on them.`
+const rows = gene.variants
+  .map(v => {
+    const partner = variantPartner(gene, v)
+    return `<tr ${variantData(v)} data-position="${v.position}" data-am="${v.alphaMissense ?? -1}">
+      <td>${esc(v.change)}</td>
+      <td class="nowrap">${chip(v.label)} <a href="${clinvarHref(v.variation)}" title="${esc(v.review)}">VCV${String(v.variation).padStart(9, '0')}</a></td>
+      <td>${conditionCell(v.conditions)}</td>
+      <td class="num">${amCell(v.alphaMissense, am)}</td>
+      <td>${v.partners.map(esc).join(', ')}</td>
+      <td class="nowrap"><a href="${genomeUrl(v.chrom, v.pos - 30, v.pos + 30, JBROWSE)}">chr${esc(v.chrom)}:${v.pos.toLocaleString()}</a></td>
+      <td class="nowrap"><a href="${sessionUrl(variantSpec(gene, v), JBROWSE)}">with ${esc(partner?.gene)}</a></td>
+    </tr>`
+  })
+  .join('')
+---
+
+<Layout title={gene.gene} description={description} nav="genes">
+  <p><a href={href('genes/')}>← All genes</a></p>
+  <h1>{gene.gene}</h1>
+  <p class="lede">
+    UniProt <a href={`https://www.uniprot.org/uniprotkb/${gene.accession}`}>{gene.accession}</a>,
+    {gene.length} residues, chr{gene.chrom}:{gene.start.toLocaleString()}–{gene.end.toLocaleString()} ({gene.strand}).
+    {gene.interfaceResidues} residues sit at a confident predicted interface;
+    {gene.variants.length} of its {gene.classified} ClinVar-classified missense variants fall on them.
+  </p>
+  <div class="actions">
+    <a class="button primary" href={genomeUrl(gene.chrom, gene.start - pad, gene.end + pad, JBROWSE)}>View on the genome</a>
+    <a class="button" href={`https://genomes.jbrowse.org/protein-browser/?gene=${encodeURIComponent(gene.gene)}`}>Open in the protein browser</a>
+    <a class="button" href={`https://alphafold.ebi.ac.uk/entry/${gene.accession}`}>AlphaFold DB entry</a>
+    {isoformRow && <a class="button" href={isoformHref(isoformRow.page)}>Isoforms ({isoformRow.modelled})</a>}
+  </div>
+  <h2>Protein map</h2>
+  <div id="protein-map"><Fragment set:html={proteinMap(gene)} /></div>
+  <h2>Predicted partners</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Partner</th><th class="num">ipSAE</th><th class="num">ipTM</th>
+          <th class="num">Residues</th><th>Interface residues</th><th class="num">Variants</th><th>Complex</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          gene.partners.map(p => (
+            <tr>
+              <td><a href={`https://www.uniprot.org/uniprotkb/${p.accession}`}>{p.gene}</a></td>
+              <td class="num">{p.ipsae?.toFixed(2)}</td>
+              <td class="num">{p.iptm?.toFixed(2)}</td>
+              <td class="num">{p.residues}</td>
+              <td class="muted">{p.runs}</td>
+              <td class="num">{p.variants}</td>
+              <td class="nowrap">
+                <a href={sessionUrl(complexSpec(gene.gene, p.entity, locus), JBROWSE)}>3D + genome</a> ·
+                <a href={`https://alphafold.ebi.ac.uk/entry/${p.entity}`}>AFDB</a>
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+  <h2>ClinVar missense variants at an interface</h2>
+  <div class="toolbar filters">
+    {
+      LABEL_KEYS.map(label => (
+        <label>
+          <input type="checkbox" value={label} checked /> <Fragment set:html={chip(label)} /> {gene.counts[label]}
+        </label>
+      ))
+    }
+    <label>
+      Sort by
+      <select id="variant-sort">
+        <option value="position">position</option>
+        <option value="alphaMissense">AlphaMissense</option>
+      </select>
+    </label>
+    <label>
+      Condition
+      <select id="variant-condition">
+        <option value="">all</option>
+        {conditions.map(([name, n]) => <option value={name}>{name} ({n})</option>)}
+      </select>
+    </label>
+  </div>
+  <p class="muted">
+    <a href="https://doi.org/10.1126/science.adg7492">AlphaMissense</a> predicts how likely a substitution is to be
+    pathogenic, from 0 to 1: above {am.likelyPathogenic} is likely pathogenic, below {am.likelyBenign} likely benign. It is
+    a prediction from sequence and the single-protein structure, and does not see the partner.
+  </p>
+  <div class="table-wrap">
+    <table id="variants">
+      <thead>
+        <tr><th>Change</th><th>ClinVar</th><th>Condition</th><th class="num">AlphaMissense</th><th>Touches</th><th>Genome</th><th>Structure</th></tr>
+      </thead>
+      <tbody set:html={rows} />
+    </table>
+  </div>
+</Layout>
+
+<script>
+  import '../../scripts/variants.ts'
+</script>

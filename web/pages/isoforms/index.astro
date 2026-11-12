@@ -1,0 +1,63 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import { isoformIndex } from '../../lib/data.ts'
+import { esc } from '../../lib/html.ts'
+import { isoformHref } from '../../lib/site.ts'
+import { sortableTable } from '../../lib/table.ts'
+
+const { genes: rows, checked, described } = isoformIndex()
+const table = sortableTable({
+  id: 'isoforms',
+  rows,
+  sortBy: 5,
+  noun: 'genes',
+  placeholder: 'Filter genes',
+  search: r => [r.gene, r.accession],
+  columns: [
+    { label: 'Gene', cell: r => `<a href="${isoformHref(r.page)}">${esc(r.gene)}</a>`, sort: r => r.gene },
+    {
+      label: 'Isoforms modelled',
+      num: true,
+      cell: r => `${r.modelled} <span class="muted">of ${r.described}</span>`,
+      sort: r => r.modelled,
+    },
+    {
+      label: 'Shortest',
+      num: true,
+      cell: r => `${r.shortest} <span class="muted">/ ${r.length} aa</span>`,
+      sort: r => r.shortest,
+    },
+    { label: 'Folded residues missing or replaced', num: true, cell: r => r.foldedChanged, sort: r => r.foldedChanged },
+    { label: 'Shared residues losing confidence', num: true, cell: r => r.unfolded, sort: r => r.unfolded },
+    { label: 'Pathogenic sites absent', num: true, cell: r => r.pathogenicLost, sort: r => r.pathogenicLost },
+    {
+      label: 'Isoforms lacking half or more of an interface',
+      num: true,
+      cell: r => r.interfaceLost,
+      sort: r => r.interfaceLost,
+    },
+  ],
+})
+---
+
+<Layout title="Isoforms" nav="isoforms">
+  <h1>Isoforms</h1>
+  <p class="lede">
+    AlphaFold DB now models UniProt's alternative isoforms. For each disease gene with modelled isoforms, see where each
+    isoform differs from the canonical protein, whether the part they share keeps its predicted fold, and which pathogenic
+    ClinVar sites and predicted partner interfaces it lacks.
+  </p>
+  <p class="note">
+    AlphaFold DB models at least one alternative isoform for {rows.length.toLocaleString()} of the
+    {checked.toLocaleString()} disease genes checked{
+      checked < described
+        ? `, of ${described.toLocaleString()} with described isoforms; the rest are still being fetched`
+        : ' with described isoforms'
+    }.
+  </p>
+  <Fragment set:html={table} />
+</Layout>
+
+<script>
+  import '../../scripts/table.ts'
+</script>

@@ -690,3 +690,50 @@ h3 {
   border: 1px solid var(--border);
   border-radius: 8px;
 }
+
+.post-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.post-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.post-card:hover {
+  border-color: var(--link);
+}
+
+.posts {
+  list-style: none;
+  padding: 0;
+}
+
+.posts li {
+  margin: 0 0 20px;
+}
+
+.posts a {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.posts time,
+.post > time {
+  display: block;
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+.post .share-figure {
+  max-width: 520px;
+}

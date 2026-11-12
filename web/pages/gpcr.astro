@@ -1,0 +1,148 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { gpcr } from '../lib/data.ts'
+import { agreementText, gAlphaCell, receptorLinks, sideCell, variantDetails } from '../lib/gpcr.ts'
+import { residueCount } from '../lib/html.ts'
+import { surfaceMap } from '../lib/maps.ts'
+
+const data = gpcr()
+const chimeras = data.complexes.filter(c => c.gProteins.some(g => g.chimera)).length
+const anchored = new Set<string>()
+const anchor = (gene: string) => {
+  const first = !anchored.has(gene)
+  anchored.add(gene)
+  return first ? gene : undefined
+}
+---
+
+<Layout
+  title="GPCRs and their G proteins"
+  description={`Experimental receptor–G protein interfaces from ${data.complexes.length} cryo-EM and X-ray complexes, labelled with GPCRdb generic numbers, beside AlphaFold DB's predicted interfaces and the ClinVar variants on them.`}
+  nav="gpcr"
+>
+  <h1>GPCRs and their G proteins</h1>
+  <p class="lede">
+    Experimental receptor–G protein interfaces from {data.complexes.length} cryo-EM and X-ray complexes of biogenic amine
+    receptors (dopamine, serotonin, adrenergic and histamine), selected from <a href="https://gpcrdb.org/">GPCRdb</a> by
+    BioHackathon Europe 2026 Project 9. Residues within 5 Å of the partner, between the receptor and Gα, are mapped to human
+    codons, shown beside AlphaFold DB's predicted interfaces, and carried into JBrowse as the "experimental GPCR–G protein
+    interface" tracks.
+  </p>
+  <h2>The receptor-facing surface of each Gα</h2>
+  <p class="muted">
+    Bars: how many structures put a receptor within 5 Å of the residue. Marks above: ClinVar pathogenic (red) and uncertain
+    (orange) missense.
+  </p>
+  {
+    data.gAlphas.map(g => (
+      <>
+        <h3 id={g.gene}>
+          {g.gene}{' '}
+          <span class="muted">
+            in {g.structures} structure{g.structures > 1 ? 's' : ''}: {g.receptors.join(', ')}
+          </span>
+        </h3>
+        <Fragment set:html={surfaceMap(g)} />
+        <p>
+          {
+            `${residueCount(g.counts.length)} contact${g.counts.length === 1 ? 's' : ''} a receptor${g.chimeraOnly ? ', counting only the segments of engineered chimeras that carry this sequence' : ''}. `
+          }ClinVar on them: <Fragment set:html={variantDetails(g.variants)} /><br />
+          AlphaFold DB:{' '}
+          {
+            g.afdb ? (
+              <>
+                its predicted GPCR complexes ({g.afdbReceptors.join(', ')}) cover{' '}
+                <Fragment set:html={agreementText(g.afdb, g.chimeraOnly)} />
+              </>
+            ) : (
+              'no predicted complex with a GPCR'
+            )
+          }.
+        </p>
+      </>
+    ))
+  }
+  <h2 id="complexes">Complexes</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Receptor</th><th>G protein</th><th>Structure</th><th>Receptor side</th><th>Gα side</th>
+          <th>AlphaFold DB covers, receptor side</th><th>Open</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          data.complexes.map(c => {
+            const r = c.receptorSide
+            return (
+              <tr id={anchor(r.gene)}>
+                <td class="nowrap">
+                  {r.gene}
+                  {c.species !== 'Human' && <span class="muted"> {c.species}</span>}
+                </td>
+                <td>
+                  {c.g_subtype} <span class="muted">{c.g_note}</span>
+                </td>
+                <td class="nowrap">
+                  <a href={`https://www.rcsb.org/structure/${c.pdb}`}>{c.pdb}</a>{' '}
+                  <span class="muted">
+                    {c.method}, {c.resolution} Å
+                  </span>
+                </td>
+                <td set:html={sideCell(r)} />
+                <td set:html={gAlphaCell(c.gProteins)} />
+                <td set:html={agreementText(r.afdb)} />
+                <td class="nowrap" set:html={receptorLinks(r.gene, c.pdb, r.locus)} />
+              </tr>
+            )
+          })
+        }
+      </tbody>
+    </table>
+  </div>
+  <h2>The other structures in the set</h2>
+  <p class="muted">
+    Receptors without a G protein bound, mostly inactive-state X-ray structures: the reference conformations.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Receptor</th><th>State</th><th>Structure</th><th>Open</th></tr>
+      </thead>
+      <tbody>
+        {
+          data.others.map(o => (
+            <tr>
+              <td class="nowrap">
+                {o.gene}
+                {o.species !== 'Human' && <span class="muted"> {o.species}</span>}
+              </td>
+              <td>
+                {o.state} <span class="muted">{o.degree_active}% active</span>
+              </td>
+              <td class="nowrap">
+                <a href={`https://www.rcsb.org/structure/${o.pdb}`}>{o.pdb}</a>{' '}
+                <span class="muted">
+                  {o.method}, {o.resolution} Å
+                </span>
+              </td>
+              <td set:html={receptorLinks(o.gene, o.pdb, null)} />
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+  <p class="note">
+    The G proteins in these complexes are often engineered: dominant-negative Gαi1, mini-Gs and mini-Gq. SIFTS maps most of
+    them to a single gene. {chimeras} are chimeras it maps to none: each of their segments is assigned to the human Gα whose
+    sequence it carries, so a mini-Gq contributes its Gαq α5 helix to GNAQ and its scaffold to GNAS. Non-human receptors and
+    G proteins are aligned to the human protein before mapping to codons; a residue that differs from the human one is still
+    mapped, and marked. Only receptor–Gα contacts are counted, not those with Gβγ. Receptor residues and variants carry
+    <a href="https://docs.gpcrdb.org/generic_numbering.html">GPCRdb generic numbers</a> (e.g. 3.50x50), or their loop's name
+    where GPCRdb gives none, so the same position can be compared across receptors. The Gα-side comparison sets these
+    amine-receptor structures against AlphaFold DB's complexes with other GPCRs, so the share of predicted residues seen here
+    is a lower bound.
+  </p>
+</Layout>

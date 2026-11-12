@@ -1,0 +1,117 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { oddsText } from '../lib/charts.ts'
+import { gpcr, summary } from '../lib/data.ts'
+import { percent } from '../lib/html.ts'
+import { href } from '../lib/site.ts'
+
+const s = summary()
+const data = gpcr()
+const chimeras = data.complexes.filter(c => c.gProteins.some(g => g.chimera)).length
+const t = s.thresholds
+const uncertain = s.alphaMissense.calls.uncertain
+---
+
+<Layout title="About" nav="about">
+  <h1>About</h1>
+  <p class="lede">
+    A prototype layer for genome browsers: predicted protein–protein interfaces and the ClinVar variants on them.
+  </p>
+  <h2>Method</h2>
+  <ul>
+    <li>All {s.proteins.toLocaleString()} reviewed human proteins with a UniProt disease annotation.</li>
+    <li>
+      Their heterodimers from AlphaFold DB's 2026 complex release (AlphaFold-Multimer), kept at ipSAE ≥ {t.ipsae}, the
+      AlphaFold DB team's threshold.
+    </li>
+    <li>
+      Interface residues: any heavy atom within {t.contact} Å of the partner, residue pLDDT ≥ {t.plddt}. Mapped to hg38
+      codons with EBI Proteins API coordinates.
+    </li>
+    <li>
+      Variants: single-nucleotide missense variants classified pathogenic, likely pathogenic, uncertain, likely benign or
+      benign in NCBI's weekly ClinVar <code>variant_summary</code> (downloaded {s.provenance.clinvarDownloaded}), on a RefSeq
+      transcript UniProt maps to the canonical isoform. Conflicting classifications are left out, and so is any variant whose
+      wild-type residue does not match the canonical sequence at its position.
+    </li>
+    <li>
+      Each variant's <a href="https://doi.org/10.1126/science.adg7492">AlphaMissense</a> pathogenicity, from the published
+      table of every substitution in the canonical proteins. Of the {s.variantsAtInterface.uncertain.toLocaleString()}
+      variants of uncertain significance at an interface, it scores {uncertain.scored.toLocaleString()} and calls
+      {uncertain.likelyPathogenic.toLocaleString()} ({percent(uncertain.likelyPathogenic, uncertain.scored)}) likely pathogenic.
+    </li>
+  </ul>
+  <h2>Does the interface mean anything?</h2>
+  <p>Within each protein, pathogenic missense variants sit at a predicted interface more often than benign ones:</p>
+  <ul>
+    <li>All residues: <Fragment set:html={oddsText(s.enrichment.all)} /></li>
+    <li>
+      Only folded residues (pLDDT ≥ 70): <Fragment set:html={oddsText(s.enrichment.ordered)} />. The buried core is rich in
+      pathogenic variants and is not an interface.
+    </li>
+    <li>Only folded, surface-exposed residues: <Fragment set:html={oddsText(s.enrichment.orderedSurface)} /></li>
+    {
+      Object.entries(s.enrichment.byAlphaMissenseClass).map(([name, e]) => (
+        <li>
+          Only variants in the class "{name}": <Fragment set:html={oddsText(e)} />
+        </li>
+      ))
+    }
+  </ul>
+  <p>
+    Mantel–Haenszel odds ratios across proteins, with intervals from resampling proteins. The surface line rules out "folded
+    vs disordered" as the explanation, and the AlphaMissense lines show the interface adds a little to a predictor that
+    never sees the partner. Each confidence band of ipSAE, compared with residues at no interface, gives about the same odds
+    ratio. The <a href={href('blog/2026-11-12-disease-variants-cluster/')}>findings post</a> draws these as charts.
+  </p>
+  <h2>Leads</h2>
+  <p>
+    The <a href={href('leads/')}>{s.leads.variants.toLocaleString()} leads</a> are the variants of uncertain significance at
+    a confident interface residue where ClinVar classifies another missense variant pathogenic. Conditions are the names
+    ClinVar's submitters gave, so one disease can appear under several names.
+  </p>
+  <h2>GPCRs</h2>
+  <ul>
+    <li>
+      {data.complexes.length} experimental receptor–G protein complexes of biogenic amine receptors, from a GPCRdb selection
+      made by BioHackathon Europe 2026 Project 9, plus {data.others.length} receptor structures without a G protein.
+    </li>
+    <li>
+      Contacts: heavy atoms within 5 Å between receptor and Gα. PDBe's SIFTS annotation gives each residue's UniProt
+      position; a receptor chain SIFTS does not map is aligned to its UniProt sequence. Non-human proteins are aligned to the
+      human ortholog. Receptor residues are labelled with GPCRdb generic numbers from GPCRdb's residue table for the human
+      receptor, or their segment (e.g. ICL3) where it gives none.
+    </li>
+    <li>
+      {chimeras} G proteins are engineered chimeras that SIFTS maps to no gene. Each stretch of such a chain is assigned to
+      the human Gα it matches best, favouring the Gα the structure is annotated with.
+    </li>
+    <li>Every receptor and Gα here is looked up in AlphaFold DB, whether or not it is a disease protein.</li>
+  </ul>
+  <h2>Isoforms</h2>
+  <ul>
+    <li>
+      AlphaFold DB's monomer models of UniProt's alternative isoforms, for disease genes with at least one modelled besides
+      the canonical.
+    </li>
+    <li>
+      Each isoform's sequence is rebuilt from UniProt's alternative-sequence edits and checked against its model's sequence,
+      which gives every isoform residue its canonical position. A replacement of the same length is compared residue by
+      residue, so only residues that change count as lost.
+    </li>
+    <li>RefSeq transcripts come from UniProt's cross-references, which name the isoform each one encodes.</li>
+  </ul>
+  <h2>Caveats</h2>
+  <ul>
+    <li>
+      Coverage: {percent(s.withPartner, s.proteins)} of disease proteins have any predicted partner. AlphaFold DB modelled
+      STRING physical-interaction pairs only; TP53 has none and KRAS has no RAF.
+    </li>
+    <li>The complexes are predictions, and ipSAE ≥ {t.ipsae} is "tentatively high-confidence".</li>
+    <li>An interface variant is a lead, not a mechanism: the residue may matter for folding or for another partner.</li>
+    <li>
+      Experimental interfaces from the PDB are shown in the
+      <a href="https://genomes.jbrowse.org/protein-browser/">protein browser</a>; this atlas adds predicted ones.
+    </li>
+  </ul>
+</Layout>

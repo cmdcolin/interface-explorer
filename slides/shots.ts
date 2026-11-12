@@ -6,7 +6,8 @@ import { extname, join, normalize } from 'node:path'
 import { setTimeout as sleep } from 'node:timers/promises'
 
 const here = import.meta.dirname
-const siteDir = join(here, '..', 'site')
+const siteDir = join(here, '..', 'dist')
+const base = '/interface-atlas/'
 const outDir = join(here, 'shots')
 const live = 'https://cmdcolin.github.io/interface-atlas/'
 const chrome = process.env.CHROME ?? 'google-chrome'
@@ -27,23 +28,23 @@ interface Shot {
 }
 
 const shots: Shot[] = [
-  { name: 'home', url: local => `${local}#/`, height: 1000, wait: 2 },
+  { name: 'home', url: local => local, height: 1000, wait: 2 },
   {
     name: 'gene_GNAO1',
-    url: local => `${local}#/gene/GNAO1`,
+    url: local => `${local}gene/GNAO1/`,
     height: 1000,
     wait: 2,
   },
   {
     name: 'isoforms_APP',
-    url: local => `${local}#/isoforms/APP`,
+    url: local => `${local}isoforms/APP/`,
     height: 1000,
     wait: 2,
   },
-  { name: 'gpcr', url: local => `${local}#/gpcr`, height: 1000, wait: 2 },
+  { name: 'gpcr', url: local => `${local}gpcr/`, height: 1000, wait: 2 },
   {
     name: 'variant3d',
-    url: local => `${local}#/gene/VHL`,
+    url: local => `${local}gene/VHL/`,
     follow: '#variants tr:has(.chip.pathogenic) td:last-child a',
     height: 800,
     wait: 45,
@@ -55,7 +56,11 @@ function serveSite() {
     const path = normalize(
       decodeURIComponent(new URL(request.url ?? '/', 'http://x').pathname),
     )
-    const file = join(siteDir, path.endsWith('/') ? `${path}index.html` : path)
+    const inside = path.startsWith(base) ? path.slice(base.length - 1) : path
+    const file = join(
+      siteDir,
+      inside.endsWith('/') ? `${inside}index.html` : inside,
+    )
     readFile(file).then(
       body => {
         response.writeHead(200, {
@@ -76,7 +81,7 @@ function serveSite() {
       resolve({
         origin:
           address && typeof address === 'object'
-            ? `http://127.0.0.1:${address.port}/`
+            ? `http://127.0.0.1:${address.port}${base}`
             : '',
         close: () => server.close(),
       })
@@ -163,7 +168,7 @@ async function capture(browser: Browser, shot: Shot, local: string) {
     await browser.send(
       'Runtime.evaluate',
       {
-        expression: `location.href = document.querySelector(${JSON.stringify(shot.follow)}).href.replace(location.origin + '/', ${JSON.stringify(live)})`,
+        expression: `location.href = document.querySelector(${JSON.stringify(shot.follow)}).href.replace(${JSON.stringify(local)}, ${JSON.stringify(live)})`,
       },
       session,
     )

@@ -1,0 +1,198 @@
+import type { GenePage, leads } from '../../src/pages.ts'
+
+export type Label = 'pathogenic' | 'uncertain' | 'benign'
+
+export type Gene = GenePage
+export type GeneVariant = Gene['variants'][number]
+export type Lead = ReturnType<typeof leads>[number] & { page: string }
+
+export interface GeneRow {
+  gene: string
+  page: string
+  accession: string
+  partners: number
+  topPartner: string
+  bestIpsae: number
+  interfaceResidues: number
+  length: number
+  pathogenic: number
+  uncertain: number
+  benign: number
+}
+
+export interface Enrichment {
+  'proteins informative': number
+  'pathogenic at interface': string
+  'benign at interface': string
+  'Mantel–Haenszel odds ratio': number
+  '95% CI (bootstrap over proteins)': [number, number]
+}
+
+export interface Summary {
+  proteins: number
+  withPartner: number
+  genes: number
+  unmapped: number
+  partners: number
+  variantsAtInterface: Record<Label, number>
+  leads: { variants: number; genes: number }
+  alphaMissense: {
+    calls: Record<Label, { scored: number; likelyPathogenic: number }>
+    likelyBenign: number
+    likelyPathogenic: number
+  }
+  enrichment: {
+    all: Enrichment
+    ordered: Enrichment
+    orderedSurface: Enrichment
+    byConfidenceBand: Record<string, Enrichment>
+    byAlphaMissenseClass: Record<string, Enrichment>
+  }
+  thresholds: { ipsae: number; plddt: number; contact: number }
+  provenance: { clinvarDownloaded: string }
+}
+
+export interface IsoformRow {
+  gene: string
+  page: string
+  accession: string
+  described: number
+  modelled: number
+  shortest: number
+  length: number
+  foldedChanged: number
+  unfolded: number
+  pathogenicLost: number
+  interfaceLost: number
+}
+
+export interface IsoformIndex {
+  checked: number
+  described: number
+  genes: IsoformRow[]
+}
+
+export interface IsoformTotals {
+  genes: number
+  alternativeIsoforms: number
+  lackingInterface: number
+  genesLackingPathogenic: number
+}
+
+export interface Edit {
+  start: number
+  end: number
+  original?: string
+  replacement: string
+}
+
+export interface Isoform {
+  accession: string
+  name?: string
+  model: string
+  cif: string
+  length: number
+  meanPlddt: number
+  plddt: [number, number][]
+  segments: [number, number, number][]
+  edits: Edit[]
+  refseq: string[]
+  foldedChanged: number
+  unfolded: number
+  pathogenicLost: number[]
+  pathogenicChanges: string[]
+  interfaceLost: Record<string, [number, number]>
+}
+
+export interface IsoformRecord {
+  gene: string
+  page: string
+  accession: string
+  length: number
+  locus?: string | null
+  described: number
+  canonical: {
+    accession: string
+    name?: string
+    model: string
+    cif: string
+    meanPlddt: number
+    plddt: [number, number][]
+    refseq: string[]
+  }
+  pathogenic?: number[]
+  interface?: number[]
+  isoforms: Isoform[]
+}
+
+export interface SideVariant {
+  change: string
+  label: Label
+  position: number
+  variation: number
+}
+
+export interface Side {
+  gene: string
+  accession: string
+  identity: number
+  residues: number[]
+  differing: number[]
+  chimera: boolean
+  locus: string | null
+  variants: SideVariant[]
+  generic?: Record<string, string>
+}
+
+export interface Agreement {
+  partner: string
+  predicted: number
+  shared: number
+  recall: number
+  precision: number
+}
+
+export interface Complex {
+  pdb: string
+  method: string
+  resolution: string
+  state: string
+  species: string
+  g_family: string
+  g_subtype: string
+  g_note: string
+  receptor: string
+  receptorSide: Side & { afdb: Agreement | null }
+  gProteins: Side[]
+}
+
+export interface GAlpha {
+  gene: string
+  accession: string
+  length: number
+  locus: string | null
+  counts: [number, number][]
+  receptors: string[]
+  structures: number
+  chimeraOnly: boolean
+  afdbReceptors: string[]
+  afdb: Agreement | null
+  variants: SideVariant[]
+}
+
+export interface OtherStructure {
+  pdb: string
+  method: string
+  resolution: string
+  state: string
+  species: string
+  receptor: string
+  gene: string
+  degree_active: string
+}
+
+export interface Gpcr {
+  complexes: Complex[]
+  gAlphas: GAlpha[]
+  others: OtherStructure[]
+}
