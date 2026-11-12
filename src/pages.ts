@@ -1,3 +1,4 @@
+import { rmSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { positionRuns } from 'p2s_mapper'
@@ -480,6 +481,7 @@ async function main() {
     }))
     .sort((a, b) => (a.gene < b.gene ? -1 : a.gene > b.gene ? 1 : 0))
   const diseasePages = diseaseRecords(pages, ontology, diseases)
+  rmSync(join(SITE_DATA, 'diseases'), { recursive: true, force: true })
   for (const disease of diseasePages) {
     writeJson(join(SITE_DATA, 'diseases', `${disease.page}.json`), disease)
   }
