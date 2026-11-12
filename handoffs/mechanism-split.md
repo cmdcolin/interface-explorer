@@ -10,8 +10,10 @@ description: "Test whether interfaces are where non-loss-of-function missense li
   points to, and for broken binding, which partner. The aggregate odds ratio
   becomes a supporting fact; the per-variant mechanism hint becomes a feature
   of the explorer (see `handoffs/explorer-reframe.md`).
-- **State as of 2026-11-12:** scoped, no code yet. Claim a step here before
-  starting it.
+- **State as of 2026-11-12:** claimed by the session that added homodimers
+  (branch `mechanism`): labels, analysis rows and, if the split holds, the
+  per-variant hint. Homodimers are now in the atlas, so the caveat below about
+  their absence no longer applies.
 
 ## Hypothesis
 
