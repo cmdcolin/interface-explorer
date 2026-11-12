@@ -43,7 +43,7 @@ const shots: Shot[] = [
   { name: 'gpcr', url: local => `${local}#/gpcr`, height: 1000, wait: 2 },
   {
     name: 'variant3d',
-    url: () => `${live}#/gene/VHL`,
+    url: local => `${local}#/gene/VHL`,
     follow: '#variants tr:has(.chip.pathogenic) td:last-child a',
     height: 800,
     wait: 45,
@@ -163,7 +163,7 @@ async function capture(browser: Browser, shot: Shot, local: string) {
     await browser.send(
       'Runtime.evaluate',
       {
-        expression: `location.href = document.querySelector(${JSON.stringify(shot.follow)}).href`,
+        expression: `location.href = document.querySelector(${JSON.stringify(shot.follow)}).href.replace(location.origin + '/', ${JSON.stringify(live)})`,
       },
       session,
     )

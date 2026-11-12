@@ -1,5 +1,7 @@
 const app = document.getElementById('app')
 const TRACKS = 'hg38-ncbiRefSeqCurated,interfaces,interface-variants,hg38-clinvarMain'
+const CLINVAR = 'hg38-clinvarMain'
+const VIEW_TRACKS = TRACKS.split(',').map(trackId => (trackId === CLINVAR ? { trackId, displaySnapshot: { type: 'LinearMultiRowFeatureDisplay' } } : trackId))
 const LABELS = { pathogenic: 'Pathogenic', uncertain: 'Uncertain', benign: 'Benign' }
 const cache = new Map()
 
@@ -32,7 +34,7 @@ function complexLink(gene, entity, loc, variant) {
     gene,
     alphaFoldComplexId: entity,
     ...(variant ? { variant } : {}),
-    connectedView: { assembly: 'hg38', loc, tracks: TRACKS.split(',') },
+    connectedView: { assembly: 'hg38', loc, tracks: VIEW_TRACKS },
   }
   return `jbrowse/?session=spec-${encodeURIComponent(JSON.stringify({ views: [view] }))}`
 }
