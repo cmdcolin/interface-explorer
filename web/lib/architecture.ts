@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process'
 
-type Kind = 'source' | 'step' | 'file' | 'viewer' | 'live' | 'junction'
+type Kind = 'source' | 'step' | 'file' | 'viewer' | 'live'
 
 interface Node {
   id: string
@@ -43,7 +43,7 @@ const MONO = 'Courier'
 export const COLUMNS = [
   'Sources',
   'Fetch and compute',
-  '\u00a0',
+  'Cache',
   'Combine',
   'Published files',
   'In the browser',
@@ -202,7 +202,7 @@ export function nodes({ proteins, contact, ipsae, plddt }: Numbers): Node[] {
       lines: ['rebuild, compare folds'],
     },
 
-    { id: 'out', kind: 'junction', title: '' },
+    { id: 'out', kind: 'file', title: 'out/', lines: ['cached results'] },
     {
       id: 'tracks',
       kind: 'step',
@@ -397,9 +397,7 @@ function headings() {
 }
 
 function nodeSource(node: Node) {
-  return node.kind === 'junction'
-    ? `${node.id} [shape=point width=0.1 color="${color('text2')}"];`
-    : `${node.id} [label=${label(node)} ${nodeSize(node)} ${nodeStyle(node)}];`
+  return `${node.id} [label=${label(node)} ${nodeSize(node)} ${nodeStyle(node)}];`
 }
 
 export function architectureDot(numbers: Numbers) {
