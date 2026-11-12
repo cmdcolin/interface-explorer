@@ -13,9 +13,11 @@ import {
   callBars,
   compositionBar,
   confidenceRows,
-  matchedRows,
+  conservationQuartileRows,
+  conservationRows,
   forestPlot,
   odds,
+  shareBars,
   shareFigure,
 } from '../../lib/charts.ts'
 import { summary } from '../../lib/data.ts'
@@ -25,6 +27,11 @@ export const s = summary()
 export const e = s.enrichment
 export const v = s.variantsAtInterface
 export const am = s.alphaMissense.calls
+export const c = s.conservation.enrichment
+export const counted = e =>
+  ['pathogenic at interface', 'benign at interface']
+    .map(key => Number(e[key].split('/')[1]))
+    .reduce((sum, n) => sum + n, 0)
 
 We mapped every confident AlphaFold DB predicted complex of a human disease
 protein back to the genome, codon by codon, and asked which ClinVar missense
@@ -63,18 +70,35 @@ protein at a time, not the partner.
 
 <Html html={forestPlot(alphaMissenseRows(s))} />
 
-### Conservation explains only part of it
-
-Pathogenic variants favour conserved bases, and interfaces are conserved.
-Comparing variants only within the same quarter of conservation across 100
-vertebrates lowers the odds ratios above but leaves most of the effect; the
-[conservation post](../2026-11-12-interfaces-are-conserved/) has the detail.
-
-<Html html={forestPlot(matchedRows(s))} />
-
 Mantel–Haenszel odds ratios across proteins; lines are 95% intervals from
 resampling proteins, and the dashed line marks no difference. Hover a row for
 the number of proteins behind it.
+
+## Conservation explains only part of it
+
+UCSC's phyloP across 100 vertebrates scores every base by how much more slowly
+it has changed than neutral DNA would. On its own it predicts pathogenicity:
+
+<Html html={shareBars(conservationQuartileRows(s), 'var(--pathogenic)')} />
+
+Share of classified variants that are pathogenic, by the phyloP of the
+variant's base, in quarters of all scored variants.
+
+Interfaces are conserved too, so being at one might be conservation under
+another name. Comparing pathogenic and benign variants only within the same
+quarter, protein by protein:
+
+<Html html={forestPlot(conservationRows(s))} />
+
+On the folded surface the odds ratio goes from
+{odds(c.orderedSurface.unmatched).toFixed(1)}× to
+**{odds(c.orderedSurface.matched).toFixed(1)}×**: conservation accounts for part
+of the interface signal, not most of it. These rows count only variants with a
+phyloP score, and a quarter of a protein counts only when it holds both a
+pathogenic and a benign variant, so the matched surface row rests on
+{counted(c.orderedSurface.matched).toLocaleString()} of
+{counted(c.orderedSurface.unmatched).toLocaleString()} variants. Quarters are
+coarse, and phyloP measures DNA, not protein.
 
 ## {v.uncertain.toLocaleString()} variants of uncertain significance sit at an interface
 

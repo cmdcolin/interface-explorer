@@ -1,0 +1,117 @@
+---
+title: 'Are the predicted interfaces real?'
+date: '2026-11-12'
+order: 3
+description: 'Two independent checks: where the PDB holds both proteins, the predicted interface covers most of the experimental one, even for pairs solved after AlphaFold was trained; and predicted interfaces are more conserved than random patches of the same protein surface.'
+hero: './heroes/are-the-interfaces-real.jpg'
+heroAlt: 'KRAS on the genome with its predicted interface codons, beside the experimental KRAS–SOS1 structure 6EPL'
+---
+
+import Html from '../../components/Html.astro'
+import {
+  conservedInterfaceRows,
+  patchRows,
+  recallHistogram,
+  shareBars,
+} from '../../lib/charts.ts'
+import { summary } from '../../lib/data.ts'
+import { percent } from '../../lib/html.ts'
+
+export const s = summary()
+export const all = s.validation.all
+export const unseen = s.validation.unseen
+export const r = s.conservation.residues
+export const pa = r.patches.all
+export const near = r.nearbyPatches.all
+export const share = x => `${Math.round(100 * x)}%`
+
+Every interface in the atlas is a prediction. Two checks say most of them are
+real: experimental structures, where they exist, and evolution, which has kept
+the predicted surfaces more conserved than the rest.
+
+## Against experiment
+
+For {all.pairs.toLocaleString()} predicted pairs, the PDB has an experimental
+structure holding both proteins. In {all.touching.toLocaleString()} of them the
+two proteins touch, and there the predicted interface covers a median
+**{share(all.recall)}** of the experimental one.
+
+<Html
+  html={recallHistogram([
+    { label: 'All pairs with a structure', colour: 'var(--interface)', v: all },
+    { label: `No structure deposited by ${s.validation.cutoff}`, colour: 'var(--pathogenic)', v: unseen },
+  ])}
+/>
+
+Bars are the share of each group's pairs; hover one for the count.
+
+AlphaFold was trained on the PDB, so agreeing with structures it has seen would
+prove little. {unseen.touching.toLocaleString()} of the pairs had no structure
+deposited by {s.validation.cutoff}, the cutoff of its training set. For those the
+median is {share(unseen.recall)}, and
+{percent(unseen.recovered, unseen.touching)} have at least half of their
+experimental interface predicted, against
+{percent(all.recovered, all.touching)} of all pairs. In the other direction, a
+median {share(all.precision)} of the predicted residues the structure resolves
+are in the experimental interface ({share(unseen.precision)} for pairs with no
+structure before the cutoff). Each gene page names the structure its partners
+were checked against.
+
+## Against evolution
+
+Only the well-studied pairs have a structure. For the rest, conservation across
+UCSC's 100 vertebrates is a check that needs none. For each confident complex we
+compared the mean phyloP of its interface codons with that of the protein's
+other folded, surface-exposed residues at no confident interface, matched for
+exposure and pLDDT. The interface is more conserved in
+**{percent(r.all['interface more conserved'], r.all.complexes)}** of
+{r.all.complexes.toLocaleString()} complexes, by a median
+{r.all['median difference']} phyloP units.
+
+<Html html={shareBars(conservedInterfaceRows(s), 'var(--interface)')} />
+
+Share of complexes whose interface is more conserved, by ipSAE. Hover a row for
+the counts.
+
+Any compact patch of folded surface might stand out like that. So we ranked
+each interface among patches of its size from the same protein's surface at no
+confident interface, one centred on each such residue, and ranked a random patch
+the same way in the interface's place to learn what chance gives. The interface
+beats the median patch in
+**{percent(pa['above the median patch'].interface, pa.complexes)}** of
+{pa.complexes.toLocaleString()} complexes, against
+{percent(pa['above the median patch'].fake, pa.complexes)} for the stand-in, and
+beats 95% of its patches in
+{percent(pa['above 95% of patches'].interface, pa.complexes)}, against
+{percent(pa['above 95% of patches'].fake, pa.complexes)}.
+
+<Html html={shareBars(patchRows(s), 'var(--interface)')} />
+
+The share rises with ipSAE, as it would if the more confident predictions are
+more often right. It is not just conserved domains: ranked only among patches
+centred within 25 Å of its middle, the interface beats the median one in
+{percent(near['above the median patch'].interface, near.complexes)} of
+{near.complexes.toLocaleString()} complexes, against
+{percent(near['above the median patch'].fake, near.complexes)} for a stand-in.
+
+Conservation cannot vouch for the partner, though: AlphaFold reads the same
+alignments, and could dock a wrong partner, such as a paralog, on a real
+conserved site.
+
+## Caveats
+
+- One structure is compared per pair: among those covering nearly the most of
+  both proteins, the one with the fewest chains.
+- {(all.pairs - all.touching).toLocaleString()} pairs share a PDB entry in which
+  the two proteins do not touch: subunits of rings and large assemblies, such as
+  the Sm rings, the exosome and the spliceosome. Contacts made only through
+  crystal symmetry are also missed.
+- A pair first deposited after the cutoff can still resemble an older structure
+  of related proteins.
+- phyloP measures DNA, not protein: a codon can be conserved for splicing, and a
+  free third position lowers a codon's mean.
+- Surface residues at no confident interface may touch partners AlphaFold DB did
+  not model, which makes the conservation comparisons conservative. Patches are
+  the residues nearest a point, so they are rounder than many real interfaces,
+  and the patch test covers {pa.complexes.toLocaleString()} of the
+  {r.all.complexes.toLocaleString()} complexes.

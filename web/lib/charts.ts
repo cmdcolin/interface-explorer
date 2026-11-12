@@ -290,10 +290,6 @@ export function conservationRows(summary: Summary) {
   ]
 }
 
-export function matchedRows(summary: Summary) {
-  return conservationRows(summary).filter(row => row.label.endsWith(MATCHED))
-}
-
 function conservedRow(label: string, r: ResidueConservation) {
   return {
     label,

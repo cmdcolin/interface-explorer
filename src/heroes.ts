@@ -4,7 +4,6 @@ import { join } from 'node:path'
 import {
   INTERFACE_TRACKS,
   geneLocus,
-  locusUrl,
   pdbSpec,
   sessionUrl,
   variantSpec,
@@ -29,9 +28,6 @@ function firstPathogenic(name: string, partner: string) {
   return variant ? sessionUrl(variantSpec(record, variant), jbrowse) : jbrowse
 }
 
-const actb = gene('ACTB')
-const kras = gene('KRAS')
-
 await screenshots(
   [
     {
@@ -42,37 +38,25 @@ await screenshots(
     },
     {
       name: 'three-places-to-start',
-      url: () => firstPathogenic('GNAO1', 'GNB1'),
+      url: () => `${LIVE}isoforms/APP/`,
       height: 800,
-      wait: 45,
+      wait: 10,
     },
     {
-      name: 'predictions-match-experiment',
+      name: 'are-the-interfaces-real',
       url: () =>
         sessionUrl(
-          pdbSpec('KRAS', '6EPL', geneLocus(kras), INTERFACE_TRACKS),
+          pdbSpec('KRAS', '6EPL', geneLocus(gene('KRAS')), INTERFACE_TRACKS),
           jbrowse,
         ),
       height: 800,
       wait: 45,
-    },
-    {
-      name: 'interfaces-are-conserved',
-      url: () =>
-        locusUrl(
-          geneLocus(actb),
-          [...INTERFACE_TRACKS.slice(0, 3), 'hg38-phyloP100way'],
-          jbrowse,
-        ),
-      height: 740,
-      wait: 20,
     },
     {
       name: 'project-9-gpcrs',
-      url: () =>
-        sessionUrl(pdbSpec('HTR1A', '9HYI', 'chr5:63960454-63961719'), jbrowse),
-      height: 800,
-      wait: 45,
+      url: () => `${LIVE}gpcr/#GNAS`,
+      height: 700,
+      wait: 10,
     },
   ],
   { dir: join(ROOT, 'web', 'content', 'blog', 'heroes'), format: 'jpeg' },
