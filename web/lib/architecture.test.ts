@@ -44,10 +44,21 @@ describe('architecture graph', () => {
 
   it('puts every column heading at the same height', () => {
     const svg = architectureSvg(numbers)
-    const ys = [
-      ...svg.matchAll(/<title>h\d+<\/title>[\s\S]*?<text[^>]* y="(-?[\d.]+)"/g),
-    ].map(match => match[1])
-    expect(ys).toHaveLength(COLUMNS.length)
+    const ys = COLUMNS.map(
+      heading =>
+        svg.match(
+          new RegExp(
+            `<text[^>]* y="(-?[\\d.]+)"[^>]*>${heading.toUpperCase()}</text>`,
+          ),
+        )?.[1],
+    )
+    expect(ys.filter(y => y === undefined)).toEqual([])
     expect(new Set(ys).size).toBe(1)
+  })
+
+  it('returns a bare svg element with no prolog or node titles', () => {
+    const svg = architectureSvg(numbers)
+    expect(svg.startsWith('<svg')).toBe(true)
+    expect(svg).not.toContain('<title>')
   })
 })

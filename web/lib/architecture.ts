@@ -48,7 +48,7 @@ export const COLUMNS = [
   'In the browser',
 ]
 
-function escape(text: string) {
+function escapeHtml(text: string) {
   return text
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
@@ -349,11 +349,11 @@ function label(node: Node) {
   const chips = (node.chips ?? [])
     .map(
       chip =>
-        `<TD BGCOLOR="${color('interface')}" STYLE="rounded" CELLPADDING="2" FIXEDSIZE="TRUE" WIDTH="${chip.length * 6 + 14}" HEIGHT="16"><FONT FACE="${MONO}" POINT-SIZE="10" COLOR="${color('chipText')}">${escape(chip)}</FONT></TD>`,
+        `<TD BGCOLOR="${color('interface')}" STYLE="rounded" CELLPADDING="2" FIXEDSIZE="TRUE" WIDTH="${chip.length * 6 + 14}" HEIGHT="16"><FONT FACE="${MONO}" POINT-SIZE="10" COLOR="${color('chipText')}">${escapeHtml(chip)}</FONT></TD>`,
     )
     .join('')
   const rows = [
-    `<TR><TD ALIGN="LEFT" COLSPAN="2" WIDTH="${Math.round(nodeWidth(node) * 72 - 22)}"><FONT FACE="${face}" POINT-SIZE="13" COLOR="${color('text')}"><B>${escape(node.title)}</B></FONT></TD></TR>`,
+    `<TR><TD ALIGN="LEFT" COLSPAN="2" WIDTH="${Math.round(nodeWidth(node) * 72 - 22)}"><FONT FACE="${face}" POINT-SIZE="13" COLOR="${color('text')}"><B>${escapeHtml(node.title)}</B></FONT></TD></TR>`,
     ...(chips
       ? [
           `<TR><TD ALIGN="LEFT" COLSPAN="2"><TABLE ALIGN="LEFT" BORDER="0" CELLBORDER="0" CELLSPACING="3" CELLPADDING="0"><TR>${chips}</TR></TABLE></TD></TR>`,
@@ -361,7 +361,7 @@ function label(node: Node) {
       : []),
     ...(node.lines ?? []).map(
       line =>
-        `<TR><TD ALIGN="LEFT" COLSPAN="2"><FONT FACE="${SANS}" POINT-SIZE="11" COLOR="${color('text2')}">${escape(line)}</FONT></TD></TR>`,
+        `<TR><TD ALIGN="LEFT" COLSPAN="2"><FONT FACE="${SANS}" POINT-SIZE="11" COLOR="${color('text2')}">${escapeHtml(line)}</FONT></TD></TR>`,
     ),
   ]
   return `<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1">${rows.join('')}</TABLE>>`
@@ -382,13 +382,13 @@ function nodeStyle(node: Node) {
 }
 
 function edgeStyle(edge: Edge) {
-  return `${edge.label ? `xlabel=<<FONT FACE="${SANS}" POINT-SIZE="10" COLOR="${color('text2')}">${escape(edge.label)}</FONT>> ` : ''}`
+  return `${edge.label ? `xlabel=<<FONT FACE="${SANS}" POINT-SIZE="10" COLOR="${color('text2')}">${escapeHtml(edge.label)}</FONT>> ` : ''}`
 }
 
 function headings() {
   return COLUMNS.map(
     (text, i) =>
-      `h${i} [shape=plaintext style="" label=<<FONT FACE="${SANS}" POINT-SIZE="11" COLOR="${color('text2')}"><B>${escape(text.toUpperCase())}</B></FONT>>];`,
+      `h${i} [shape=plaintext style="" label=<<FONT FACE="${SANS}" POINT-SIZE="11" COLOR="${color('text2')}"><B>${escapeHtml(text.toUpperCase())}</B></FONT>>];`,
   )
 }
 
@@ -440,10 +440,17 @@ function alignHeadings(svg: string) {
       [...block.matchAll(Y)].map(match => Number(match[1])),
     ),
   )
-  return blocks.reduce(
-    (out, block) => out.replace(block, block.replace(Y, `y="${top}"`)),
-    svg,
-  )
+  return blocks.length === 0
+    ? fail('no column headings found in the rendered diagram')
+    : blocks.reduce(
+        (out, block) =>
+          out.replace(block, () => block.replace(Y, () => `y="${top}"`)),
+        svg,
+      )
+}
+
+function bareSvg(svg: string) {
+  return svg.slice(svg.indexOf('<svg')).replace(/<title>[\s\S]*?<\/title>/g, '')
 }
 
 function fail(message: string): never {
@@ -469,5 +476,5 @@ function renderDot(source: string) {
 }
 
 export function architectureSvg(numbers: Numbers) {
-  return alignHeadings(theme(renderDot(architectureDot(numbers))))
+  return bareSvg(alignHeadings(theme(renderDot(architectureDot(numbers)))))
 }
