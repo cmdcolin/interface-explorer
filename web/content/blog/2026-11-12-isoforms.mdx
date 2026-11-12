@@ -12,10 +12,16 @@ import { appCase, isoformTotals } from '../../lib/cases.ts'
 
 export const isoforms = isoformTotals()
 
-Splicing changes interfaces too. APP695 (P05067-4), the neuronal isoform of
-APP, has no Kunitz inhibitor domain, so it lacks most of APP's predicted
-interfaces with the proteases KLK11, KLK14 and prostasin; APP751 (P05067-8)
-keeps the domain and lacks none.
+A gene can make several proteins by splicing, and an isoform that skips an exon
+loses whatever that exon contributed. AlphaFold DB now models UniProt's
+alternative isoforms, so each one can be checked against the predicted
+interfaces of the canonical protein.
+
+## APP695, the neuronal isoform of APP
+
+APP695 (P05067-4) has no Kunitz inhibitor domain, so it lacks most of APP's
+predicted interfaces with the proteases KLK11, KLK14 and prostasin. APP751
+(P05067-8) keeps the domain and lacks none.
 
 <Html html={appCase()} />
 
@@ -25,4 +31,7 @@ Across {isoforms.genes.toLocaleString()} disease genes and
 {isoforms.alternativeIsoforms.toLocaleString()} modelled isoforms,
 {isoforms.lackingInterface.toLocaleString()} isoforms lack half or more of a
 partner interface, and {isoforms.genesLackingPathogenic.toLocaleString()} genes
-have an isoform missing a residue with a pathogenic variant.
+have an isoform missing a residue with a pathogenic variant. The
+[isoforms](../../isoforms/) page lists every gene, starting with those that
+lose the most pathogenic sites.
+
