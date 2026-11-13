@@ -13,6 +13,7 @@ const LANE = 13
 const CHARACTER_WIDTH = 6
 const ALIKE = 0.8
 const FOLDED = 70
+const BRIDGE = 4
 
 const SITES = ['Binding site', 'Active site', 'Site']
 
@@ -91,17 +92,33 @@ export function partnerKey(gene: string) {
   return `partner:${gene}`
 }
 
+export function blocks(positions: number[], bridge = 1) {
+  const runs: [number, number][] = []
+  for (const p of positions.toSorted((a, b) => a - b)) {
+    const last = runs.at(-1)
+    if (last && p - last[1] <= bridge) {
+      last[1] = Math.max(last[1], p)
+    } else {
+      runs.push([p, p])
+    }
+  }
+  return runs
+}
+
+function blockWidth(start: number, end: number, scale: (x: number) => number) {
+  return Math.max(scale(end + 1) - scale(start), 2.5)
+}
+
 function guide(
   key: string,
-  positions: number[],
+  runs: [number, number][],
   scale: (x: number) => number,
   bottom: number,
 ) {
-  const width = Math.max(scale(2) - scale(1), 2)
-  const bars = positions.map(
-    p =>
-      `M${(scale(p) - width / 2).toFixed(2)} 0h${width.toFixed(2)}v${bottom}h-${width.toFixed(2)}z`,
-  )
+  const bars = runs.map(([start, end]) => {
+    const width = blockWidth(start, end, scale)
+    return `M${(scale(start) - (scale(2) - scale(1)) / 2).toFixed(2)} 0h${width.toFixed(2)}v${bottom}h-${width.toFixed(2)}z`
+  })
   return `<path class="guide" data-for="${esc(key)}" d="${bars.join('')}" />`
 }
 
@@ -263,8 +280,8 @@ export function proteinMap(gene: Gene) {
             ${track.residues.map(r => `<rect x="${scale(r) - 1}" y="${y}" width="2.5" height="10" fill="var(--interface)"><title>residue ${r}: interface with ${esc(shown)}</title></rect>`).join('')}</g>`
         })
         .join('')}
-      ${tracks.map((track, index) => guide(`track:${index}`, track.residues, scale, axisY)).join('')}
-      ${gene.partners.map(p => guide(partnerKey(p.gene), partnerResidues(p), scale, axisY)).join('')}
+      ${tracks.map((track, index) => guide(`track:${index}`, blocks(track.residues), scale, axisY)).join('')}
+      ${gene.partners.map(p => guide(partnerKey(p.gene), blocks(partnerResidues(p)), scale, axisY)).join('')}
       <line class="axis" x1="${scale(1)}" x2="${scale(gene.length)}" y1="${axisY}" y2="${axisY}" />
       <g class="map-cursor" visibility="hidden"><line y1="0" y2="${axisY}" /><text y="${axisY + 16}" text-anchor="middle"></text></g>
       ${axisLabels(gene.length)
@@ -310,17 +327,32 @@ function keptShare(x: number, y: number, radius: number, share: number) {
       : ''
 }
 
+export function interfaceProximity(record: IsoformRecord) {
+  const interfaceResidues = new Set(Object.values(record.interfaces).flat())
+  const sites = record.pathogenic ?? []
+  const distances = sites.map(site =>
+    Math.min(...[...interfaceResidues].map(r => Math.abs(r - site))),
+  )
+  return {
+    sites,
+    atInterface: sites.filter(site => interfaceResidues.has(site)),
+    nearest: Math.min(...distances),
+  }
+}
+
 export function isoformMap(record: IsoformRecord) {
   const mapWidth = 1000
   const left = 110
   const rowHeight = 22
+  const trackHeight = 17
   const column = 24
   const partners = Object.entries(record.interfaces)
   const headLabel = (partner: string) =>
     partnerLabel({ gene: partner, homodimer: partner === record.gene })
-  const interfaceResidues = [
-    ...new Set(partners.flatMap(([, positions]) => positions)),
-  ].sort((a, b) => a - b)
+  const interfaceBlocks = blocks(
+    partners.flatMap(([, positions]) => positions),
+    BRIDGE,
+  )
   const headerHeight = partners.length
     ? Math.max(...partners.map(([partner]) => headLabel(partner).length)) *
         4.6 +
@@ -332,6 +364,17 @@ export function isoformMap(record: IsoformRecord) {
   const scale = (x: number) =>
     left + ((x - 1) / Math.max(record.length - 1, 1)) * (mapWidth - left - 20)
   const step = (mapWidth - left - 20) / record.length
+  const rect = (
+    start: number,
+    end: number,
+    y: number,
+    height: number,
+    attributes: string,
+    title = '',
+  ) =>
+    `<rect ${attributes} x="${(scale(start) - step / 2).toFixed(2)}" y="${y}" width="${blockWidth(start, end, scale).toFixed(2)}" height="${height}">${title ? `<title>${esc(title)}</title>` : ''}</rect>`
+  const span = (start: number, end: number) =>
+    start === end ? `${start}` : `${start}–${end}`
   const rows = [
     {
       label: 'Canonical',
@@ -378,28 +421,43 @@ export function isoformMap(record: IsoformRecord) {
       }
     }
     return runs
-      .map(
-        r =>
-          `<rect class="${r.folded ? 'folded' : 'loose'}" x="${scale(r.start) - step / 2}" y="${y}" width="${(r.end - r.start + 1) * step}" height="12" />`,
+      .map(r =>
+        rect(r.start, r.end, y, 12, `class="${r.folded ? 'folded' : 'loose'}"`),
       )
       .join('')
   }
-  const interfaceTicks = (row: (typeof rows)[number], y: number) => {
+  const interfaceOn = (row: (typeof rows)[number], y: number) => {
     const present = kept(row)
-    return interfaceResidues
-      .filter(x => present.has(x))
-      .map(
-        x =>
-          `<rect class="interface-tick" x="${scale(x) - 1}" y="${y + 3}" width="2.5" height="6" />`,
+    const residues = interfaceBlocks.flatMap(([start, end]) =>
+      Array.from({ length: end - start + 1 }, (_, k) => start + k).filter(r =>
+        present.has(r),
+      ),
+    )
+    return blocks(residues)
+      .map(([start, end]) =>
+        rect(
+          start,
+          end,
+          y + 3,
+          6,
+          'class="interface-tick"',
+          `interface block ${span(start, end)}`,
+        ),
       )
       .join('')
   }
   const replaced = (row: (typeof rows)[number], y: number) =>
     row.edits
       .filter(e => e.replacement)
-      .map(
-        e =>
-          `<rect class="replaced" x="${scale(e.start) - step / 2}" y="${y - 2}" width="${(e.end - e.start + 1) * step}" height="16"><title>${esc(editText(e))}: ${esc(e.replacement)}</title></rect>`,
+      .map(e =>
+        rect(
+          e.start,
+          e.end,
+          y - 2,
+          16,
+          'class="replaced"',
+          `${editText(e)}: ${e.replacement}`,
+        ),
       )
       .join('')
   const dots = (row: (typeof rows)[number], y: number) =>
@@ -408,35 +466,50 @@ export function isoformMap(record: IsoformRecord) {
         const [lost = 0, total = positions.length] =
           row.interfaceLost[partner] ?? []
         const x = mapWidth + 16 + index * column + column / 2
-        return `<g class="partner-dot" data-guide="${esc(partnerKey(partner))}"><title>${esc(row.label)} keeps ${total - lost} of ${total} ${esc(headLabel(partner))} interface residues</title><circle class="dot-ring" cx="${x}" cy="${y + 6}" r="7" />${keptShare(x, y + 6, 7, (total - lost) / total)}</g>`
+        return `<g class="partner-dot" data-guide="${esc(partnerKey(partner))}"><title>${esc(row.label)} has ${total - lost} of ${total} ${esc(headLabel(partner))} interface residues</title><circle class="dot-ring" cx="${x}" cy="${y + 6}" r="7" />${keptShare(x, y + 6, 7, (total - lost) / total)}</g>`
       })
       .join('')
-  const marks = [
-    {
-      key: 'pathogenic',
-      label: 'ClinVar pathogenic',
-      hint: 'ClinVar pathogenic',
-      positions: record.pathogenic ?? [],
-      color: 'var(--pathogenic)',
-      title: 'pathogenic missense at residue',
-    },
-    {
-      key: 'interface',
-      label: 'Partner interface',
-      hint: 'partner interface',
-      positions: interfaceResidues,
-      color: 'var(--interface)',
-      title: 'predicted interface residue',
-    },
-  ].filter(m => m.positions.length)
-  const ticks = (m: (typeof marks)[number], y: number) =>
-    m.positions
-      .map(
-        x =>
-          `<rect x="${scale(x) - 1}" y="${y}" width="2.5" height="9" fill="${m.color}"><title>${m.title} ${x}</title></rect>`,
-      )
-      .join('')
-  const top = Math.max(marks.length * 17 + 8, headerHeight)
+  const pathogenic = record.pathogenic ?? []
+  const tracks = [
+    ...(pathogenic.length
+      ? [
+          {
+            key: 'pathogenic',
+            label: 'ClinVar pathogenic',
+            runs: blocks(pathogenic),
+            marks: (y: number) =>
+              pathogenic
+                .map(
+                  x =>
+                    `<rect x="${scale(x) - 1}" y="${y}" width="2.5" height="9" fill="var(--pathogenic)"><title>pathogenic missense at residue ${x}</title></rect>`,
+                )
+                .join(''),
+          },
+        ]
+      : []),
+    ...partners.map(([partner, positions]) => {
+      const runs = blocks(positions, BRIDGE)
+      return {
+        key: partnerKey(partner),
+        label: headLabel(partner),
+        runs,
+        marks: (y: number) =>
+          runs
+            .map(([start, end]) =>
+              rect(
+                start,
+                end,
+                y,
+                10,
+                'fill="var(--interface)"',
+                `${headLabel(partner)} interface ${span(start, end)}`,
+              ),
+            )
+            .join(''),
+      }
+    }),
+  ]
+  const top = Math.max(tracks.length * trackHeight + 8, headerHeight)
   const height = top + rows.length * rowHeight + 24
   const axisY = top + rows.length * rowHeight + 4
   const headers = partners
@@ -446,19 +519,18 @@ export function isoformMap(record: IsoformRecord) {
     })
     .join('')
   return `
-    <div class="map-wrap"><svg class="map" style="min-width:${Math.round(width * 0.76)}px" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(record.gene)} isoforms aligned to the canonical protein, with the share of each partner's interface residues each isoform keeps">
-      ${marks.map((m, index) => `<g class="map-row" data-guide="${m.key}"><rect class="row-hit" x="0" y="${index * 17 - 3}" width="${mapWidth}" height="15" /><text class="row-label" x="0" y="${index * 17 + 9}">${m.label}</text>${ticks(m, index * 17)}</g>`).join('')}
+    <div class="map-wrap"><svg class="map" style="min-width:${Math.round(width * 0.76)}px" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(record.gene)} isoforms aligned to the canonical protein, under its ClinVar pathogenic sites and each partner's predicted interface">
+      ${tracks.map((t, index) => `<g class="map-row" data-guide="${esc(t.key)}"><rect class="row-hit" x="0" y="${index * trackHeight - 3}" width="${mapWidth}" height="${trackHeight}" /><text class="row-label" x="0" y="${index * trackHeight + 9}">${esc(t.label)}</text>${t.marks(index * trackHeight)}</g>`).join('')}
       ${headers}
       ${rows
         .map((row, index) => {
           const y = top + index * rowHeight
           return `<g class="map-row" data-isoform="${esc(row.isoform)}"><rect class="row-hit" x="0" y="${y - 4}" width="${mapWidth}" height="${rowHeight - 2}" /><text class="row-label" x="0" y="${y + 10}">${esc(row.label)}</text>
             <line class="baseline" x1="${scale(1)}" x2="${scale(record.length)}" y1="${y + 6}" y2="${y + 6}" />
-            ${bars(row, y)}${interfaceTicks(row, y)}${replaced(row, y)}${dots(row, y)}</g>`
+            ${bars(row, y)}${interfaceOn(row, y)}${replaced(row, y)}${dots(row, y)}</g>`
         })
         .join('')}
-      ${marks.map(m => guide(m.key, m.positions, scale, axisY)).join('')}
-      ${partners.map(([partner, positions]) => guide(partnerKey(partner), positions, scale, axisY)).join('')}
+      ${tracks.map(t => guide(t.key, t.runs, scale, axisY)).join('')}
       <line class="axis" x1="${scale(1)}" x2="${scale(record.length)}" y1="${axisY}" y2="${axisY}" />
       ${axisLabels(record.length)
         .map(
@@ -472,9 +544,9 @@ export function isoformMap(record: IsoformRecord) {
       <span><span class="swatch loose-swatch"></span>pLDDT &lt; ${FOLDED}</span>
       <span>gap: missing from the isoform</span>
       <span><span class="swatch replaced-swatch"></span>replaced in the isoform</span>
-      ${interfaceResidues.length ? `<span><span class="swatch" style="background:var(--interface)"></span>interface residue the isoform keeps</span>` : ''}
-      ${partners.length ? `<span><span class="dot-swatch"></span>share of a partner's interface residues kept</span>` : ''}
-      ${marks.length ? `<span class="muted">Hover ${[...marks.map(m => `<span class="hover-hint" data-guide="${m.key}">${m.hint}</span>`), ...(partners.length ? ['a partner'] : [])].join(' or ')} to run its residues down every isoform.</span>` : ''}
+      ${partners.length ? `<span><span class="swatch" style="background:var(--interface)"></span>predicted interface, gaps of ${BRIDGE - 1} residues or fewer filled in</span>` : ''}
+      ${partners.length ? `<span><span class="dot-swatch"></span>share of a partner's interface residues in the isoform</span>` : ''}
+      ${tracks.length ? `<span class="muted">Hover a row above the isoforms, or a partner's column, to run its residues down every isoform.</span>` : ''}
     </div>`
 }
 

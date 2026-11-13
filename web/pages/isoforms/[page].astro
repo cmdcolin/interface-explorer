@@ -3,7 +3,7 @@ import { ISOFORM_TRACKS, isoformSpec, locusUrl, sessionUrl } from '../../../src/
 import Layout from '../../layouts/Layout.astro'
 import { geneRows, isoform, isoformIndex } from '../../lib/data.ts'
 import { esc } from '../../lib/html.ts'
-import { editText, isoformMap, partnerKey } from '../../lib/maps.ts'
+import { editText, interfaceProximity, isoformMap, partnerKey } from '../../lib/maps.ts'
 import { JBROWSE, geneHref, href } from '../../lib/site.ts'
 import type { Isoform } from '../../lib/types.ts'
 
@@ -14,12 +14,19 @@ export function getStaticPaths() {
 const record = isoform(Astro.params.page ?? '')
 const canonical = record.canonical
 const atlasGene = geneRows().find(g => g.accession === record.accession)
+const proximity = interfaceProximity(record)
+const sitesText = `${proximity.sites.length} ClinVar pathogenic missense ${proximity.sites.length === 1 ? 'site' : 'sites'}`
+const proximityText = !proximity.sites.length || !Object.keys(record.interfaces).length
+  ? ''
+  : proximity.atInterface.length
+    ? `${proximity.atInterface.length} of the ${sitesText} ${proximity.atInterface.length === 1 ? 'is a predicted interface residue' : 'are predicted interface residues'}: ${proximity.atInterface.join(', ')}.`
+    : `None of the ${sitesText} is a predicted interface residue; the closest is ${proximity.nearest} residues along the sequence from one.`
 
 function interfaceLossCell(interfaceLost: Isoform['interfaceLost']) {
   const entries = Object.entries(interfaceLost)
   const most = entries.filter(([, [lost, total]]) => lost >= total / 2).length
   return entries.length
-    ? `<details data-guide="interface"><summary>${most ? `${most} lose half or more` : 'under half each'}</summary>${entries
+    ? `<details><summary>${most ? `${most} lose half or more` : 'under half each'}</summary>${entries
         .map(([partner, [lost, total]]) => `<span class="hover-hint" data-guide="${esc(partnerKey(partner))}">${esc(partner)} <span class="muted">${lost} of ${total}</span></span>`)
         .join(', ')}</details>`
     : '—'
@@ -70,10 +77,12 @@ const rows = record.isoforms
   </div>
   <h2>Isoforms on the canonical sequence</h2>
   <p class="muted">
-    Each row places an isoform's residues at the canonical positions they share. Blue ticks are partner interface
-    residues the isoform keeps, and each circle on the right fills with the share of that partner's interface the
-    isoform keeps. No isoform was modelled with its partners, so a full circle is not evidence that it binds.
+    Each row places an isoform's residues at the canonical positions they share. The rows above them mark ClinVar
+    pathogenic sites and each partner's predicted interface, and the blue blocks on an isoform are the interface residues
+    it has. Each circle on the right fills with the share of that partner's interface residues in the isoform. No
+    isoform was modelled with its partners, so a full circle is not evidence that it binds.
   </p>
+  {proximityText && <p class="muted">{proximityText}</p>}
   <Fragment set:html={isoformMap(record)} />
   <h2>How each isoform differs</h2>
   <div class="table-wrap">
@@ -82,7 +91,7 @@ const rows = record.isoforms
         <tr>
           <th>Isoform</th><th class="num">Length</th><th class="num">Mean pLDDT</th><th>Differs from canonical</th>
           <th class="num">Folded residues missing or replaced</th><th class="num">Shared residues losing confidence</th>
-          <th data-guide="pathogenic">Pathogenic sites absent</th><th data-guide="interface">Partner interface residues absent</th><th>RefSeq</th><th>Structure</th>
+          <th data-guide="pathogenic">Pathogenic sites absent</th><th>Partner interface residues absent</th><th>RefSeq</th><th>Structure</th>
         </tr>
       </thead>
       <tbody set:html={rows} />

@@ -8,9 +8,10 @@ heroAlt: 'A gene cartoon: the canonical isoform has five exons and a partner pro
 ---
 
 import Html from '../../components/Html.astro'
-import { appCase, isoformTotals } from '../../lib/cases.ts'
+import { appCase, appSites, isoformTotals } from '../../lib/cases.ts'
 
 export const isoforms = isoformTotals()
+export const app = appSites()
 
 A gene can make several proteins by splicing, and an isoform that skips an exon
 loses whatever that exon contributed. AlphaFold DB now models UniProt's
@@ -22,6 +23,11 @@ interfaces of the canonical protein.
 APP695 (P05067-4) has no Kunitz inhibitor domain, so it lacks most of APP's
 predicted interfaces with the proteases KLK11, KLK14 and prostasin. APP751
 (P05067-8) keeps the domain and lacks none.
+
+None of APP's {app.count} ClinVar pathogenic missense sites, at residues
+{app.first}–{app.last}, is in these interfaces, so this example is
+about interfaces only. Each gene's isoform page says whether any of its
+pathogenic sites is an interface residue.
 
 <Html html={appCase()} />
 
