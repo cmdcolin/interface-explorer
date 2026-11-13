@@ -26,7 +26,8 @@ with no structure can be checked against
 The PDB holds both proteins for {all.pairs.toLocaleString()} predicted pairs,
 and they touch in {all.touching.toLocaleString()}. There the prediction covers
 a median **{share(all.recall)}** of the experimental interface, and
-{share(all.precision)} of its resolved residues lie in that interface.
+{share(all.precision)} of the predicted residues the structure resolves fall
+within it.
 
 AlphaFold was trained on the PDB, so the fairer test is the
 {unseen.touching.toLocaleString()} pairs first deposited after its
