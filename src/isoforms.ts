@@ -281,10 +281,11 @@ async function modelledGene(
     },
     described: isoforms.size,
     unmatched,
-    partners: [...interfaces.keys()].sort(compareText),
     pathogenic: sortedNumbers(pathogenic.map(([position]) => position)),
-    interface: sortedNumbers(
-      [...interfaces.values()].flatMap(residues => [...residues]),
+    interfaces: Object.fromEntries(
+      [...interfaces]
+        .sort(([a], [b]) => compareText(a, b))
+        .map(([partner, residues]) => [partner, sortedNumbers(residues)]),
     ),
     isoforms: [...alternatives]
       .sort((a, b) => isoformNumber(a.isoform) - isoformNumber(b.isoform))

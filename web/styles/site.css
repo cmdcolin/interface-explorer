@@ -1048,6 +1048,33 @@ h3 {
   fill-opacity: 0.1;
 }
 
+.map .guide {
+  visibility: hidden;
+  pointer-events: none;
+  fill: var(--text);
+  fill-opacity: 0.18;
+}
+
+.map .guide.shown {
+  visibility: visible;
+}
+
+.map .lit .row-label {
+  fill: var(--text);
+  font-weight: 600;
+}
+
+.map .lit .row-hit {
+  fill: var(--text);
+  fill-opacity: 0.06;
+}
+
+.hover-hint {
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: default;
+}
+
 .map-cursor line {
   stroke: var(--text);
   stroke-width: 1;

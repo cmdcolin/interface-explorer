@@ -3,7 +3,7 @@ import { ISOFORM_TRACKS, isoformSpec, locusUrl, sessionUrl } from '../../../src/
 import Layout from '../../layouts/Layout.astro'
 import { geneRows, isoform, isoformIndex } from '../../lib/data.ts'
 import { esc } from '../../lib/html.ts'
-import { editText, isoformMap } from '../../lib/maps.ts'
+import { editText, isoformMap, partnerKey } from '../../lib/maps.ts'
 import { JBROWSE, geneHref, href } from '../../lib/site.ts'
 import type { Isoform } from '../../lib/types.ts'
 
@@ -19,22 +19,22 @@ function interfaceLossCell(interfaceLost: Isoform['interfaceLost']) {
   const entries = Object.entries(interfaceLost)
   const most = entries.filter(([, [lost, total]]) => lost >= total / 2).length
   return entries.length
-    ? `<details><summary>${most ? `${most} lose half or more` : 'under half each'}</summary>${entries
-        .map(([partner, [lost, total]]) => `${esc(partner)} <span class="muted">${lost} of ${total}</span>`)
+    ? `<details data-guide="interface"><summary>${most ? `${most} lose half or more` : 'under half each'}</summary>${entries
+        .map(([partner, [lost, total]]) => `<span class="hover-hint" data-guide="${esc(partnerKey(partner))}">${esc(partner)} <span class="muted">${lost} of ${total}</span></span>`)
         .join(', ')}</details>`
     : '—'
 }
 
 const rows = record.isoforms
   .map(
-    i => `<tr>
+    i => `<tr data-isoform="${esc(i.accession)}">
       <td class="nowrap">${esc(i.accession)}${i.name && !i.accession.endsWith(`-${i.name}`) ? ` <span class="muted">${esc(i.name)}</span>` : ''}</td>
       <td class="num">${i.length}</td>
       <td class="num">${i.meanPlddt}</td>
       <td class="wide">${i.edits.map(e => esc(editText(e))).join('; ')}</td>
       <td class="num">${i.foldedChanged}</td>
       <td class="num">${i.unfolded}</td>
-      <td>${i.pathogenicLost.length ? `<details><summary>${i.pathogenicLost.length}</summary>${i.pathogenicChanges.map(esc).join(', ')}</details>` : '0'}</td>
+      <td>${i.pathogenicLost.length ? `<details data-guide="pathogenic"><summary>${i.pathogenicLost.length}</summary>${i.pathogenicChanges.map(esc).join(', ')}</details>` : '0'}</td>
       <td>${interfaceLossCell(i.interfaceLost)}</td>
       <td class="nowrap">${i.refseq[0] ? `<a href="https://www.ncbi.nlm.nih.gov/nuccore/${esc(i.refseq[0])}">${esc(i.refseq[0])}</a>${i.refseq.length > 1 ? ` <span class="muted" title="${esc(i.refseq.slice(1).join(', '))}">+${i.refseq.length - 1}</span>` : ''}` : '—'}</td>
       <td class="nowrap"><a href="${sessionUrl(isoformSpec(record, i.refseq[0], [{ url: i.cif }, { url: canonical.cif }]), JBROWSE)}">3D vs canonical</a> · <a href="https://alphafold.ebi.ac.uk/entry/${esc(i.model)}">AFDB</a></td>
@@ -80,7 +80,7 @@ const rows = record.isoforms
         <tr>
           <th>Isoform</th><th class="num">Length</th><th class="num">Mean pLDDT</th><th>Differs from canonical</th>
           <th class="num">Folded residues missing or replaced</th><th class="num">Shared residues losing confidence</th>
-          <th>Pathogenic sites absent</th><th>Partner interface residues absent</th><th>RefSeq</th><th>Structure</th>
+          <th data-guide="pathogenic">Pathogenic sites absent</th><th data-guide="interface">Partner interface residues absent</th><th>RefSeq</th><th>Structure</th>
         </tr>
       </thead>
       <tbody set:html={rows} />
@@ -90,6 +90,6 @@ const rows = record.isoforms
     "Losing confidence" counts shared residues whose pLDDT falls from ≥ 70 on the canonical model to &lt; 50 on the
     isoform's: a hint that the isoform does not keep that part folded, though pLDDT is a prediction's confidence, not a
     measurement. "3D vs canonical" opens the isoform's model superposed on the canonical one, linked to the isoform's own
-    transcript.
+    transcript. Hover a row, or a partner in it, to find it on the map above.
   </p>
 </Layout>

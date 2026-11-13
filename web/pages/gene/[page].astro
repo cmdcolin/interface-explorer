@@ -25,7 +25,7 @@ import {
   pisaHref,
   reportedCell,
 } from '../../lib/html.ts'
-import { pathogenicAtSameResidue, proteinMap, variantData, partnerLabel } from '../../lib/maps.ts'
+import { pathogenicAtSameResidue, proteinMap, variantData, partnerKey, partnerLabel } from '../../lib/maps.ts'
 import { initialPartner, partnerPicks, stories, structureData } from '../../lib/structure.ts'
 import { JBROWSE, diseaseHref, geneHref, href, isoformHref } from '../../lib/site.ts'
 
@@ -176,7 +176,7 @@ const rows = gene.variants
       <tbody>
         {
           gene.partners.map(p => (
-            <tr>
+            <tr data-guide={partnerKey(p.gene)}>
               <td>
                 {p.homodimer ? <span title={`AlphaFold DB's predicted homodimer: two copies of ${gene.gene}`}>itself <span class="muted">(homodimer)</span></span> : <a href={partnerHref(p.accession)}>{p.gene}</a>}
                 {p.modelledAs && (

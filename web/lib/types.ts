@@ -203,7 +203,7 @@ export interface IsoformRecord {
     refseq: string[]
   }
   pathogenic?: number[]
-  interface?: number[]
+  interfaces: Record<string, number[]>
   isoforms: Isoform[]
 }
 

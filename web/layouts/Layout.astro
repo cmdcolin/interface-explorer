@@ -116,6 +116,8 @@ const links = [
       <a href="https://github.com/cmdcolin/interface-explorer">Source</a>.
     </footer>
     <script>
+      import '../scripts/guides.ts'
+
       const menu = document.querySelector<HTMLDetailsElement>('.nav-menu')
       document.addEventListener('click', event => {
         if (event.target instanceof Node && !menu?.contains(event.target)) {
