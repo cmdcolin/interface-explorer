@@ -1,5 +1,5 @@
 import { isoform, isoformTotals } from './data.ts'
-import { interfaceProximity, isoformMap } from './maps.ts'
+import { isoformMap, pathogenicSites } from './maps.ts'
 import { href, isoformHref } from './site.ts'
 
 export function appCase() {
@@ -19,7 +19,7 @@ export function appCase() {
 }
 
 export function appSites() {
-  const { sites } = interfaceProximity(isoform('APP'))
+  const { sites } = pathogenicSites(isoform('APP'))
   return {
     count: sites.length,
     first: Math.min(...sites),

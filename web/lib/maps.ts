@@ -13,6 +13,7 @@ const LANE = 13
 const CHARACTER_WIDTH = 6
 const ALIKE = 0.8
 const FOLDED = 70
+const UNCONFIDENT = 50
 const BRIDGE = 4
 
 const SITES = ['Binding site', 'Active site', 'Site']
@@ -327,16 +328,26 @@ function keptShare(x: number, y: number, radius: number, share: number) {
       : ''
 }
 
-export function interfaceProximity(record: IsoformRecord) {
-  const interfaceResidues = new Set(Object.values(record.interfaces).flat())
+export function pathogenicSites(record: IsoformRecord) {
+  const partners = Object.entries(record.interfaces)
+  const interfaceResidues = partners.flatMap(([, positions]) => positions)
   const sites = record.pathogenic ?? []
-  const distances = sites.map(site =>
-    Math.min(...[...interfaceResidues].map(r => Math.abs(r - site))),
-  )
+  const plddt = residueBands(record.canonical.plddt)
   return {
     sites,
-    atInterface: sites.filter(site => interfaceResidues.has(site)),
-    nearest: Math.min(...distances),
+    unconfident: sites.filter(site => (plddt[site - 1] ?? 0) < UNCONFIDENT)
+      .length,
+    atInterface: sites.flatMap(site => {
+      const withSite = partners
+        .filter(([, positions]) => positions.includes(site))
+        .map(([partner]) => partner)
+      return withSite.length ? [{ site, partners: withSite }] : []
+    }),
+    siteSpan: [Math.min(...sites), Math.max(...sites)],
+    interfaceSpan: [
+      Math.min(...interfaceResidues),
+      Math.max(...interfaceResidues),
+    ],
   }
 }
 

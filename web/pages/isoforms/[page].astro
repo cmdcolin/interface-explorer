@@ -3,7 +3,7 @@ import { ISOFORM_TRACKS, isoformSpec, locusUrl, sessionUrl } from '../../../src/
 import Layout from '../../layouts/Layout.astro'
 import { geneRows, isoform, isoformIndex } from '../../lib/data.ts'
 import { esc } from '../../lib/html.ts'
-import { editText, interfaceProximity, isoformMap, partnerKey } from '../../lib/maps.ts'
+import { editText, isoformMap, partnerKey, pathogenicSites } from '../../lib/maps.ts'
 import { JBROWSE, geneHref, href } from '../../lib/site.ts'
 import type { Isoform } from '../../lib/types.ts'
 
@@ -14,13 +14,30 @@ export function getStaticPaths() {
 const record = isoform(Astro.params.page ?? '')
 const canonical = record.canonical
 const atlasGene = geneRows().find(g => g.accession === record.accession)
-const proximity = interfaceProximity(record)
-const sitesText = `${proximity.sites.length} ClinVar pathogenic missense ${proximity.sites.length === 1 ? 'site' : 'sites'}`
-const proximityText = !proximity.sites.length || !Object.keys(record.interfaces).length
-  ? ''
-  : proximity.atInterface.length
-    ? `${proximity.atInterface.length} of the ${sitesText} ${proximity.atInterface.length === 1 ? 'is a predicted interface residue' : 'are predicted interface residues'}: ${proximity.atInterface.join(', ')}.`
-    : `None of the ${sitesText} is a predicted interface residue; the closest is ${proximity.nearest} residues along the sequence from one.`
+const pathogenic = pathogenicSites(record)
+const span = ([start, end]: number[]) => (start === end ? `${start}` : `${start}–${end}`)
+const sitesText = `${pathogenic.sites.length} ClinVar pathogenic missense ${pathogenic.sites.length === 1 ? 'site' : 'sites'}`
+const unconfidentText = pathogenic.unconfident
+  ? `, ${pathogenic.unconfident} of them where the canonical model has pLDDT below 50`
+  : ''
+const byPartner = Map.groupBy(
+  pathogenic.atInterface.flatMap(a => a.partners),
+  partner => partner,
+)
+const atInterfaceText =
+  pathogenic.atInterface.length <= 5
+    ? pathogenic.atInterface.map(a => `${a.site} (${a.partners.join(', ')})`).join(', ')
+    : `by partner, ${[...byPartner]
+        .map(([partner, sites]) => [partner, sites.length] as const)
+        .toSorted((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]))
+        .map(([partner, count]) => `${partner} ${count}`)
+        .join(', ')}`
+const pathogenicText =
+  !pathogenic.sites.length || !Object.keys(record.interfaces).length
+    ? ''
+    : pathogenic.atInterface.length
+      ? `${pathogenic.atInterface.length} of the ${sitesText} ${pathogenic.atInterface.length === 1 ? 'is a predicted interface residue' : 'are predicted interface residues'}: ${atInterfaceText}.`
+      : `None of the ${sitesText} is a predicted interface residue. The sites lie at ${span(pathogenic.siteSpan)}${unconfidentText}; the predicted interfaces lie at ${span(pathogenic.interfaceSpan)}.`
 
 function interfaceLossCell(interfaceLost: Isoform['interfaceLost']) {
   const entries = Object.entries(interfaceLost)
@@ -82,7 +99,7 @@ const rows = record.isoforms
     it has. Each circle on the right fills with the share of that partner's interface residues in the isoform. No
     isoform was modelled with its partners, so a full circle is not evidence that it binds.
   </p>
-  {proximityText && <p class="muted">{proximityText}</p>}
+  {pathogenicText && <p class="muted">{pathogenicText}</p>}
   <Fragment set:html={isoformMap(record)} />
   <h2>How each isoform differs</h2>
   <div class="table-wrap">
