@@ -403,6 +403,11 @@ function summaryRow(gene: GeneRecord, page: string) {
     pathogenicLost: Math.max(...isoforms.map(i => i.pathogenicLost.length)),
     pathogenicAtInterface: gene.pathogenic.filter(p => interfaceResidues.has(p))
       .length,
+    pathogenicInterfaceLost: Math.max(
+      ...isoforms.map(
+        i => i.pathogenicLost.filter(p => interfaceResidues.has(p)).length,
+      ),
+    ),
     interfaceLost: isoforms.filter(i =>
       Object.values(i.interfaceLost).some(
         ([lostCount = 0, total = 0]) => lostCount >= MOST * total,
@@ -417,6 +422,7 @@ export function isoformTotals(
     interfaceLost: number
     pathogenicLost: number
     pathogenicAtInterface: number
+    pathogenicInterfaceLost: number
   }[],
 ) {
   return {
@@ -426,6 +432,9 @@ export function isoformTotals(
     genesLackingPathogenic: rows.filter(row => row.pathogenicLost > 0).length,
     genesPathogenicAtInterface: rows.filter(
       row => row.pathogenicAtInterface > 0,
+    ).length,
+    genesLackingPathogenicInterface: rows.filter(
+      row => row.pathogenicInterfaceLost > 0,
     ).length,
   }
 }

@@ -57,13 +57,15 @@ describe('isoformTotals', () => {
           modelled: 3,
           interfaceLost: 2,
           pathogenicLost: 4,
-          pathogenicAtInterface: 0,
+          pathogenicAtInterface: 2,
+          pathogenicInterfaceLost: 1,
         },
         {
           modelled: 2,
           interfaceLost: 0,
           pathogenicLost: 0,
-          pathogenicAtInterface: 3,
+          pathogenicAtInterface: 0,
+          pathogenicInterfaceLost: 0,
         },
       ]),
     ).toEqual({
@@ -72,6 +74,7 @@ describe('isoformTotals', () => {
       lackingInterface: 2,
       genesLackingPathogenic: 1,
       genesPathogenicAtInterface: 1,
+      genesLackingPathogenicInterface: 1,
     })
   })
 })

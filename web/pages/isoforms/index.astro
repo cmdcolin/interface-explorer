@@ -37,6 +37,12 @@ const table = sortableTable({
       sort: r => r.pathogenicAtInterface,
     },
     {
+      label: 'Pathogenic interface sites absent',
+      num: true,
+      cell: r => r.pathogenicInterfaceLost,
+      sort: r => r.pathogenicInterfaceLost,
+    },
+    {
       label: 'Isoforms lacking half or more of an interface',
       num: true,
       cell: r => r.interfaceLost,

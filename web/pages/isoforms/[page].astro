@@ -39,6 +39,9 @@ const pathogenicText =
       ? `${pathogenic.atInterface.length} of the ${sitesText} ${pathogenic.atInterface.length === 1 ? 'is a predicted interface residue' : 'are predicted interface residues'}: ${atInterfaceText}.`
       : `None of the ${sitesText} is a predicted interface residue. The sites lie at ${span(pathogenic.siteSpan)}${unconfidentText}; the predicted interfaces lie at ${span(pathogenic.interfaceSpan)}.`
 
+const interfaceResidues = new Set(Object.values(record.interfaces).flat())
+const atInterface = (positions: number[]) => positions.filter(p => interfaceResidues.has(p)).length
+
 function interfaceLossCell(interfaceLost: Isoform['interfaceLost']) {
   const entries = Object.entries(interfaceLost)
   const most = entries.filter(([, [lost, total]]) => lost >= total / 2).length
@@ -58,7 +61,7 @@ const rows = record.isoforms
       <td class="wide">${i.edits.map(e => esc(editText(e))).join('; ')}</td>
       <td class="num">${i.foldedChanged}</td>
       <td class="num">${i.unfolded}</td>
-      <td>${i.pathogenicLost.length ? `<details data-guide="pathogenic"><summary>${i.pathogenicLost.length}</summary>${i.pathogenicChanges.map(esc).join(', ')}</details>` : '0'}</td>
+      <td>${i.pathogenicLost.length ? `<details data-guide="pathogenic"><summary>${i.pathogenicLost.length}${atInterface(i.pathogenicLost) ? `, ${atInterface(i.pathogenicLost)} at an interface` : ''}</summary>${i.pathogenicChanges.map(esc).join(', ')}</details>` : '0'}</td>
       <td>${interfaceLossCell(i.interfaceLost)}</td>
       <td class="nowrap">${i.refseq[0] ? `<a href="https://www.ncbi.nlm.nih.gov/nuccore/${esc(i.refseq[0])}">${esc(i.refseq[0])}</a>${i.refseq.length > 1 ? ` <span class="muted" title="${esc(i.refseq.slice(1).join(', '))}">+${i.refseq.length - 1}</span>` : ''}` : '—'}</td>
       <td class="nowrap"><a href="${sessionUrl(isoformSpec(record, i.refseq[0], [{ url: i.cif }, { url: canonical.cif }]), JBROWSE)}">3D vs canonical</a> · <a href="https://alphafold.ebi.ac.uk/entry/${esc(i.model)}">AFDB</a></td>

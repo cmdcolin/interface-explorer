@@ -166,6 +166,7 @@ export interface IsoformRow {
   unfolded: number
   pathogenicLost: number
   pathogenicAtInterface: number
+  pathogenicInterfaceLost: number
   interfaceLost: number
 }
 
@@ -181,6 +182,7 @@ export interface IsoformTotals {
   lackingInterface: number
   genesLackingPathogenic: number
   genesPathogenicAtInterface: number
+  genesLackingPathogenicInterface: number
 }
 
 export interface Edit {
