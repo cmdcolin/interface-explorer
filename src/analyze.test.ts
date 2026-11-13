@@ -5,6 +5,7 @@ import {
   armProteins,
   bands,
   byEvidence,
+  byFunction,
   byMetric,
   byRegion,
   interfaceScore,
@@ -261,4 +262,23 @@ test('a protein with no variant at the interface is not informative', () => {
       'proteins informative'
     ],
   ).toBe(1)
+})
+
+test('functions with enough informative proteins get an odds ratio each', () => {
+  const proteins = Array.from({ length: 15 }, (_, i) => ({
+    ...PROTEIN,
+    accession: `P${i}`,
+  }))
+  const result = byFunction(
+    proteins,
+    new Map([
+      ...proteins.map(
+        p => [p.accession, ['Kinase']] satisfies [string, string[]],
+      ),
+      ['P0', ['Kinase', 'Ion channel']],
+    ]),
+  )
+  expect(Object.keys(result)).toEqual(['Kinase'])
+  expect(result.Kinase?.['proteins informative']).toBe(15)
+  expect(result.Kinase?.genes.length).toBe(5)
 })

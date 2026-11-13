@@ -21,6 +21,8 @@ export const [pn, pd] = share('pathogenic at interface')
 export const [bn, bd] = share('benign at interface')
 export const r = s.regions.regions
 export const total = label => Object.values(r).reduce((n, x) => n + x[label], 0)
+export const functions = Object.entries(e.byFunction)
+export const family = ([name, row]) => `${name} (${odds(row).toFixed(1)})`
 export const regionShare = (name, label) => percent(r[name][label], total(label))
 
 ## Where pathogenic variants sit
@@ -88,6 +90,20 @@ The rows check the obvious confounders:
   ([Bergquist et al. 2025](https://doi.org/10.1016/j.gim.2025.101402)) the
   difference is small or absent, so the interface adds little to a predictor that
   already scores these residues.
+
+## By kind of protein
+
+Grouped by UniProt molecular-function keyword, the odds ratio is highest for
+{functions.slice(0, 4).map(family).join(', ')} and lowest for
+{functions.slice(-2).map(family).join(' and ')}. Each group holds only a few
+dozen proteins and most of their intervals overlap, so treat these as places
+to start browsing. Among ion channels, for example:{' '}
+{e.byFunction['Ion channel']?.genes.slice(0, 3).map(([gene], i) => (
+  <>
+    {i ? ', ' : ''}
+    <a href={href(`gene/${gene}/`)}>{gene}</a>
+  </>
+))}.
 
 Earlier work has made the same comparison; the
 [comparison](../../comparison/) page lists it.

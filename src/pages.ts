@@ -570,6 +570,7 @@ async function main() {
       byKind: analysis.by_kind,
       byMechanism: analysis.by_mechanism,
       byPairEvidence: analysis.by_pair_evidence,
+      byFunction: analysis.by_function,
     },
     conservation: {
       variants: conservation.variants,

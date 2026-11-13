@@ -27,7 +27,7 @@ import {
   seededRandom,
 } from './numeric.ts'
 import { OUT } from './paths.ts'
-import { SITE_TYPES, diseaseFeatures } from './uniprot.ts'
+import { SITE_TYPES, diseaseFeatures, diseaseFunctions } from './uniprot.ts'
 import type { Feature } from './uniprot.ts'
 import { readVariants } from './variants.ts'
 import type { Variant } from './variants.ts'
@@ -43,6 +43,8 @@ export const SURFACE = 0.2
 const EXAMPLES = 25
 const SUMMARY_LABELS: Label[] = ['pathogenic', 'benign', 'uncertain']
 const REGION_GENES = 12
+const FUNCTION_PROTEINS = 15
+const FUNCTION_GENES = 5
 
 type Metric = (typeof METRIC)[keyof typeof METRIC]
 export type Score = (complex: Interface, protein: AtlasProtein) => number
@@ -374,6 +376,47 @@ export function byRegion(
   }
 }
 
+function pathogenicAtInterface(protein: ProteinVariants) {
+  const best = interfaceScore(protein, byMetric('ipsae'))
+  return protein.variants.filter(
+    v => v.label === 'pathogenic' && (best.get(v.position) ?? 0) >= CONFIDENT,
+  ).length
+}
+
+export function byFunction(
+  proteins: ProteinVariants[],
+  functions: Map<string, string[]>,
+) {
+  const names = [
+    ...new Set(proteins.flatMap(p => functions.get(p.accession) ?? [])),
+  ]
+  return Object.fromEntries(
+    names
+      .map(name => {
+        const members = proteins.filter(p =>
+          functions.get(p.accession)?.includes(name),
+        )
+        return [
+          name,
+          {
+            ...enrichment(tables(members, byMetric('ipsae'), CONFIDENT_BAND)),
+            genes: members
+              .map((p): [string, number] => [p.gene, pathogenicAtInterface(p)])
+              .filter(([, n]) => n > 0)
+              .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
+              .slice(0, FUNCTION_GENES),
+          },
+        ] as const
+      })
+      .filter(([, e]) => e['proteins informative'] >= FUNCTION_PROTEINS)
+      .sort(
+        (a, b) =>
+          b[1]['Mantel–Haenszel odds ratio'] -
+          a[1]['Mantel–Haenszel odds ratio'],
+      ),
+  )
+}
+
 function confidentPartners(protein: AtlasProtein, position: number) {
   return [
     ...new Set(
@@ -443,6 +486,7 @@ export async function main() {
       'uncertain variants at a confident interface': uncertain.length,
     },
     by_region: byRegion(withComplex, await diseaseFeatures()),
+    by_function: byFunction(withComplex, await diseaseFunctions()),
     controlled_for_order_and_surface: Object.fromEntries(
       Object.entries(CONTROLS).map(([name, keep]) => [
         name,

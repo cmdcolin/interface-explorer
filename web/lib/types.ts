@@ -122,6 +122,7 @@ export interface Summary {
     byKind: Record<string, Record<string, Enrichment>>
     byMechanism: Record<string, Record<string, Enrichment>>
     byPairEvidence: Record<string, Enrichment>
+    byFunction: Record<string, Enrichment & { genes: [string, number][] }>
   }
   conservation: {
     variants: {

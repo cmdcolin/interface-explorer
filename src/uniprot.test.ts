@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { contextOf, featuresOf } from './uniprot.ts'
+import { contextOf, featuresOf, molecularFunctionsOf } from './uniprot.ts'
 
 test('features keep the drawn types and their ranges', () => {
   expect(
@@ -59,4 +59,15 @@ test('a protein context reads its family and subcellular locations', () => {
     family: 'class-II aminoacyl-tRNA synthetase family',
     locations: ['Cytoplasm, cytosol'],
   })
+})
+
+test('molecular functions keep only that keyword category', () => {
+  expect(
+    molecularFunctionsOf({
+      keywords: [
+        { category: 'Molecular function', name: 'Ion channel' },
+        { category: 'Disease', name: 'Epilepsy' },
+      ],
+    }),
+  ).toEqual(['Ion channel'])
 })

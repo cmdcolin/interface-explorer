@@ -52,6 +52,19 @@ Across all 5,350 UniProt disease proteins.
   ipSAE 0.7–0.8, 2.3× (95% CI 1.9–3.0), 330 proteins;
   ipSAE 0.8–0.9, 2.2× (95% CI 1.8–2.7), 326 proteins;
   ipSAE ≥ 0.9, 1.8× (95% CI 1.3–2.6), 91 proteins.
+- By kind of protein the odds ratio varies, but each group is small. Grouped
+  by UniProt molecular-function keyword, with at least 15 informative proteins
+  each, it is highest for
+  Growth factor, 8.7× (95% CI 4.3–29.9), 17 proteins (GDF5, GPI, TYMP);
+  Chaperone, 4.9× (95% CI 1.7–14.7), 15 proteins (HSPB8, BAG3, MMAA);
+  Ion channel, 4.5× (95% CI 1.6–10.3), 25 proteins (KCNB1, CHRNE, KCNJ10);
+  Receptor, 3.3× (95% CI 1.9–5.8), 42 proteins (CHRNE, FGFR3, ITGB3);
+  and lowest for
+  Glycosyltransferase, 0.9× (95% CI 0.3–3.7), 21 proteins (HPRT1, APRT, PIGA);
+  RNA-binding, 0.9× (95% CI 0.3–2.0), 18 proteins (DKC1, LSM7, SRP54).
+  Most intervals overlap the overall 2.2× (95% CI 1.9–2.6). The keywords are loose
+  groupings: one protein can carry several, and a keyword can take in proteins
+  better known for another role.
 - Not every pair has an experiment behind it. IntAct or BioGRID report
   1,162 of the 3,462 pairs binding directly and 947 only in the same
   complex; for the other 1,353 the prediction is the only evidence.

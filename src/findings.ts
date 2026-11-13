@@ -150,6 +150,12 @@ export function findings(
     placed.reduce((n, x) => n + x['at a UniProt site'][label], 0)
   const shares = (name: keyof typeof r) =>
     `${pct(r[name].pathogenic, total('pathogenic'))} of pathogenic, ${pct(r[name].benign, total('benign'))} of benign`
+  const functions = Object.entries(e.byFunction)
+  const family = ([name, row]: (typeof functions)[number]) =>
+    `${name}, ${odds(row)} (${row.genes
+      .slice(0, 3)
+      .map(([gene]) => gene)
+      .join(', ')})`
   const buriedInterface =
     s.regions['interface residues the single chain buries']
   const exposedGenes = s.regions['exposed surface genes']
@@ -204,6 +210,21 @@ Across all ${int(s.proteins)} UniProt disease proteins.
   copies share gives ${homo ? odds(homo) : '—'}.
 - It holds in every confidence band. Against residues at no interface:
 ${bands.map(([name, band]) => `  ${name}, ${odds(band)}`).join(';\n')}.
+- By kind of protein the odds ratio varies, but each group is small. Grouped
+  by UniProt molecular-function keyword, with at least ${Math.min(...functions.map(([, row]) => row['proteins informative']))} informative proteins
+  each, it is highest for
+${functions
+  .slice(0, 4)
+  .map(f => `  ${family(f)}`)
+  .join(';\n')};
+  and lowest for
+${functions
+  .slice(-2)
+  .map(f => `  ${family(f)}`)
+  .join(';\n')}.
+  Most intervals overlap the overall ${ratio(e.all)}. The keywords are loose
+  groupings: one protein can carry several, and a keyword can take in proteins
+  better known for another role.
 - Not every pair has an experiment behind it. IntAct or BioGRID report
   ${int(s.pairs.direct)} of the ${int(s.pairs.all)} pairs binding directly and ${int(s.pairs.complex)} only in the same
   complex; for the other ${int(s.pairs.all - s.pairs.direct - s.pairs.complex)} the prediction is the only evidence.

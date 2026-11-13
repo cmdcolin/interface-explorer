@@ -13,7 +13,7 @@ export type UniProtEntry = Record<string, unknown>
 const DISEASE_QUERY = 'organism_id:9606 AND reviewed:true AND cc_disease:*'
 
 const FEATURE_FIELDS =
-  'accession,ft_domain,ft_repeat,ft_zn_fing,ft_motif,ft_region,ft_coiled,ft_binding,ft_act_site,ft_site'
+  'accession,ft_domain,ft_repeat,ft_zn_fing,ft_motif,ft_region,ft_coiled,ft_binding,ft_act_site,ft_site,keyword'
 
 export const FEATURE_TYPES = [
   'Domain',
@@ -81,13 +81,31 @@ export function featuresOf(entry: UniProtEntry) {
   })
 }
 
-export async function diseaseFeatures() {
-  const entries = await uniprotEntries(
+export function molecularFunctionsOf(entry: UniProtEntry) {
+  return records(entry.keywords).flatMap(keyword => {
+    const name = text(keyword.name)
+    return keyword.category === 'Molecular function' && name ? [name] : []
+  })
+}
+
+function diseaseAnnotations() {
+  return uniprotEntries(
     DISEASE_QUERY,
     join(DATA, 'uniprot_disease_annotations.json'),
     FEATURE_FIELDS,
   )
+}
+
+export async function diseaseFeatures() {
+  const entries = await diseaseAnnotations()
   return new Map(entries.map(entry => [accessionOf(entry), featuresOf(entry)]))
+}
+
+export async function diseaseFunctions() {
+  const entries = await diseaseAnnotations()
+  return new Map(
+    entries.map(entry => [accessionOf(entry), molecularFunctionsOf(entry)]),
+  )
 }
 
 export function diseasesOf(entry: UniProtEntry) {
