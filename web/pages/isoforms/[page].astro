@@ -70,7 +70,9 @@ const rows = record.isoforms
   </div>
   <h2>Isoforms on the canonical sequence</h2>
   <p class="muted">
-    Each row places an isoform's residues at the canonical positions they share, colored by that isoform's own model.
+    Each row places an isoform's residues at the canonical positions they share. Blue ticks are partner interface
+    residues the isoform keeps, and each circle on the right fills with the share of that partner's interface the
+    isoform keeps. No isoform was modelled with its partners, so a full circle is not evidence that it binds.
   </p>
   <Fragment set:html={isoformMap(record)} />
   <h2>How each isoform differs</h2>

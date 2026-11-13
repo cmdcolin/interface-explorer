@@ -12,6 +12,7 @@ const MAP_PARTNERS = 12
 const LANE = 13
 const CHARACTER_WIDTH = 6
 const ALIKE = 0.8
+const FOLDED = 70
 
 const FEATURE_ROWS = [
   { label: 'Domains', types: ['Domain', 'Repeat', 'Zinc finger', 'Motif'] },
@@ -252,20 +253,6 @@ export function proteinMap(gene: Gene) {
     </div>`
 }
 
-const PLDDT_BANDS: [number, string, string][] = [
-  [90, 'var(--plddt-very-high)', 'very high (≥ 90)'],
-  [70, 'var(--plddt-confident)', 'confident (70–90)'],
-  [50, 'var(--plddt-low)', 'low (50–70)'],
-  [0, 'var(--plddt-very-low)', 'very low (< 50)'],
-]
-
-function plddtColor(score: number | undefined) {
-  return (
-    PLDDT_BANDS.find(([min]) => (score ?? 0) >= min)?.[1] ??
-    'var(--plddt-very-low)'
-  )
-}
-
 function residueBands(runs: [number, number][]) {
   return runs.flatMap(([band, length]) => Array<number>(length).fill(band))
 }
@@ -283,13 +270,32 @@ export function editText(edit: Edit) {
       : `${range} replaced by ${edit.replacement.length} aa`
 }
 
+function keptShare(x: number, y: number, radius: number, share: number) {
+  const angle = 2 * Math.PI * share
+  const endX = x + radius * Math.sin(angle)
+  const endY = y - radius * Math.cos(angle)
+  return share >= 1
+    ? `<circle class="kept" cx="${x}" cy="${y}" r="${radius}" />`
+    : share > 0
+      ? `<path class="kept" d="M${x} ${y}V${y - radius}A${radius} ${radius} 0 ${share > 0.5 ? 1 : 0} 1 ${endX.toFixed(2)} ${endY.toFixed(2)}z" />`
+      : ''
+}
+
 export function isoformMap(record: IsoformRecord) {
-  const width = 1000
+  const mapWidth = 1000
   const left = 110
   const rowHeight = 22
+  const column = 24
+  const partners = Object.entries(record.interfaces)
+  const headLabel = (partner: string) => partnerLabel({ gene: partner, homodimer: partner === record.gene })
+  const interfaceResidues = [...new Set(partners.flatMap(([, positions]) => positions))].sort((a, b) => a - b)
+  const headerHeight = partners.length
+    ? Math.max(...partners.map(([partner]) => headLabel(partner).length)) * 4.6 + 14
+    : 0
+  const width = mapWidth + (partners.length ? 16 + partners.length * column + headerHeight : 0)
   const scale = (x: number) =>
-    left + ((x - 1) / Math.max(record.length - 1, 1)) * (width - left - 20)
-  const step = (width - left - 20) / record.length
+    left + ((x - 1) / Math.max(record.length - 1, 1)) * (mapWidth - left - 20)
+  const step = (mapWidth - left - 20) / record.length
   const rows = [
     {
       label: 'Canonical',
@@ -297,6 +303,7 @@ export function isoformMap(record: IsoformRecord) {
       plddt: residueBands(record.canonical.plddt),
       segments: [[1, 1, record.length]],
       edits: [],
+      interfaceLost: Object.fromEntries<[number, number]>([]),
     },
     ...record.isoforms.map(i => ({
       label: i.accession,
@@ -304,34 +311,40 @@ export function isoformMap(record: IsoformRecord) {
       plddt: residueBands(i.plddt),
       segments: i.segments,
       edits: i.edits,
+      interfaceLost: i.interfaceLost,
     })),
   ]
+  const kept = (row: (typeof rows)[number]) =>
+    new Set(
+      row.segments.flatMap(([, canonicalStart = 1, length = 0]) =>
+        Array.from({ length }, (_, k) => canonicalStart + k),
+      ),
+    )
   const bars = (row: (typeof rows)[number], y: number) => {
-    const runs: { start: number; end: number; color: string }[] = []
+    const runs: { start: number; end: number; folded: boolean }[] = []
     for (const [isoStart = 1, canonicalStart = 1, length = 0] of row.segments) {
       for (let k = 0; k < length; k++) {
-        const color = plddtColor(row.plddt[isoStart - 1 + k])
+        const folded = (row.plddt[isoStart - 1 + k] ?? 0) >= FOLDED
         const last = runs.at(-1)
-        if (
-          last &&
-          last.color === color &&
-          last.end === canonicalStart + k - 1
-        ) {
+        if (last && last.folded === folded && last.end === canonicalStart + k - 1) {
           last.end += 1
         } else {
-          runs.push({
-            start: canonicalStart + k,
-            end: canonicalStart + k,
-            color,
-          })
+          runs.push({ start: canonicalStart + k, end: canonicalStart + k, folded })
         }
       }
     }
     return runs
       .map(
         r =>
-          `<rect x="${scale(r.start) - step / 2}" y="${y}" width="${(r.end - r.start + 1) * step}" height="12" fill="${r.color}" />`,
+          `<rect class="${r.folded ? 'folded' : 'loose'}" x="${scale(r.start) - step / 2}" y="${y}" width="${(r.end - r.start + 1) * step}" height="12" />`,
       )
+      .join('')
+  }
+  const interfaceTicks = (row: (typeof rows)[number], y: number) => {
+    const present = kept(row)
+    return interfaceResidues
+      .filter(x => present.has(x))
+      .map(x => `<rect class="interface-tick" x="${scale(x) - 1}" y="${y + 3}" width="2.5" height="6" />`)
       .join('')
   }
   const replaced = (row: (typeof rows)[number], y: number) =>
@@ -341,6 +354,14 @@ export function isoformMap(record: IsoformRecord) {
         e =>
           `<rect class="replaced" x="${scale(e.start) - step / 2}" y="${y - 2}" width="${(e.end - e.start + 1) * step}" height="16"><title>${esc(editText(e))}: ${esc(e.replacement)}</title></rect>`,
       )
+      .join('')
+  const dots = (row: (typeof rows)[number], y: number) =>
+    partners
+      .map(([partner, positions], index) => {
+        const [lost = 0, total = positions.length] = row.interfaceLost[partner] ?? []
+        const x = mapWidth + 16 + index * column + column / 2
+        return `<g class="partner-dot" data-guide="${esc(partnerKey(partner))}"><title>${esc(row.label)} keeps ${total - lost} of ${total} ${esc(headLabel(partner))} interface residues</title><circle class="dot-ring" cx="${x}" cy="${y + 6}" r="7" />${keptShare(x, y + 6, 7, (total - lost) / total)}</g>`
+      })
       .join('')
   const marks = [
     {
@@ -355,7 +376,7 @@ export function isoformMap(record: IsoformRecord) {
       key: 'interface',
       label: 'Partner interface',
       hint: 'partner interface',
-      positions: [...new Set(Object.values(record.interfaces).flat())].sort((a, b) => a - b),
+      positions: interfaceResidues,
       color: 'var(--interface)',
       title: 'predicted interface residue',
     },
@@ -367,22 +388,29 @@ export function isoformMap(record: IsoformRecord) {
           `<rect x="${scale(x) - 1}" y="${y}" width="2.5" height="9" fill="${m.color}"><title>${m.title} ${x}</title></rect>`,
       )
       .join('')
-  const top = marks.length * 17 + 8
+  const top = Math.max(marks.length * 17 + 8, headerHeight)
   const height = top + rows.length * rowHeight + 24
   const axisY = top + rows.length * rowHeight + 4
+  const headers = partners
+    .map(([partner], index) => {
+      const x = mapWidth + 16 + index * column + column / 2
+      return `<g class="map-row partner-head" data-guide="${esc(partnerKey(partner))}"><rect class="row-hit" x="${x - column / 2}" y="0" width="${column}" height="${height - 24}" /><text class="row-label" transform="translate(${x + 3} ${top - 8}) rotate(-45)">${esc(headLabel(partner))}</text></g>`
+    })
+    .join('')
   return `
-    <div class="map-wrap"><svg class="map" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(record.gene)} isoforms aligned to the canonical protein, colored by AlphaFold pLDDT">
-      ${marks.map((m, index) => `<g class="map-row" data-guide="${m.key}"><rect class="row-hit" x="0" y="${index * 17 - 3}" width="${width}" height="15" /><text class="row-label" x="0" y="${index * 17 + 9}">${m.label}</text>${ticks(m, index * 17)}</g>`).join('')}
+    <div class="map-wrap"><svg class="map" style="min-width:${Math.round(width * 0.76)}px" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(record.gene)} isoforms aligned to the canonical protein, with the share of each partner's interface residues each isoform keeps">
+      ${marks.map((m, index) => `<g class="map-row" data-guide="${m.key}"><rect class="row-hit" x="0" y="${index * 17 - 3}" width="${mapWidth}" height="15" /><text class="row-label" x="0" y="${index * 17 + 9}">${m.label}</text>${ticks(m, index * 17)}</g>`).join('')}
+      ${headers}
       ${rows
         .map((row, index) => {
           const y = top + index * rowHeight
-          return `<g class="map-row" data-isoform="${esc(row.isoform)}"><rect class="row-hit" x="0" y="${y - 4}" width="${width}" height="${rowHeight - 2}" /><text class="row-label" x="0" y="${y + 10}">${esc(row.label)}</text>
+          return `<g class="map-row" data-isoform="${esc(row.isoform)}"><rect class="row-hit" x="0" y="${y - 4}" width="${mapWidth}" height="${rowHeight - 2}" /><text class="row-label" x="0" y="${y + 10}">${esc(row.label)}</text>
             <line class="baseline" x1="${scale(1)}" x2="${scale(record.length)}" y1="${y + 6}" y2="${y + 6}" />
-            ${bars(row, y)}${replaced(row, y)}</g>`
+            ${bars(row, y)}${interfaceTicks(row, y)}${replaced(row, y)}${dots(row, y)}</g>`
         })
         .join('')}
       ${marks.map(m => guide(m.key, m.positions, scale, axisY)).join('')}
-      ${Object.entries(record.interfaces).map(([partner, positions]) => guide(partnerKey(partner), positions, scale, axisY)).join('')}
+      ${partners.map(([partner, positions]) => guide(partnerKey(partner), positions, scale, axisY)).join('')}
       <line class="axis" x1="${scale(1)}" x2="${scale(record.length)}" y1="${axisY}" y2="${axisY}" />
       ${axisLabels(record.length)
         .map(
@@ -392,10 +420,13 @@ export function isoformMap(record: IsoformRecord) {
         .join('')}
     </svg></div>
     <div class="legend">
-      ${PLDDT_BANDS.map(([, color, label]) => `<span><span class="swatch" style="background:${color}"></span>pLDDT ${label}</span>`).join('')}
-      <span><span class="swatch replaced-swatch"></span>replaced in the isoform</span>
+      <span><span class="swatch folded-swatch"></span>folded (pLDDT ≥ ${FOLDED})</span>
+      <span><span class="swatch loose-swatch"></span>pLDDT &lt; ${FOLDED}</span>
       <span>gap: missing from the isoform</span>
-      ${marks.length ? `<span class="muted">Hover ${marks.map(m => `<span class="hover-hint" data-guide="${m.key}">${m.hint}</span>`).join(' or ')} to run its residues down every isoform.</span>` : ''}
+      <span><span class="swatch replaced-swatch"></span>replaced in the isoform</span>
+      ${interfaceResidues.length ? `<span><span class="swatch" style="background:var(--interface)"></span>interface residue the isoform keeps</span>` : ''}
+      ${partners.length ? `<span><span class="dot-swatch"></span>share of a partner's interface residues kept</span>` : ''}
+      ${marks.length ? `<span class="muted">Hover ${[...marks.map(m => `<span class="hover-hint" data-guide="${m.key}">${m.hint}</span>`), ...(partners.length ? ['a partner'] : [])].join(' or ')} to run its residues down every isoform.</span>` : ''}
     </div>`
 }
 

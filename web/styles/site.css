@@ -15,10 +15,6 @@
   --diagram-protein: #f4b9a4;
   --partner: #3f9b78;
   --chip-text: #ffffff;
-  --plddt-very-high: #0053d6;
-  --plddt-confident: #65cbf3;
-  --plddt-low: #ffdb13;
-  --plddt-very-low: #ff7d45;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -472,6 +468,51 @@ details.more summary {
   stroke: var(--text);
   stroke-width: 1.5;
   stroke-dasharray: 3 2;
+}
+
+.map .folded {
+  fill: var(--chain);
+}
+
+.map .loose {
+  fill: var(--border);
+}
+
+.map .interface-tick {
+  fill: var(--interface);
+}
+
+.map .dot-ring {
+  fill: var(--surface);
+  stroke: var(--interface);
+  stroke-width: 1.5;
+}
+
+.map .kept {
+  fill: var(--interface);
+}
+
+.map .partner-dot.lit .dot-ring {
+  stroke-width: 2.5;
+}
+
+.folded-swatch {
+  background: var(--chain);
+}
+
+.loose-swatch {
+  background: var(--border);
+}
+
+.dot-swatch {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  margin-right: 4px;
+  vertical-align: -1px;
+  border-radius: 50%;
+  border: 1.5px solid var(--interface);
+  background: linear-gradient(90deg, var(--surface) 50%, var(--interface) 50%);
 }
 
 .replaced-swatch {
