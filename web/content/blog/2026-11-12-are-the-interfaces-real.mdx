@@ -1,5 +1,5 @@
 ---
-title: 'How the predicted interfaces compare with experiment'
+title: 'Predicted interfaces match the PDB, including structures solved after AlphaFold was trained'
 date: '2026-11-12'
 order: 3
 description: 'Where the PDB holds both proteins, the predicted interface covers most of the experimental one, including for pairs solved after AlphaFold was trained.'
@@ -16,18 +16,20 @@ export const unseen = s.validation.unseen
 export const share = x => `${Math.round(100 * x)}%`
 export const rom1 = gene('PRPH2').partners.find(p => p.gene === 'ROM1')
 
-Every interface in the explorer is a prediction. Here is how they compare with
-experimental structures where those exist; for the rest,
-[conservation and gnomAD](../2026-11-13-evolution-and-people/) are checks that
-need no structure.
+Every interface in the explorer is a prediction. To check one, we look for a
+PDB entry that holds both proteins, list the residues that touch the partner in
+that structure, and count how many of them the prediction also names. Pairs
+without a structure can still be checked against
+[conservation and gnomAD](../2026-11-13-evolution-and-people/).
 
 ## Experimental structures
 
 For {all.pairs.toLocaleString()} predicted pairs the PDB holds a structure of
 both proteins, and in {all.touching.toLocaleString()} of them the two touch.
 There the prediction covers a median **{share(all.recall)}** of the
-experimental interface, and {share(all.precision)} of the predicted residues
-the structure resolves are in it.
+experimental interface. In the other direction, {share(all.precision)} of the
+predicted residues that the structure resolves are in the experimental
+interface.
 
 AlphaFold was trained on the PDB, so the {unseen.touching.toLocaleString()}
 pairs with no structure deposited by {s.validation.cutoff}, its training
