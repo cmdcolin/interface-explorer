@@ -25,8 +25,8 @@ import {
 import type { PatchRank } from './conservation.ts'
 import { readComparisons, validation } from './experimental.ts'
 import type { Comparison } from './experimental.ts'
-import { SURFACE } from './analyze.ts'
-import type { ScoredVariant } from './analyze.ts'
+import { SURFACE, regionOf } from './analyze.ts'
+import type { Region, ScoredVariant } from './analyze.ts'
 import {
   CONFIDENT,
   CONTACT,
@@ -235,12 +235,31 @@ export function geneRecord(
     ),
     classified: variants.length,
     totals: labelCounts(variants),
+    pathogenicElsewhere: pathogenicByRegion(protein, variants, atResidue),
     interfaceResidues: atResidue.size,
     counts: labelCounts(atInterface),
   }
 }
 
 export type GenePage = ReturnType<typeof geneRecord> & { page: string }
+
+export function pathogenicByRegion(
+  protein: AtlasProtein,
+  variants: Variant[],
+  atResidue: Map<number, string[]>,
+) {
+  const regions = variants
+    .filter(v => v.label === 'pathogenic')
+    .map(v =>
+      regionOf(protein.context[String(v.position)], atResidue.has(v.position)),
+    )
+  const count = (region: Region) => regions.filter(r => r === region).length
+  return {
+    buried: count('buried core'),
+    surface: count('exposed surface'),
+    lowConfidence: count('low confidence'),
+  }
+}
 
 export function leads(gene: ReturnType<typeof geneRecord>) {
   const pathogenic = gene.variants.filter(v => v.label === 'pathogenic')

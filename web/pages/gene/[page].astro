@@ -79,6 +79,7 @@ const rows = gene.variants
     </tr>`
   })
   .join('')
+const elsewhere = gene.pathogenicElsewhere
 ---
 
 <Layout title={gene.gene} description={description} nav="genes">
@@ -91,6 +92,15 @@ const rows = gene.variants
     (ipSAE ≥ {thresholds.ipsae}, residue pLDDT ≥ {thresholds.plddt}, within {thresholds.contact} Å of the partner).
     They hold {gene.counts.pathogenic} of its {gene.totals.pathogenic} pathogenic missense variants{share(gene.counts.pathogenic, gene.totals.pathogenic)}
     and {gene.counts.benign} of its {gene.totals.benign} benign ones{share(gene.counts.benign, gene.totals.benign)}.
+    {
+      elsewhere.buried + elsewhere.surface + elsewhere.lowConfidence > 0 && (
+        <>
+          Of the other pathogenic ones, {elsewhere.buried} sit in the buried core, {elsewhere.surface} elsewhere on the
+          folded surface and {elsewhere.lowConfidence} where AlphaFold is not confident (pLDDT &lt; {thresholds.plddt});
+          <a href="https://www.ebi.ac.uk/ProtVar/">ProtVar</a> gives a predicted stability effect for each.
+        </>
+      )
+    }
   </p>
   <div class="actions">
     <a class="button primary" href={genomeUrl(gene.chrom, gene.start - pad, gene.end + pad, JBROWSE)}>View on the genome</a>

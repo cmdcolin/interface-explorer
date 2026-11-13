@@ -7,6 +7,7 @@ import {
   distinctPairs,
   geneRecord,
   leads,
+  pathogenicByRegion,
   runs,
 } from './pages.ts'
 
@@ -523,4 +524,47 @@ is_a: MONDO:0000010
     },
   ])
   expect(pages.find(d => d.id === 'MONDO:0000011')?.pairs).toEqual([])
+})
+
+test('pathogenic variants away from an interface are placed by the single-chain model', () => {
+  const variant = (position: number, label: 'pathogenic' | 'benign') => ({
+    position,
+    label,
+    change: `A${position}V`,
+    variation: position,
+    review: '',
+    chrom: '1',
+    pos: position,
+    allele: 'C>T',
+    conditions: [],
+    diseases: [],
+  })
+  const protein = {
+    accession: 'P00001',
+    gene: 'GENE',
+    length: 100,
+    complexes: 1,
+    hetero: 1,
+    homo: 0,
+    interfaces: [],
+    context: {
+      '1': [90, 0.1],
+      '2': [90, 0.5],
+      '3': [40, 0.5],
+      '4': [90, 0.1],
+    } satisfies Record<string, [number, number]>,
+  }
+  expect(
+    pathogenicByRegion(
+      protein,
+      [
+        variant(1, 'pathogenic'),
+        variant(2, 'pathogenic'),
+        variant(3, 'pathogenic'),
+        variant(4, 'pathogenic'),
+        variant(5, 'benign'),
+      ],
+      new Map([[4, ['PARTNER']]]),
+    ),
+  ).toEqual({ buried: 1, surface: 1, lowConfidence: 1 })
 })
