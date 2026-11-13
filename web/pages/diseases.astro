@@ -12,8 +12,8 @@ const table = sortableTable({
   rows: diseases,
   sortBy: 3,
   noun: 'diseases',
-  placeholder: 'Filter diseases',
-  search: d => [d.name, d.id],
+  placeholder: 'Filter diseases or genes',
+  search: d => [d.name, d.id, ...d.causal],
   columns: [
     {
       label: 'Disease',

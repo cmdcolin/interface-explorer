@@ -4,12 +4,6 @@ export interface CloudWord {
   group: boolean
 }
 
-export interface PlacedWord extends CloudWord {
-  x: number
-  y: number
-  size: number
-}
-
 interface Box {
   left: number
   right: number
@@ -17,20 +11,27 @@ interface Box {
   bottom: number
 }
 
-const GLYPH_WIDTH = 0.55
+const GLYPH_WIDTH = 0.58
 const PADDING = 4
 
 const overlaps = (a: Box, b: Box) =>
   a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
 
-function spiral(step: number) {
-  const angle = step * 0.35
-  const radius = 1.6 * angle
-  return { dx: radius * Math.cos(angle) * 1.8, dy: radius * Math.sin(angle) }
+const STRETCH = 1.8
+const STEP = 4
+
+function spiral(width: number, height: number) {
+  const reach = Math.hypot(width / 2 / STRETCH, height / 2)
+  const points: { dx: number; dy: number }[] = []
+  for (let angle = 0; 1.6 * angle <= reach; angle += Math.min(0.35, STEP / (1.6 * angle * STRETCH || 1))) {
+    const radius = 1.6 * angle
+    points.push({ dx: radius * Math.cos(angle) * STRETCH, dy: radius * Math.sin(angle) })
+  }
+  return points
 }
 
-export function wordCloud(
-  words: CloudWord[],
+export function wordCloud<T extends CloudWord>(
+  words: T[],
   width: number,
   height: number,
   minSize: number,
@@ -40,6 +41,7 @@ export function wordCloud(
   const lightest = Math.min(...words.map(w => w.weight))
   const span = Math.sqrt(heaviest) - Math.sqrt(lightest) || 1
   const taken: Box[] = []
+  const points = spiral(width, height)
   return words
     .toSorted((a, b) => b.weight - a.weight)
     .flatMap(word => {
@@ -49,27 +51,25 @@ export function wordCloud(
           (maxSize - minSize)
       const halfWidth = (word.text.length * size * GLYPH_WIDTH) / 2 + PADDING
       const halfHeight = size / 2 + PADDING
-      for (let step = 0; step < 4000; step += 1) {
-        const { dx, dy } = spiral(step)
-        const x = width / 2 + dx
-        const y = height / 2 + dy
-        const box = {
-          left: x - halfWidth,
-          right: x + halfWidth,
-          top: y - halfHeight,
-          bottom: y + halfHeight,
-        }
-        const fits =
+      const boxAt = ({ dx, dy }: { dx: number; dy: number }) => ({
+        left: width / 2 + dx - halfWidth,
+        right: width / 2 + dx + halfWidth,
+        top: height / 2 + dy - halfHeight,
+        bottom: height / 2 + dy + halfHeight,
+      })
+      const spot = points.find(point => {
+        const box = boxAt(point)
+        return (
           box.left >= 0 &&
           box.right <= width &&
           box.top >= 0 &&
           box.bottom <= height &&
           !taken.some(other => overlaps(box, other))
-        if (fits) {
-          taken.push(box)
-          return [{ ...word, x, y, size }]
-        }
+        )
+      })
+      if (spot) {
+        taken.push(boxAt(spot))
       }
-      return []
+      return spot ? [{ ...word, x: width / 2 + spot.dx, y: height / 2 + spot.dy, size }] : []
     })
 }

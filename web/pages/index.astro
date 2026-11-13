@@ -3,7 +3,8 @@ import { Image } from 'astro:assets'
 
 import Layout from '../layouts/Layout.astro'
 import { geneScatter, odds, shareFigure } from '../lib/charts.ts'
-import { gene, geneRows, summary } from '../lib/data.ts'
+import { diseaseRows, gene, geneRows, summary } from '../lib/data.ts'
+import { diseaseClouds } from '../lib/disease-cloud.ts'
 import { interfaceDiagram } from '../lib/interface-diagram.ts'
 import { percent } from '../lib/html.ts'
 import { posts } from '../lib/posts.ts'
@@ -11,6 +12,7 @@ import { href } from '../lib/site.ts'
 
 const s = summary()
 const genes = geneRows()
+const diseases = diseaseRows()
 const vhl = gene('VHL')
 const shown = vhl.variants.find(v => v.label === 'pathogenic')
 const shownPartner = shown && vhl.partners.find(p => shown.partners.includes(p.gene))
@@ -79,6 +81,20 @@ const tiles = [
     </div>
   </section>
 
+  <section class="disease-explorer">
+    <h2>Explore by disease</h2>
+    <p class="lede">
+      Each name is sized by its pathogenic ClinVar variants at a predicted interface. Blue ones have two causal genes
+      predicted to bind each other. Click one, or search all {diseases.length.toLocaleString()} diseases by name or gene.
+    </p>
+    <form class="disease-search" role="search" action={href('diseases/')} data-index={href('data/diseases.json')} data-base={href('disease/')}>
+      <input type="search" name="q" placeholder="A disease or gene, e.g. Noonan or KRAS" aria-label="Search diseases by name or gene" autocomplete="off" />
+    </form>
+    <ol class="disease-results" hidden></ol>
+    <Fragment set:html={diseaseClouds(diseases)} />
+    <p><a href={href('diseases/')}>Every disease in a table</a></p>
+  </section>
+
   <section>
     <figure class="tour">
       <div class="tour-frame">
@@ -131,4 +147,5 @@ const tiles = [
 
 <script>
   import '../scripts/home.ts'
+  import '../scripts/disease-search.ts'
 </script>

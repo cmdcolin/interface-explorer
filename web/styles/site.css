@@ -1256,3 +1256,66 @@ h3 {
   font-size: 14px;
   margin-top: 8px;
 }
+
+.disease-search input[type="search"] {
+  width: min(100%, 420px);
+}
+
+.disease-results {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-width: 760px;
+}
+
+.disease-results li {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.disease-results .more {
+  border-bottom: none;
+}
+
+.disease-cloud {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 16px 0 8px;
+}
+
+.disease-cloud text {
+  fill: var(--text-2);
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: central;
+  transition: opacity 0.15s;
+}
+
+.disease-cloud text.paired {
+  fill: var(--interface);
+}
+
+.disease-cloud a:hover text,
+.disease-cloud a:focus-visible text,
+.disease-cloud a.match text {
+  text-decoration: underline;
+}
+
+.disease-cloud a.dim text {
+  opacity: 0.15;
+}
+
+.disease-cloud.narrow {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .disease-cloud.wide {
+    display: none;
+  }
+
+  .disease-cloud.narrow {
+    display: block;
+  }
+}
