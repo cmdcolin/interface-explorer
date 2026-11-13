@@ -985,6 +985,17 @@ h3 {
   border: 1px solid var(--partner);
 }
 
+.map .feature.site rect,
+.feature-swatch.site {
+  fill: var(--text);
+  stroke: var(--text);
+}
+
+.feature-swatch.site {
+  background: var(--text);
+  border: 1px solid var(--text);
+}
+
 .map .feature text {
   font-size: 9.5px;
   fill: var(--text);

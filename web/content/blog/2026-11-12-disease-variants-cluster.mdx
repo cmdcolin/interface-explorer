@@ -2,7 +2,7 @@
 title: 'Pathogenic variants at predicted interfaces'
 date: '2026-11-12'
 order: 1
-description: 'Within the same protein, pathogenic ClinVar missense variants sit at a predicted interface more often than benign ones. One figure and the checks behind it.'
+description: 'Where pathogenic ClinVar missense variants fall in proteins with a predicted complex: mostly in the buried core, and at an interface more often than benign ones. Two figures and the checks behind them.'
 hero: './heroes/disease-variants-cluster.jpg'
 heroAlt: 'The genome browser at VHL codon 80, a pathogenic variant on the predicted interface with elongin C, beside the predicted complex with serine 80 highlighted'
 ---
@@ -19,9 +19,43 @@ export const v = s.variantsAtInterface
 export const share = key => e.all[key].split('/').map(Number)
 export const [pn, pd] = share('pathogenic at interface')
 export const [bn, bd] = share('benign at interface')
+export const r = s.regions.regions
+export const total = label => Object.values(r).reduce((n, x) => n + x[label], 0)
+export const regionShare = (name, label) => percent(r[name][label], total(label))
 
-We compared where ClinVar missense variants fall in disease proteins that have
-a confident AlphaFold DB complex. {percent(pn, pd)} of pathogenic variants
+## Where pathogenic variants sit
+
+Most pathogenic missense variants in these proteins are not at an interface.
+Placed by each protein's single-chain AlphaFold model,
+{regionShare('buried core', 'pathogenic')} of pathogenic variants sit in the
+buried core, against {regionShare('buried core', 'benign')} of benign ones. The
+interface holds {regionShare('interface', 'pathogenic')} of pathogenic variants;
+the rest of the folded surface {regionShare('exposed surface', 'pathogenic')};
+residues the model is not confident about (pLDDT below
+{s.thresholds.plddt}) {regionShare('low confidence', 'pathogenic')}.
+
+<figure class="plot">
+  <img
+    src={href('figures/regions.svg')}
+    width="800"
+    height="260"
+    alt="Stacked bars: pathogenic variants mostly in the buried core, benign ones mostly on the surface and in residues the model is not confident about"
+  />
+  <figcaption>
+    ClinVar missense variants in disease proteins with a predicted complex,
+    by where their residue sits.
+  </figcaption>
+</figure>
+
+A buried residue has less than {percent(s.thresholds.surface, 1)} of its
+surface exposed in the single-chain model. Variants there can change how the
+protein folds; [ProtVar](https://www.ebi.ac.uk/ProtVar/) gives a predicted
+stability effect for each one. The rest of this post is about the interface share.
+
+## At the interface
+
+To compare each protein with itself, we kept the proteins that have both
+pathogenic and benign variants. {percent(pn, pd)} of pathogenic variants
 ({pn.toLocaleString()} of {pd.toLocaleString()}) sit at a predicted interface,
 against {percent(bn, bd)} of benign ones ({bn.toLocaleString()} of
 {bd.toLocaleString()}). Compared within each protein, that is an odds ratio of

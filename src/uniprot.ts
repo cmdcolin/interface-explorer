@@ -13,7 +13,7 @@ export type UniProtEntry = Record<string, unknown>
 const DISEASE_QUERY = 'organism_id:9606 AND reviewed:true AND cc_disease:*'
 
 const FEATURE_FIELDS =
-  'accession,ft_domain,ft_repeat,ft_zn_fing,ft_motif,ft_region,ft_coiled'
+  'accession,ft_domain,ft_repeat,ft_zn_fing,ft_motif,ft_region,ft_coiled,ft_binding,ft_act_site,ft_site'
 
 export const FEATURE_TYPES = [
   'Domain',
@@ -22,7 +22,12 @@ export const FEATURE_TYPES = [
   'Motif',
   'Region',
   'Coiled coil',
+  'Binding site',
+  'Active site',
+  'Site',
 ] as const
+
+export const SITE_TYPES: FeatureType[] = ['Binding site', 'Active site', 'Site']
 
 export type FeatureType = (typeof FEATURE_TYPES)[number]
 
@@ -66,7 +71,10 @@ export function featuresOf(entry: UniProtEntry) {
             type,
             start,
             end,
-            description: text(feature.description) ?? '',
+            description:
+              text(feature.description) ||
+              text(record(feature.ligand).name) ||
+              '',
           } satisfies Feature,
         ]
       : []
@@ -76,7 +84,7 @@ export function featuresOf(entry: UniProtEntry) {
 export async function diseaseFeatures() {
   const entries = await uniprotEntries(
     DISEASE_QUERY,
-    join(DATA, 'uniprot_disease_features.json'),
+    join(DATA, 'uniprot_disease_annotations.json'),
     FEATURE_FIELDS,
   )
   return new Map(entries.map(entry => [accessionOf(entry), featuresOf(entry)]))

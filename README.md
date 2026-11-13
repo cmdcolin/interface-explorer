@@ -4,9 +4,11 @@ A browser of predicted protein–protein interfaces in human disease genes. For
 every human disease gene with an AlphaFold DB predicted complex, it shows which
 codons sit at the interface, which ClinVar missense variants fall there, and
 how each alternative isoform's predicted structure differs from the canonical
-one, in 3D and on the genome. Agreement with deposited PDB structures, and the
-variant statistics, describe the predicted interfaces; the explorer is for
-browsing them.
+one, in 3D and on the genome. Most pathogenic missense variants sit in the
+buried core rather than at an interface; the findings place every variant by
+region, and the protein maps mark UniProt's binding and active sites.
+Agreement with deposited PDB structures, and the variant statistics, describe
+the predicted interfaces; the explorer is for browsing them.
 
 **[Open the explorer](https://cmdcolin.github.io/interface-explorer/)**
 

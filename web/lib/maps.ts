@@ -14,9 +14,12 @@ const CHARACTER_WIDTH = 6
 const ALIKE = 0.8
 const FOLDED = 70
 
+const SITES = ['Binding site', 'Active site', 'Site']
+
 const FEATURE_ROWS = [
   { label: 'Domains', types: ['Domain', 'Repeat', 'Zinc finger', 'Motif'] },
   { label: 'Regions', types: ['Region', 'Coiled coil'] },
+  { label: 'Sites', types: SITES },
 ]
 
 export function isBindingRegion(feature: Feature) {
@@ -24,13 +27,15 @@ export function isBindingRegion(feature: Feature) {
 }
 
 function featureKind(feature: Feature) {
-  return feature.description === 'Disordered'
-    ? 'disordered'
-    : isBindingRegion(feature)
-      ? 'binding'
-      : feature.type === 'Region' || feature.type === 'Coiled coil'
-        ? 'region'
-        : 'domain'
+  return SITES.includes(feature.type)
+    ? 'site'
+    : feature.description === 'Disordered'
+      ? 'disordered'
+      : isBindingRegion(feature)
+        ? 'binding'
+        : feature.type === 'Region' || feature.type === 'Coiled coil'
+          ? 'region'
+          : 'domain'
 }
 
 function featureName(feature: Feature) {
@@ -86,9 +91,17 @@ export function partnerKey(gene: string) {
   return `partner:${gene}`
 }
 
-function guide(key: string, positions: number[], scale: (x: number) => number, bottom: number) {
+function guide(
+  key: string,
+  positions: number[],
+  scale: (x: number) => number,
+  bottom: number,
+) {
   const width = Math.max(scale(2) - scale(1), 2)
-  const bars = positions.map(p => `M${(scale(p) - width / 2).toFixed(2)} 0h${width.toFixed(2)}v${bottom}h-${width.toFixed(2)}z`)
+  const bars = positions.map(
+    p =>
+      `M${(scale(p) - width / 2).toFixed(2)} 0h${width.toFixed(2)}v${bottom}h-${width.toFixed(2)}z`,
+  )
   return `<path class="guide" data-for="${esc(key)}" d="${bars.join('')}" />`
 }
 
@@ -96,13 +109,24 @@ export function partnerLabel(partner: { gene: string; homodimer?: boolean }) {
   return partner.homodimer ? 'itself' : partner.gene
 }
 
-export function partnerGroups(partners: { gene: string; runs: string; variants: number; homodimer?: boolean }[]) {
+export function partnerGroups(
+  partners: {
+    gene: string
+    runs: string
+    variants: number
+    homodimer?: boolean
+  }[],
+) {
   const groups: { members: typeof partners; residues: Set<number> }[] = []
   for (const partner of partners) {
     const residues = new Set(partnerResidues(partner))
     const alike = partner.homodimer
       ? undefined
-      : groups.find(g => !g.members.some(m => m.homodimer) && overlap(g.residues, residues) >= ALIKE)
+      : groups.find(
+          g =>
+            !g.members.some(m => m.homodimer) &&
+            overlap(g.residues, residues) >= ALIKE,
+        )
     if (alike) {
       alike.members.push(partner)
     } else {
@@ -111,7 +135,11 @@ export function partnerGroups(partners: { gene: string; runs: string; variants: 
   }
   return groups.map(g => {
     const members = g.members.toSorted((a, b) => b.variants - a.variants)
-    return { names: members.map(p => p.gene), labels: members.map(partnerLabel), residues: g.residues }
+    return {
+      names: members.map(p => p.gene),
+      labels: members.map(partnerLabel),
+      residues: g.residues,
+    }
   })
 }
 
@@ -248,7 +276,8 @@ export function proteinMap(gene: Gene) {
     </svg></div>
     <div class="legend">
       <span><span class="swatch" style="background:var(--interface)"></span>interface residue, one row per partner, or per group of partners with nearly the same interface residues; hover a row to draw its residues as columns through the variant rows</span>
-      ${gene.features.length ? `<span><span class="swatch feature-swatch binding"></span>UniProt interaction or binding region</span>` : ''}
+      ${gene.features.some(f => featureKind(f) === 'binding') ? `<span><span class="swatch feature-swatch binding"></span>UniProt interaction or binding region</span>` : ''}
+      ${gene.features.some(f => featureKind(f) === 'site') ? `<span><span class="swatch feature-swatch site"></span>UniProt binding or active site</span>` : ''}
       ${LABEL_KEYS.map(label => `<span><span class="swatch" style="background:var(--${label})"></span>${LABELS[label].toLowerCase()} variant</span>`).join('')}
     </div>`
 }
@@ -287,12 +316,19 @@ export function isoformMap(record: IsoformRecord) {
   const rowHeight = 22
   const column = 24
   const partners = Object.entries(record.interfaces)
-  const headLabel = (partner: string) => partnerLabel({ gene: partner, homodimer: partner === record.gene })
-  const interfaceResidues = [...new Set(partners.flatMap(([, positions]) => positions))].sort((a, b) => a - b)
+  const headLabel = (partner: string) =>
+    partnerLabel({ gene: partner, homodimer: partner === record.gene })
+  const interfaceResidues = [
+    ...new Set(partners.flatMap(([, positions]) => positions)),
+  ].sort((a, b) => a - b)
   const headerHeight = partners.length
-    ? Math.max(...partners.map(([partner]) => headLabel(partner).length)) * 4.6 + 14
+    ? Math.max(...partners.map(([partner]) => headLabel(partner).length)) *
+        4.6 +
+      14
     : 0
-  const width = mapWidth + (partners.length ? 16 + partners.length * column + headerHeight : 0)
+  const width =
+    mapWidth +
+    (partners.length ? 16 + partners.length * column + headerHeight : 0)
   const scale = (x: number) =>
     left + ((x - 1) / Math.max(record.length - 1, 1)) * (mapWidth - left - 20)
   const step = (mapWidth - left - 20) / record.length
@@ -326,10 +362,18 @@ export function isoformMap(record: IsoformRecord) {
       for (let k = 0; k < length; k++) {
         const folded = (row.plddt[isoStart - 1 + k] ?? 0) >= FOLDED
         const last = runs.at(-1)
-        if (last && last.folded === folded && last.end === canonicalStart + k - 1) {
+        if (
+          last &&
+          last.folded === folded &&
+          last.end === canonicalStart + k - 1
+        ) {
           last.end += 1
         } else {
-          runs.push({ start: canonicalStart + k, end: canonicalStart + k, folded })
+          runs.push({
+            start: canonicalStart + k,
+            end: canonicalStart + k,
+            folded,
+          })
         }
       }
     }
@@ -344,7 +388,10 @@ export function isoformMap(record: IsoformRecord) {
     const present = kept(row)
     return interfaceResidues
       .filter(x => present.has(x))
-      .map(x => `<rect class="interface-tick" x="${scale(x) - 1}" y="${y + 3}" width="2.5" height="6" />`)
+      .map(
+        x =>
+          `<rect class="interface-tick" x="${scale(x) - 1}" y="${y + 3}" width="2.5" height="6" />`,
+      )
       .join('')
   }
   const replaced = (row: (typeof rows)[number], y: number) =>
@@ -358,7 +405,8 @@ export function isoformMap(record: IsoformRecord) {
   const dots = (row: (typeof rows)[number], y: number) =>
     partners
       .map(([partner, positions], index) => {
-        const [lost = 0, total = positions.length] = row.interfaceLost[partner] ?? []
+        const [lost = 0, total = positions.length] =
+          row.interfaceLost[partner] ?? []
         const x = mapWidth + 16 + index * column + column / 2
         return `<g class="partner-dot" data-guide="${esc(partnerKey(partner))}"><title>${esc(row.label)} keeps ${total - lost} of ${total} ${esc(headLabel(partner))} interface residues</title><circle class="dot-ring" cx="${x}" cy="${y + 6}" r="7" />${keptShare(x, y + 6, 7, (total - lost) / total)}</g>`
       })

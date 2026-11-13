@@ -42,8 +42,9 @@
   `interface_variants.bb`.
 - `pnpm pages`: `site/data/summary.json`, `genes.json`, `leads.json`,
   `genes/<GENE>.json`, `diseases.json` and `diseases/<MONDO_ID>.json`, with
-  each disease protein's UniProt domains and regions (cached in
-  `data/uniprot_disease_features.json`), each protein's UniProt diseases
+  each disease protein's UniProt domains, regions and binding, active and
+  other sites (cached in
+  `data/uniprot_disease_annotations.json`), each protein's UniProt diseases
   (cached in `data/uniprot_human_diseases.json`), the MONDO ontology (cached in
   `data/mondo.obo.gz`) and which chain of each AlphaFold DB complex is the
   gene's.

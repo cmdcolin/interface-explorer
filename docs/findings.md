@@ -11,9 +11,26 @@ Across all 5,350 UniProt disease proteins.
   0.6 in both directions (the lower of chain A → B and B → A), mean pLDDT ≥
   70 and few backbone clashes ([Han et al. 2026](https://research.nvidia.com/labs/dbr/assets/data/manuscripts/afdb.html);
   ipSAE: [Dunbrack 2025](https://doi.org/10.1101/2025.02.10.637595)).
+- Most pathogenic missense in these proteins is not at an interface. Placing
+  19,713 pathogenic and 12,102 benign variants by the complexes and by
+  each protein's single-chain AlphaFold model:
+  - buried core: 56% of pathogenic, 19% of benign
+  - interface: 19% of pathogenic, 9% of benign
+  - the rest of the folded surface: 19% of pathogenic, 37% of benign
+  - not confidently modelled (pLDDT < 70): 7% of pathogenic, 36% of benign
+
+  UniProt's curated binding, active and other sites hold 1,109 pathogenic and
+  48 benign variants across all four. The folded surface away from any
+  interface holds 3,648 pathogenic variants in 712 genes, the most in
+  PAH (139), GLA (78), ACTA1 (71), GCDH (61), G6PD (52), HBB (50), TTR (48), TUBA1A (43), EDA (41), PSEN1 (41), PTEN (41), ABCD1 (39). Several of these form
+  tetramers, filaments or other assemblies larger than the two chains
+  AlphaFold DB models, so some of those residues may sit at an interface the
+  atlas does not have. For predicted effects on folding stability,
+  [ProtVar](https://www.ebi.ac.uk/ProtVar/) gives FoldX estimates for each
+  variant ([Jänes et al. 2024](https://doi.org/10.1101/2024.05.29.596373)).
 - Within each protein, pathogenic missense variants sit at a predicted
   interface 2.2× (95% CI 1.9–2.6) as often as benign ones (Mantel–Haenszel odds ratio,
-  1,155 proteins with both). This confirms earlier work rather than
+  838 proteins with variants at an interface). This confirms earlier work rather than
   being new: [Burke et al. 2023](https://doi.org/10.1038/s41594-022-00910-8)
   found 2.3-fold on AlphaFold2 models of HuRI and hu.MAP pairs, and
   [Wang et al. 2012](https://doi.org/10.1038/nbt.2106),
@@ -21,43 +38,45 @@ Across all 5,350 UniProt disease proteins.
   [David & Sternberg 2015](https://doi.org/10.1016/j.jmb.2015.07.004) showed it
   on experimental interfaces and in the lab. The controls below are what this
   adds. Counting only folded, surface-exposed residues, it is
-  3.3× (95% CI 2.7–3.9), 720 proteins, so the effect is not just "folded vs disordered".
-- Folded residues alone give 1.6× (95% CI 1.4–1.9), 1,035 proteins: the buried core is rich in
-  pathogenic variants and is not an interface, which is why the surface
-  comparison is the fair one.
+  3.3× (95% CI 2.7–3.9), 539 proteins, so the effect is not just "folded vs disordered".
+- Folded residues alone give 1.6× (95% CI 1.4–1.9), 758 proteins: the buried core is rich in
+  pathogenic variants and mostly not at an interface, so the surface
+  comparison sets it aside. That also sets aside the interface residues the
+  single chain buries, which hold 1,260 pathogenic variants to
+  173 benign.
 - It holds for both kinds of complex. On the folded surface, interfaces with
-  other proteins give 3.2× (95% CI 2.6–4.0), 720 proteins, and the interface a homodimer's two
-  copies share gives 3.2× (95% CI 2.5–4.1), 720 proteins.
-- The signal does not depend on confidence. Against residues at no interface:
-  ipSAE 0.6–0.7, 2.5× (95% CI 1.6–3.9), 1,097 proteins;
-  ipSAE 0.7–0.8, 2.3× (95% CI 1.9–3.0), 1,115 proteins;
-  ipSAE 0.8–0.9, 2.2× (95% CI 1.8–2.7), 1,105 proteins;
-  ipSAE ≥ 0.9, 1.8× (95% CI 1.3–2.6), 1,083 proteins.
+  other proteins give 3.2× (95% CI 2.6–4.0), 399 proteins, and the interface a homodimer's two
+  copies share gives 3.2× (95% CI 2.5–4.1), 228 proteins.
+- It holds in every confidence band. Against residues at no interface:
+  ipSAE 0.6–0.7, 2.5× (95% CI 1.6–3.9), 189 proteins;
+  ipSAE 0.7–0.8, 2.3× (95% CI 1.9–3.0), 330 proteins;
+  ipSAE 0.8–0.9, 2.2× (95% CI 1.8–2.7), 326 proteins;
+  ipSAE ≥ 0.9, 1.8× (95% CI 1.3–2.6), 91 proteins.
 - Not every pair has an experiment behind it. IntAct or BioGRID report
   1,162 of the 3,462 pairs binding directly and 947 only in the same
   complex; for the other 1,353 the prediction is the only evidence.
   Against residues at no interface, the interfaces of pairs that
-  neither IntAct nor BioGRID reports, 1.9× (95% CI 1.5–2.4), 1,094 proteins;
-  IntAct or BioGRID report only in the same complex, 2.2× (95% CI 1.8–2.9), 1,108 proteins;
-  IntAct or BioGRID report binding directly, 2.4× (95% CI 1.9–3.0), 1,116 proteins.
+  neither IntAct nor BioGRID reports, 1.9× (95% CI 1.5–2.4), 267 proteins;
+  IntAct or BioGRID report only in the same complex, 2.2× (95% CI 1.8–2.9), 268 proteins;
+  IntAct or BioGRID report binding directly, 2.4× (95% CI 1.9–3.0), 407 proteins.
 - The interface adds little beyond AlphaMissense. Within AlphaMissense's
   evidence bands, as calibrated for clinical use by Bergquist et al. 2025
   ([Genet Med 27:101402](https://doi.org/10.1016/j.gim.2025.101402)):
-  BP4 (≤ 0.169), 1.4× (95% CI 1.0–1.9), 374 proteins;
-  indeterminate, 1.0× (95% CI 0.8–1.3), 539 proteins;
-  PP3 (≥ 0.792), 1.5× (95% CI 1.0–2.3), 226 proteins.
+  BP4 (≤ 0.169), 1.4× (95% CI 1.0–1.9), 165 proteins;
+  indeterminate, 1.0× (95% CI 0.8–1.3), 283 proteins;
+  PP3 (≥ 0.792), 1.5× (95% CI 1.0–2.3), 134 proteins.
 - Inheritance does not change what the interface marks. Over all residues
   the effect looks larger for variants of dominant diseases,
-  3.5× (95% CI 2.3–5.7), 196 proteins, than of recessive ones,
-  1.5× (95% CI 1.2–1.9), 424 proteins, as it would if dominant missense acted
+  3.5× (95% CI 2.3–5.7), 124 proteins, than of recessive ones,
+  1.5× (95% CI 1.2–1.9), 265 proteins, as it would if dominant missense acted
   through binding and recessive missense through the fold. On the folded
-  surface they match: 2.5× (95% CI 1.6–4.2), 110 proteins against
-  3.2× (95% CI 2.4–4.5), 219 proteins. The gap closes once the buried core is set aside, so it
-  reflects where in the fold the variants fall rather than the interface, and
-  position and inheritance alone give no mechanism hint. Genes with no pathogenic
-  truncating variant in ClinVar give 2.5× (95% CI 1.5–4.1), 107 proteins on
+  surface the two overlap: 2.5× (95% CI 1.6–4.2), 76 proteins against
+  3.2× (95% CI 2.4–4.5), 161 proteins. Most of the gap goes once the buried core is set aside,
+  so it reflects where in the fold the variants fall; the surface intervals
+  are too wide to rule out a smaller difference there. Genes with no pathogenic
+  truncating variant in ClinVar give 2.5× (95% CI 1.5–4.1), 73 proteins on
   the folded surface, and those with at least two give
-  3.3× (95% CI 2.7–4.0), 545 proteins. Inheritance is HPO's, through
+  3.3× (95% CI 2.7–4.0), 419 proteins. Inheritance is HPO's, through
   each variant's OMIM diseases.
 - Conservation explains only part of it. Of the variants classified pathogenic
   or benign, 89% are pathogenic in the top quarter of 100-way vertebrate
@@ -86,7 +105,9 @@ Across all 5,350 UniProt disease proteins.
   of the other folded surface (Mantel–Haenszel, 1,634 proteins), and
   0.90, 0.94, 0.92, 0.93 from the lowest ipSAE band to the highest. The
   synonymous variants at the same residues control for mutation rate and
-  coverage. The effect is small, since the rest of the surface is also
+  coverage, but not for the residues' make-up: interface and surface differ in
+  amino acids, and so in what share of each codon's changes are missense. The
+  effect is small, since the rest of the surface is also
   constrained. It comes mostly from dominant genes, 0.87× (95% CI 0.84–0.91)
   (342 proteins), against 0.96× (95% CI 0.94–0.98)
   for recessive ones (821), though phyloP marks the
@@ -111,7 +132,9 @@ Across all 5,350 UniProt disease proteins.
   predicted residues the structure resolves are in it. For the 229 pairs with
   no structure deposited by AlphaFold's training cutoff (2021-09-30),
   it is 88% and 82%. Most of the 67 that do not touch are
-  subunits of rings and large assemblies that are not neighbours.
+  subunits of rings and large assemblies that are not neighbours. Pairs with
+  a deposited structure lean towards stable, well-studied complexes, so the
+  agreement may be lower for pairs that are only predicted.
 - 99.0% of the interface variants' genomic positions fall inside
   their gene's interface codons, an independent check of the residue → codon
   mapping. The rest belong to CALM1, GRIA3, H3-3A, H3C1, H4C1, HBA1, KCTD1, PGAP2, SLC39A14, TUBA3D; several of
@@ -126,8 +149,10 @@ Across all 5,350 UniProt disease proteins.
 - The complexes and isoform models are predictions. A low isoform pLDDT where
   the canonical model is confident hints that the isoform does not keep that
   part folded; it is not a measurement.
-- A variant at an interface may matter for folding, for another partner or not
-  at all.
+- The interface is every residue within 5 Å of the partner, so it takes in
+  the rim and residues partly buried in the protein itself; interface and core
+  overlap. A variant at an interface may matter for folding, for another
+  partner or not at all.
 - 17 disease genes with a confident complex are left out because the EBI
   Proteins API gives no primary-assembly coding coordinates that match their
   length.

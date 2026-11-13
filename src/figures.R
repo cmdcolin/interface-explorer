@@ -158,3 +158,37 @@ save(
   "inheritance",
   3.8
 )
+
+region_names <- c(
+  "buried core" = "Buried core",
+  "interface" = "Interface",
+  "exposed surface" = "Rest of the folded surface",
+  "low confidence" = sprintf("Not confidently modelled (pLDDT < %s)", summary$thresholds$plddt)
+)
+region_colours <- setNames(c("#5b5a56", interface_colour, "#c9c7c0", "#ecebe6"), region_names)
+placed <- do.call(rbind, lapply(c(pathogenic = "Pathogenic", benign = "Benign"), function(label) {
+  counts <- vapply(names(region_names), function(r) summary$regions$regions[[r]][[tolower(label)]], numeric(1))
+  data.frame(
+    label = factor(label, levels = c("Benign", "Pathogenic")),
+    region = factor(region_names, levels = rev(region_names)),
+    share = counts / sum(counts)
+  )
+}))
+
+save(
+  ggplot(placed, aes(share, label, fill = region)) +
+    geom_col(width = 0.6, colour = "white", linewidth = 0.4) +
+    geom_text(
+      aes(label = ifelse(share >= 0.06, percent_label(share), "")),
+      position = position_stack(vjust = 0.5),
+      colour = ifelse(placed$region %in% region_names[1:2], "white", "grey15"),
+      size = 4
+    ) +
+    scale_fill_manual(values = region_colours, breaks = unname(region_names)) +
+    scale_x_continuous(labels = percent_label, expand = c(0, 0)) +
+    labs(x = "Share of ClinVar missense variants in proteins with a predicted complex", y = NULL) +
+    guides(fill = guide_legend(nrow = 2)) +
+    theme(plot.margin = margin(5, 20, 5, 5)),
+  "regions",
+  2.6
+)

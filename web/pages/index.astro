@@ -17,6 +17,11 @@ const vhl = gene('VHL')
 const shown = vhl.variants.find(v => v.label === 'pathogenic')
 const shownPartner = shown && vhl.partners.find(p => shown.partners.includes(p.gene))
 const all = await posts()
+const regions = s.regions.regions
+const regionTotal = (label: 'pathogenic' | 'benign') =>
+  Object.values(regions).reduce((n, region) => n + region[label], 0)
+const pathogenicShare = (region: keyof typeof regions) =>
+  percent(regions[region].pathogenic, regionTotal('pathogenic'))
 const tiles = [
   [s.withPartner, 'disease genes with a confident predicted complex', href('genes/')],
   [s.partners, 'predicted interfaces, each in 3D and on the genome', href('genes/')],
@@ -73,9 +78,26 @@ const tiles = [
       }
     </div>
     <p>
-      Within the same disease protein, pathogenic variants sit at a predicted interface more often than benign ones (odds
-      ratio {odds(s.enrichment.all).toFixed(1)}; <a href={href('blog/2026-11-12-disease-variants-cluster/')}>how it was
-      measured</a>).
+      <strong>Most pathogenic variants are not at an interface.</strong> In disease proteins with a predicted complex,
+      {pathogenicShare('interface')} of pathogenic missense variants sit at one. {pathogenicShare('buried core')} sit in
+      the buried core of the protein, where they can change how it folds, {pathogenicShare('exposed surface')} elsewhere
+      on its folded surface, and {pathogenicShare('low confidence')} in parts AlphaFold does not model confidently. The
+      explorer covers the interface share.
+    </p>
+    <figure class="plot">
+      <img
+        src={href('figures/regions.svg')}
+        width="800"
+        height="260"
+        loading="lazy"
+        alt="Stacked bars: pathogenic variants mostly in the buried core, benign ones mostly on the surface and in residues the model is not confident about"
+      />
+    </figure>
+    <p>
+      Within the same disease protein, pathogenic variants still sit at a predicted interface more often than benign
+      ones (odds ratio {odds(s.enrichment.all).toFixed(1)}; <a href={href('blog/2026-11-12-disease-variants-cluster/')}
+        >where variants sit and how it was measured</a
+      >).
     </p>
   </section>
 

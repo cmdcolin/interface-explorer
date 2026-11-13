@@ -6,9 +6,12 @@ import {
   bands,
   byEvidence,
   byMetric,
+  byRegion,
   interfaceScore,
   mantelHaenszel,
   mechanismArms,
+  regionOf,
+  stratifiedEnrichment,
   tables,
 } from './analyze.ts'
 import type { ProteinVariants } from './analyze.ts'
@@ -209,4 +212,53 @@ test('a mechanism arm keeps its gene class and its inheritance mode', () => {
   ).toEqual(protein.variants.filter((_, i) => i % 2 === 0).map(v => v.diseases))
   expect(truncating && armProteins([protein], truncating)).toEqual([])
   expect(Object.keys(arms)).toHaveLength(12)
+})
+
+test('a residue is at an interface first, then placed by its single-chain model', () => {
+  expect(regionOf([40, 0.1], true)).toBe('interface')
+  expect(regionOf(undefined, false)).toBe('no single-chain model')
+  expect(regionOf([40, 0.1], false)).toBe('low confidence')
+  expect(regionOf([90, 0.1], false)).toBe('buried core')
+  expect(regionOf([90, 0.5], false)).toBe('exposed surface')
+})
+
+test('regions count each label and the variants at a UniProt site', () => {
+  const protein = {
+    ...PROTEIN,
+    context: {
+      ...PROTEIN.context,
+      '1': [90, 0.1] satisfies [number, number],
+      '4': [90, 0.6] satisfies [number, number],
+    },
+  }
+  const result = byRegion(
+    [protein],
+    new Map([
+      [
+        'P1',
+        [{ type: 'Active site' as const, start: 3, end: 3, description: '' }],
+      ],
+    ]),
+  )
+  expect(result.regions.interface).toEqual({
+    pathogenic: 1,
+    benign: 0,
+    uncertain: 0,
+    'at a UniProt site': { pathogenic: 0, benign: 0, uncertain: 0 },
+  })
+  expect(result.regions['buried core']['at a UniProt site'].benign).toBe(1)
+  expect(result.regions['exposed surface'].benign).toBe(1)
+  expect(result.regions['no single-chain model'].pathogenic).toBe(1)
+  expect(result['exposed surface genes']).toEqual([])
+  expect(result['interface residues the single chain buries'].pathogenic).toBe(
+    1,
+  )
+})
+
+test('a protein with no variant at the interface is not informative', () => {
+  expect(
+    stratifiedEnrichment([[[1, 2, 0, 3]], [[0, 2, 0, 3]]])[
+      'proteins informative'
+    ],
+  ).toBe(1)
 })

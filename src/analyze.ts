@@ -27,6 +27,8 @@ import {
   seededRandom,
 } from './numeric.ts'
 import { OUT } from './paths.ts'
+import { SITE_TYPES, diseaseFeatures } from './uniprot.ts'
+import type { Feature } from './uniprot.ts'
 import { readVariants } from './variants.ts'
 import type { Variant } from './variants.ts'
 
@@ -40,6 +42,7 @@ const BOOTSTRAPS = 2000
 export const SURFACE = 0.2
 const EXAMPLES = 25
 const SUMMARY_LABELS: Label[] = ['pathogenic', 'benign', 'uncertain']
+const REGION_GENES = 12
 
 type Metric = (typeof METRIC)[keyof typeof METRIC]
 export type Score = (complex: Interface, protein: AtlasProtein) => number
@@ -273,12 +276,101 @@ export function stratifiedEnrichment(proteins: Table[][]) {
     [0, 0, 0, 0],
   )
   return {
-    'proteins informative': proteins.length,
+    'proteins informative': proteins.filter(tables =>
+      tables.some(([a, b, c, d]) => a * d + b * c > 0),
+    ).length,
     'pathogenic at interface': `${a}/${a + b}`,
     'benign at interface': `${c}/${c + d}`,
     'Mantel–Haenszel odds ratio': pythonRound(mantelHaenszel(rows), 2),
     '95% CI (bootstrap over proteins)':
       proteins.length > 2 ? bootstrap(proteins) : null,
+  }
+}
+
+export type Region =
+  | 'interface'
+  | 'buried core'
+  | 'exposed surface'
+  | 'low confidence'
+  | 'no single-chain model'
+
+export function regionOf(context: Context, atInterface: boolean): Region {
+  return atInterface
+    ? 'interface'
+    : context === undefined
+      ? 'no single-chain model'
+      : context[0] < MIN_PLDDT
+        ? 'low confidence'
+        : context[1] < SURFACE
+          ? 'buried core'
+          : 'exposed surface'
+}
+
+export function siteResidues(features: Feature[]) {
+  return new Set(
+    features
+      .filter(f => SITE_TYPES.includes(f.type))
+      .flatMap(f =>
+        Array.from({ length: f.end - f.start + 1 }, (_, k) => f.start + k),
+      ),
+  )
+}
+
+export function byRegion(
+  proteins: ProteinVariants[],
+  features: Map<string, Feature[]>,
+) {
+  const placed = proteins.flatMap(protein => {
+    const best = interfaceScore(protein, byMetric('ipsae'))
+    const sites = siteResidues(features.get(protein.accession) ?? [])
+    return protein.variants.map(v => {
+      const context = protein.context[String(v.position)]
+      const atInterface = (best.get(v.position) ?? 0) >= CONFIDENT
+      return {
+        gene: protein.gene,
+        label: v.label,
+        region: regionOf(context, atInterface),
+        buriedInterface:
+          atInterface && regionOf(context, false) === 'buried core',
+        site: sites.has(v.position),
+      }
+    })
+  })
+  const counts = (variants: typeof placed) => {
+    const count = (label: Label) =>
+      variants.filter(v => v.label === label).length
+    return {
+      pathogenic: count('pathogenic'),
+      benign: count('benign'),
+      uncertain: count('uncertain'),
+    }
+  }
+  const tally = (region: Region) => {
+    const inRegion = placed.filter(v => v.region === region)
+    return {
+      ...counts(inRegion),
+      'at a UniProt site': counts(inRegion.filter(v => v.site)),
+    }
+  }
+  const exposed = placed.filter(
+    v => v.region === 'exposed surface' && v.label === 'pathogenic',
+  )
+  return {
+    regions: {
+      interface: tally('interface'),
+      'buried core': tally('buried core'),
+      'exposed surface': tally('exposed surface'),
+      'low confidence': tally('low confidence'),
+      'no single-chain model': tally('no single-chain model'),
+    } satisfies Record<Region, unknown>,
+    'interface residues the single chain buries': counts(
+      placed.filter(v => v.buriedInterface),
+    ),
+    'exposed surface genes': [...Map.groupBy(exposed, v => v.gene)]
+      .map(([gene, variants]): [string, number] => [gene, variants.length])
+      .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
+      .slice(0, REGION_GENES),
+    'exposed surface pathogenic genes': new Set(exposed.map(v => v.gene)).size,
   }
 }
 
@@ -350,6 +442,7 @@ export async function main() {
         ),
       'uncertain variants at a confident interface': uncertain.length,
     },
+    by_region: byRegion(withComplex, await diseaseFeatures()),
     controlled_for_order_and_surface: Object.fromEntries(
       Object.entries(CONTROLS).map(([name, keep]) => [
         name,

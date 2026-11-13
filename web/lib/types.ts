@@ -1,3 +1,4 @@
+import type { byRegion } from '../../src/analyze.ts'
 import type { DiseasePage, GenePage, leads } from '../../src/pages.ts'
 
 export type Label = 'pathogenic' | 'uncertain' | 'benign'
@@ -99,6 +100,7 @@ export interface Summary {
   unmapped: number
   partners: number
   variantsAtInterface: Record<Label, number>
+  regions: ReturnType<typeof byRegion>
   leads: { variants: number; genes: number; sameChange: number; apart: number }
   pairs: {
     apart: number
@@ -142,7 +144,7 @@ export interface Summary {
     byInheritance: Record<Inheritance, PopulationConstraint>
   }
   validation: { cutoff: string; all: Validation; unseen: Validation }
-  thresholds: { ipsae: number; plddt: number; contact: number }
+  thresholds: { ipsae: number; plddt: number; contact: number; surface: number }
   provenance: {
     clinvarDownloaded: string
     intactDownloaded: string

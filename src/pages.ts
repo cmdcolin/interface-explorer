@@ -25,6 +25,7 @@ import {
 import type { PatchRank } from './conservation.ts'
 import { readComparisons, validation } from './experimental.ts'
 import type { Comparison } from './experimental.ts'
+import { SURFACE } from './analyze.ts'
 import type { ScoredVariant } from './analyze.ts'
 import {
   CONFIDENT,
@@ -539,6 +540,7 @@ async function main() {
     unmapped: unmapped.length,
     partners: genes.reduce((n, g) => n + g.partners.length, 0),
     variantsAtInterface: labelCounts(genes.flatMap(g => g.variants)),
+    regions: analysis.by_region,
     leads: {
       variants: shortlist.length,
       genes: new Set(shortlist.map(lead => lead.page)).size,
@@ -579,7 +581,12 @@ async function main() {
     },
     gnomad: readJson(GNOMAD_RESULT),
     validation: validation(comparisons),
-    thresholds: { ipsae: CONFIDENT, plddt: MIN_PLDDT, contact: CONTACT },
+    thresholds: {
+      ipsae: CONFIDENT,
+      plddt: MIN_PLDDT,
+      contact: CONTACT,
+      surface: SURFACE,
+    },
     provenance: {
       clinvarDownloaded: downloaded(),
       ...readSources(),
