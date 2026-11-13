@@ -1,8 +1,8 @@
 ---
-title: 'Predicted interfaces match the PDB, including structures solved after AlphaFold was trained'
+title: 'Predicted interfaces match the PDB, even for structures newer than AlphaFold'
 date: '2026-11-12'
 order: 3
-description: 'Where the PDB holds both proteins, the predicted interface covers most of the experimental one, including for pairs solved after AlphaFold was trained.'
+description: 'Where the PDB holds both proteins, the prediction covers most of the experimental interface, including for pairs solved after AlphaFold was trained.'
 hero: './heroes/are-the-interfaces-real.jpg'
 heroAlt: 'PRPH2 protein map with its predicted interface residues and ClinVar variants, above a histogram of how much of each experimental interface the prediction covers, for all pairs with a structure and for pairs solved after AlphaFold was trained'
 ---
@@ -16,24 +16,21 @@ export const unseen = s.validation.unseen
 export const share = x => `${Math.round(100 * x)}%`
 export const rom1 = gene('PRPH2').partners.find(p => p.gene === 'ROM1')
 
-Every interface in the explorer is a prediction. To check one, we look for a
-PDB entry that holds both proteins, list the residues that touch the partner in
-that structure, and count how many of them the prediction also names. Pairs
-without a structure can still be checked against
-[conservation and gnomAD](../2026-11-13-evolution-and-people/).
+To check a predicted interface, we take a PDB structure holding both proteins
+and count how many of its contact residues the prediction also names. Pairs
+with no structure can be checked against
+[conservation and gnomAD](../2026-11-13-evolution-and-people/) instead.
 
 ## Experimental structures
 
-For {all.pairs.toLocaleString()} predicted pairs the PDB holds a structure of
-both proteins, and in {all.touching.toLocaleString()} of them the two touch.
-There the prediction covers a median **{share(all.recall)}** of the
-experimental interface. In the other direction, {share(all.precision)} of the
-predicted residues that the structure resolves are in the experimental
-interface.
+The PDB holds both proteins for {all.pairs.toLocaleString()} predicted pairs,
+and they touch in {all.touching.toLocaleString()}. There the prediction covers
+a median **{share(all.recall)}** of the experimental interface, and
+{share(all.precision)} of its resolved residues lie in that interface.
 
-AlphaFold was trained on the PDB, so the {unseen.touching.toLocaleString()}
-pairs with no structure deposited by {s.validation.cutoff}, its training
-cutoff, are the fairer test. Their median coverage is {share(unseen.recall)}.
+AlphaFold was trained on the PDB, so the fairer test is the
+{unseen.touching.toLocaleString()} pairs first deposited after its
+{s.validation.cutoff} cutoff. Their median coverage is {share(unseen.recall)}.
 
 <figure class="plot">
   <img
@@ -46,15 +43,15 @@ cutoff, are the fairer test. Their median coverage is {share(unseen.recall)}.
 
 PRPH2 and ROM1 are one such pair: their first structure,{' '}
 <a href={`https://www.rcsb.org/structure/${rom1.experiment.pdb}`}>{rom1.experiment.pdb.toUpperCase()}</a>,
-came after the cutoff. It puts {rom1.experiment.experimental} residues of PRPH2
-against ROM1, and the prediction has {rom1.experiment.shared} of them. Each gene
-page names the structure its partners were checked against.
+came after the cutoff. Of its {rom1.experiment.experimental} PRPH2 residues
+touching ROM1, the prediction has {rom1.experiment.shared}. Each gene page
+names the structure its partners were checked against.
 
 ## Caveats
 
-- One structure is compared per pair: among those covering nearly the most of
-  both proteins, the one with the fewest chains.
+- Each pair is checked against one structure: of those covering nearly the
+  most of both proteins, the one with the fewest chains.
 - {(all.pairs - all.touching).toLocaleString()} pairs share a PDB entry without
   touching, mostly subunits of rings and large assemblies.
-- A pair first deposited after the cutoff can still resemble older structures
+- A pair first deposited after the cutoff may still resemble older structures
   of related proteins.
