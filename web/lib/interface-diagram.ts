@@ -33,7 +33,7 @@ export function interfaceDiagram() {
         <clipPath id="interface-protein"><path d="${protein}" /></clipPath>
       </defs>
       <g clip-path="url(#interface-left)">
-        <path d="${protein}" fill="var(--chain)" />
+        <path d="${protein}" fill="var(--diagram-protein)" />
         <g clip-path="url(#interface-protein)">
           <path d="${seam(-3)}" fill="none" stroke="var(--interface)" stroke-width="34" />
         </g>

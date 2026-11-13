@@ -11,6 +11,7 @@
   --uncertain: #d97a14;
   --benign: #7a7975;
   --chain: #bdb8ab;
+  --diagram-protein: #f4b9a4;
   --partner: #3f9b78;
   --chip-text: #ffffff;
   --plddt-very-high: #0053d6;
@@ -33,6 +34,7 @@
     --uncertain: #e8a046;
     --benign: #a19f98;
     --chain: #77746c;
+    --diagram-protein: #b0644f;
     --partner: #4fb38c;
     --chip-text: #111110;
   }
