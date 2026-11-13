@@ -2,7 +2,7 @@
 title: 'Browse by disease'
 date: '2026-11-12'
 order: 7
-description: 'Each disease now has a page with its genes and their interface variants. Where two predicted partners both cause the disease, the page lists the pair, which points to the interaction a variant might break.'
+description: 'Each disease now has a page with its genes and their variants at predicted interfaces, and the predicted pairs whose two proteins both cause it.'
 hero: './heroes/browse-by-disease.jpg'
 heroAlt: "A word cloud of disease names, sized by how many pathogenic ClinVar variants sit at a predicted interface, with diseases where two predicted partners both cause it in blue"
 ---
@@ -12,13 +12,9 @@ import { href } from '../../lib/site.ts'
 
 export const p = diseasePost()
 
-A missense variant can leave a protein folded and working but unable to bind
-one partner. Different variants in the same gene can then cause different
-diseases, depending on which interaction they break. The explorer shows which
-predicted interface a variant sits on, but on its own that says nothing about
-whether that interface matters for the disease. A useful clue is when the
-partner itself causes the same disease: if either protein's variants give the
-same illness, the interaction between them is a likely place for it to start.
+The explorer shows which predicted interface a variant sits on. The disease
+pages add one more fact to browse by: whether the partner on the other side is
+also listed as causing the same disease.
 
 ## A page per disease
 
@@ -79,8 +75,8 @@ not the same one.
     switches RAS on, are paired by AlphaFold DB with ipSAE {p.noonan.ipsae}, and
     their interface holds {p.noonan.pathogenic} pathogenic and{' '}
     {p.noonan.uncertain} uncertain variants listing a Noonan-series condition.
-    Many RAS variants work by staying switched on rather than by losing SOS1, so
-    the pair says where to look, not what the variant does.{' '}
+    Many RAS variants keep RAS switched on rather than changing how it binds
+    SOS1, so the pair says nothing about what a variant does.{' '}
     <a href={p.noonan.href}>Open KRAS with SOS1</a>.
   </p>
 )}
@@ -99,9 +95,8 @@ several.
 
 - **A series can be broad.** The series with pairs range from{' '}
   {p.smallestSeries} to {p.largestSeries} diseases. A small series like
-  mismatch repair cancer syndrome points to a shared mechanism; a large one,
-  such as immunodeficiency or retinitis pigmentosa, shares a phenotype but not
-  necessarily a pathway. Each link shows the series' size.
+  mismatch repair cancer syndrome is specific; a large one, such as
+  immunodeficiency or retinitis pigmentosa, shares only a phenotype. Each link shows the series' size.
 - **ClinVar lists conditions per variant, not per classification.** A variant
   classified pathogenic for one condition may list others from different
   submissions, so a listed condition is not always the one it was classified

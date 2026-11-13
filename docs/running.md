@@ -52,6 +52,9 @@
   inheritance mode, into `out/mechanism.json` for `pnpm analyze`.
 - `pnpm findings`: regenerates `docs/findings.md` from `site/data/summary.json`,
   `out/gnomad.json` and the interface tracks, so its numbers never go stale.
+- `pnpm figures`: draws the blog's charts with ggplot2 from
+  `site/data/summary.json` into `site/figures/` (needs R with ggplot2 and
+  jsonlite).
 - `pnpm isoforms [workers]`: `site/data/isoforms.json` and
   `isoforms/<GENE>.json`.
 - The pipeline is TypeScript in `src/`, run directly by Node with no build

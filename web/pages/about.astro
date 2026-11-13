@@ -1,7 +1,7 @@
 ---
 import { BP4_SUPPORTING, PP3_SUPPORTING } from '../../src/constants.ts'
 import Layout from '../layouts/Layout.astro'
-import { kindRows, oddsText } from '../lib/charts.ts'
+import { oddsText } from '../lib/charts.ts'
 import { gpcr, summary } from '../lib/data.ts'
 import { percent } from '../lib/html.ts'
 import { href } from '../lib/site.ts'
@@ -37,14 +37,14 @@ const references = [
 <Layout title="About" nav="about">
   <h1>About</h1>
   <p class="lede">
-    An explorer for asking which partner a disease variant might disturb: predicted protein–protein interfaces and the ClinVar variants on them, in 3D and on the genome.
+    A list of predicted protein–protein interfaces in human disease proteins and the ClinVar variants on them, to browse in 3D and on the genome.
   </p>
   <h2>In short</h2>
   <ul>
     <li>{s.proteins.toLocaleString()} human disease proteins, with their AlphaFold DB heterodimer and homodimer predictions.</li>
     <li>Interface residues are matched to ClinVar missense variants, AlphaMissense scores and conservation.</li>
     <li>Pathogenic variants sit at predicted interfaces more often than benign ones, within the same protein.</li>
-    <li>The complexes are predictions, so an interface variant is a lead, not a mechanism.</li>
+    <li>The complexes are predictions; a variant at an interface is not evidence that it changes the binding.</li>
   </ul>
   <h2>Method</h2>
   <ul>
@@ -134,62 +134,15 @@ const references = [
       <strong>Conservation:</strong> mean phyloP over each codon, from UCSC's 100-way vertebrate alignment (multiz100way) bigWig.
     </li>
   </ul>
-  <h2>Does the interface mean anything?</h2>
-  <p>Within each protein, pathogenic missense variants sit at a predicted interface more often than benign ones:</p>
-  <ul>
-    <li>All residues: <Fragment set:html={oddsText(s.enrichment.all)} /></li>
-    <li>
-      Only folded residues (pLDDT ≥ 70): <Fragment set:html={oddsText(s.enrichment.ordered)} />. The buried core is rich in
-      pathogenic variants and is not an interface.
-    </li>
-    <li>Only folded, surface-exposed residues: <Fragment set:html={oddsText(s.enrichment.orderedSurface)} /></li>
-    {
-      kindRows(s).map(({ label, e }) => (
-        <li>
-          {label}, folded surface only: <Fragment set:html={oddsText(e)} />
-        </li>
-      ))
-    }
-    <li>
-      The same, comparing variants only within the same quarter of vertebrate conservation:
-      <Fragment set:html={oddsText(s.conservation.enrichment.orderedSurface.matched)} />
-    </li>
-    {
-      Object.entries(s.enrichment.byPairEvidence).map(([name, e]) => (
-        <li>
-          Only interfaces of pairs {name}: <Fragment set:html={oddsText(e)} />
-        </li>
-      ))
-    }
-    {
-      Object.entries(s.enrichment.byAlphaMissenseClass).map(([name, e]) => (
-        <li>
-          Only variants in the class "{name}": <Fragment set:html={oddsText(e)} />
-        </li>
-      ))
-    }
-  </ul>
+  <h2>Pathogenic and benign variants at interfaces</h2>
   <p>
-    Mantel–Haenszel odds ratios across proteins, with intervals from resampling proteins.
-    The <a href={href('blog/2026-11-12-disease-variants-cluster/')}>findings post</a> draws these as charts, and
-    <a href={href('blog/2026-11-12-are-the-interfaces-real/')}>another</a> checks the predicted interfaces against
-    experimental structures and against random patches of the same protein's surface.
+    Within each protein, pathogenic missense variants sit at a predicted interface more often than benign ones:
+    <Fragment set:html={oddsText(s.enrichment.all)} />, a Mantel–Haenszel odds ratio across proteins with an interval from
+    resampling proteins. <a href={href('blog/2026-11-12-disease-variants-cluster/')}>One post</a> shows how it holds up on
+    the folded surface, within conservation quarters and within AlphaMissense bands;
+    <a href={href('blog/2026-11-12-are-the-interfaces-real/')}>another</a> compares the predicted interfaces with
+    experimental structures and with conservation.
   </p>
-  <details class="more">
-    <summary>How to read these lines</summary>
-    <ul>
-      <li>The surface line rules out "folded vs disordered" as the explanation.</li>
-      <li>
-        The AlphaMissense lines show the interface adds little to a predictor that never sees the partner.
-      </li>
-      <li>The conservation line shows that conservation explains only part of it.</li>
-      <li>Each confidence band of ipSAE, compared with residues at no interface, gives about the same odds ratio.</li>
-      <li>
-        The lines by reported evidence compare the interfaces of pairs an experiment has shown with those only the
-        prediction supports; a residue at several interfaces counts with its best-supported pair.
-      </li>
-    </ul>
-  </details>
   <h2>Leads</h2>
   <p>
     The <a href={href('leads/')}>{s.leads.variants.toLocaleString()} leads</a> are the variants of uncertain significance at
@@ -251,7 +204,7 @@ const references = [
       The enrichment itself is not new; the <a href={href('comparison/')}>comparison</a> lists who showed it first and what
       this explorer adds.
     </li>
-    <li>An interface variant is a lead, not a mechanism: the residue may matter for folding or for another partner.</li>
+    <li>A variant at an interface may matter for folding, for another partner or not at all.</li>
     <li>
       Experimental interfaces from the PDB are shown in the
       <a href="https://genomes.jbrowse.org/protein-browser/">protein browser</a>; this explorer adds predicted ones.

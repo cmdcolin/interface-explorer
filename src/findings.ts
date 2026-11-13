@@ -262,8 +262,8 @@ ${amBands.map(([name, band]) => `  ${name.replace('AlphaMissense ', '')}, ${odds
 - The complexes and isoform models are predictions. A low isoform pLDDT where
   the canonical model is confident hints that the isoform does not keep that
   part folded; it is not a measurement.
-- An interface variant is a lead, not a mechanism: the residue may matter for
-  folding or for another partner.
+- A variant at an interface may matter for folding, for another partner or not
+  at all.
 - ${int(s.unmapped)} disease genes with a confident complex are left out because the EBI
   Proteins API gives no primary-assembly coding coordinates that match their
   length.

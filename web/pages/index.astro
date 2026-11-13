@@ -2,7 +2,7 @@
 import { Image } from 'astro:assets'
 
 import Layout from '../layouts/Layout.astro'
-import { geneScatter, odds, shareFigure } from '../lib/charts.ts'
+import { geneScatter, odds } from '../lib/charts.ts'
 import { diseaseRows, gene, geneRows, summary } from '../lib/data.ts'
 import { diseaseClouds } from '../lib/disease-cloud.ts'
 import { interfaceDiagram } from '../lib/interface-diagram.ts'
@@ -21,7 +21,7 @@ const tiles = [
   [s.withPartner, 'disease genes with a confident predicted complex', href('genes/')],
   [s.partners, 'predicted interfaces, each in 3D and on the genome', href('genes/')],
   [s.variantsAtInterface.uncertain, 'variants of uncertain significance with a named partner they touch', href('genes/')],
-  [s.leads.variants, 'leads: uncertain variants at a residue where another substitution is pathogenic', href('leads/')],
+  [s.leads.variants, 'uncertain variants at a residue where another substitution is pathogenic', href('leads/')],
 ] as const
 ---
 
@@ -72,13 +72,11 @@ const tiles = [
         ))
       }
     </div>
-    <div class="evidence">
-      <p class="lede">
-        Within the same disease protein, a pathogenic variant is <strong>{odds(s.enrichment.all).toFixed(1)}×</strong> as
-        likely as a benign one to sit on an interface.
-      </p>
-      <Fragment set:html={shareFigure(s.enrichment.all)} />
-    </div>
+    <p>
+      Within the same disease protein, pathogenic variants sit at a predicted interface more often than benign ones (odds
+      ratio {odds(s.enrichment.all).toFixed(1)}; <a href={href('blog/2026-11-12-disease-variants-cluster/')}>how it was
+      measured</a>).
+    </p>
   </section>
 
   <section class="disease-explorer">
@@ -137,11 +135,11 @@ const tiles = [
       genes far right have many unresolved ones on the same surface. Click a dot to open the gene, or
       <a href={href('genes/')}>browse the table</a>.
     </p>
-    <Fragment set:html={geneScatter(genes)} />
+    <div class="light-figure"><Fragment set:html={geneScatter(genes)} /></div>
   </section>
   <p class="note">
-    Only {percent(s.withPartner, s.proteins)} of disease proteins have any predicted complex, and the complexes are
-    predictions: an interface variant is a lead, not a mechanism.
+    Only {percent(s.withPartner, s.proteins)} of disease proteins have any predicted complex. The complexes are
+    predictions, and a variant at an interface is not evidence that it changes the binding.
   </p>
 </Layout>
 

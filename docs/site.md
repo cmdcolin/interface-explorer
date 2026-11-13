@@ -15,8 +15,7 @@
 - **Diseases:** every disease ClinVar names for a pathogenic missense variant at
   an interface, matched through MONDO, with a page for each OMIM phenotypic
   series too. Each page lists the genes and variants, and the predicted pairs
-  where both proteins cause the disease, which suggests it may arise by breaking
-  that interaction from either side.
+  where both proteins cause the disease.
 - **Leads:** variants of uncertain significance that change an interface
   residue where a substitution is already classified pathogenic (ACMG PS1 and
   PM5), ranked by AlphaMissense score; those that sit only on pairs in
