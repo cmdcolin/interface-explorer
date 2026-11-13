@@ -1,0 +1,45 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import { recallHistogram } from '../../lib/charts.ts'
+import { gene, summary } from '../../lib/data.ts'
+import { proteinMap } from '../../lib/maps.ts'
+
+const prph2 = gene('PRPH2')
+const { validation } = summary()
+const histogram = recallHistogram([
+  { label: 'All pairs with a structure', colour: 'var(--interface)', v: validation.all },
+  {
+    label: `No structure deposited by ${validation.cutoff}`,
+    colour: 'var(--pathogenic)',
+    v: validation.unseen,
+  },
+])
+---
+
+<Layout title="Interfaces hero figure" indexed={false}>
+  <div class="hero-figure">
+    <h2>PRPH2: where its predicted partners touch it, and the variants there</h2>
+    <Fragment set:html={proteinMap(prph2)} />
+    <h2>How much of the experimental interface the prediction finds</h2>
+    <Fragment set:html={histogram} />
+  </div>
+</Layout>
+
+<style>
+  .hero-figure {
+    width: 1360px;
+    max-width: none;
+    margin-left: calc(50% - 680px);
+    padding: 40px 48px;
+    background: var(--surface);
+  }
+
+  h2 {
+    margin: 0 0 16px;
+    font-size: 28px;
+  }
+
+  h2:not(:first-child) {
+    margin-top: 40px;
+  }
+</style>

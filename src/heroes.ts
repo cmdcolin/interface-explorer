@@ -32,10 +32,10 @@ await screenshots(
     },
     {
       name: 'are-the-interfaces-real',
-      url: local => `${local}gene/PRPH2/?partner=ROM1`,
-      clip: '.structure-section',
-      height: 1600,
-      wait: 30,
+      url: local => `${local}figures/interfaces-real/`,
+      clip: '.hero-figure',
+      height: 1000,
+      wait: 2,
     },
     {
       name: 'project-9-gpcrs',
