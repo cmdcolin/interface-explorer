@@ -192,3 +192,32 @@ save(
   "regions",
   2.6
 )
+
+functions <- e$byFunction
+family_rows <- do.call(rbind, lapply(names(functions), function(name) {
+  row <- odds_row("family", name, functions[[name]])
+  row$label <- sprintf("%s (%s)", name, functions[[name]][["proteins informative"]])
+  row$genes <- paste(vapply(head(functions[[name]]$genes, 3), function(g) g[[1]], character(1)), collapse = ", ")
+  row
+}))
+family_rows$label <- factor(family_rows$label, levels = rev(family_rows$label))
+family_rows$high_shown <- pmin(family_rows$high, 40)
+
+save(
+  ggplot(family_rows, aes(odds, label)) +
+    annotate("rect", xmin = e$all[["95% CI (bootstrap over proteins)"]][[1]], xmax = e$all[["95% CI (bootstrap over proteins)"]][[2]], ymin = -Inf, ymax = Inf, fill = interface_colour, alpha = 0.12) +
+    geom_vline(xintercept = e$all[["Mantel–Haenszel odds ratio"]], colour = interface_colour) +
+    geom_vline(xintercept = 1, linetype = "dashed", colour = "grey55") +
+    geom_errorbar(aes(xmin = low, xmax = high_shown), orientation = "y", width = 0, colour = pathogenic_colour, linewidth = 0.7) +
+    geom_point(colour = pathogenic_colour, size = 2.2) +
+    geom_text(aes(x = 48, label = genes), hjust = 0, size = 3.2, colour = "grey35") +
+    scale_x_log10(breaks = c(0.25, 0.5, 1, 2, 4, 8, 16, 32), labels = as.character) +
+    coord_cartesian(xlim = c(0.2, 40), clip = "off") +
+    labs(
+      x = "Odds ratio, pathogenic vs benign, at a predicted interface (log scale)",
+      y = "UniProt molecular function (proteins)"
+    ) +
+    theme(plot.margin = margin(5, 190, 5, 5), axis.title.y = element_text(size = 11, colour = "grey35")),
+  "families",
+  6.5
+)

@@ -93,6 +93,22 @@ The rows check the obvious confounders:
 
 ## By kind of protein
 
+<figure class="plot">
+  <img
+    src={href('figures/families.svg')}
+    width="800"
+    height="650"
+    alt="Odds ratios by UniProt molecular function: most intervals overlap the overall band; growth factors sit above it, RNA-binding proteins and glycosyltransferases below"
+  />
+  <figcaption>
+    Odds ratio for each UniProt molecular-function keyword with enough
+    informative proteins (in brackets), with 95% intervals. The blue line and
+    band are all proteins together; the dashed line is no difference. On the
+    right, each group's genes with the most pathogenic variants at an
+    interface.
+  </figcaption>
+</figure>
+
 Grouped by UniProt molecular-function keyword, the odds ratio is highest for
 {functions.slice(0, 4).map(family).join(', ')} and lowest for
 {functions.slice(-2).map(family).join(' and ')}. Each group holds only a few
