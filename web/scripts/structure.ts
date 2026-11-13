@@ -105,8 +105,13 @@ function pin(position: number) {
 }
 
 function markPartner(gene: string) {
+  const title = document.getElementById('structure-partner')
   for (const pick of document.querySelectorAll<HTMLElement>('.partner-pick')) {
-    pick.setAttribute('aria-pressed', String((pick.dataset.names ?? '').split(', ').includes(gene)))
+    const active = (pick.dataset.names ?? '').split(', ').includes(gene)
+    pick.setAttribute('aria-pressed', String(active))
+    if (active && title) {
+      title.textContent = pick.dataset.label ?? gene
+    }
   }
   for (const story of document.querySelectorAll<HTMLElement>('.story')) {
     story.hidden = story.dataset.partner !== gene

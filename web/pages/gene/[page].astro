@@ -54,6 +54,7 @@ const description = `${gene.gene}: ${gene.interfaceResidues} residues at a predi
 const partnerStories = stories(gene)
 const initial = initialPartner(gene)
 const picks = partnerPicks(gene)
+const initialPick = picks.find(s => initial && s.names.includes(initial))
 const hasItself = gene.partners.some(p => p.homodimer)
 const onlyItself = hasItself && gene.partners.every(p => p.homodimer)
 const structureJson = JSON.stringify(structureData(gene)).replaceAll('<', '\\u003c')
@@ -114,9 +115,9 @@ const rows = gene.variants
     partnerStories.length > 0 && (
       <section class="structure-section">
         <div class="structure-head">
-          <h2>{gene.gene} {onlyItself ? 'with itself' : 'with a partner'}, in 3D</h2>
+          <h2 id="structure-title">{gene.gene} with <span id="structure-partner">{initialPick?.labels[0]}</span></h2>
           <p class="picks-label">
-            {partnerStories.length > 1 ? `Pick one of its ${partnerStories.length} predicted partners${picks.length < partnerStories.length ? '; those touching nearly the same residues share a button' : ''}.` : onlyItself ? 'Its one predicted complex is with a copy of itself.' : 'Its one predicted partner.'}
+            {partnerStories.length > 1 && `Pick one of its ${partnerStories.length} predicted partners${picks.length < partnerStories.length ? '; those touching nearly the same residues share a button' : ''}. `}
             The red number counts the pathogenic variants at that interface.
           </p>
           <div class="partner-picks" role="group" aria-label="Partners">
@@ -126,6 +127,7 @@ const rows = gene.variants
                 class="partner-pick"
                 data-partner={s.gene}
                 data-names={s.names.join(', ')}
+                data-label={s.labels[0]}
                 title={s.names.length > 1 ? `${s.names.join(', ')}: nearly the same interface` : undefined}
                 aria-pressed={initial && s.names.includes(initial) ? 'true' : 'false'}
               >
