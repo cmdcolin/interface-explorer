@@ -18,13 +18,13 @@ export const ttr = p.ttr
 
 Many disease proteins work as two or more copies of themselves. A variant
 where two copies meet can loosen the pair, or put a faulty copy into every
-pair it joins. The explorer used to show only complexes with other proteins.
-It now adds each disease protein's homodimer from AlphaFold DB, listed as a
-partner called "itself". {p.withHomodimer.toLocaleString()} genes have one, and
+pair it joins. The explorer now lists each disease protein's homodimer from
+AlphaFold DB beside its complexes with other proteins, as a partner called
+"itself". {p.withHomodimer.toLocaleString()} genes have one, and
 for {p.onlyItself.toLocaleString()} of them it is the only confident complex,
 so they are new to the explorer.
 
-The predicted copy-to-copy interfaces hold up against experiment. Of the{' '}
+We checked the predicted copy-to-copy interfaces against experiment. Of the{' '}
 {p.checked.toLocaleString()} homodimers with a PDB entry holding two copies of
 the protein, {p.confirmed.toLocaleString()} recover at least half the residues
 in contact there. AlphaFold DB models only two copies, so for a protein that
@@ -41,8 +41,8 @@ other, and PDB {sod1.experiment?.pdb.toUpperCase()} puts{' '}
 finds {sod1.experiment?.shared}.
 
 {sod1.pathogenic} of SOD1's {sod1.total} pathogenic missense variants sit on
-that interface. AlphaMissense, which scores a single chain and never sees the
-second copy, gives at least supporting evidence of pathogenicity (ACMG PP3, as
+that interface. AlphaMissense, which scores a single chain without the second
+copy, gives at least supporting evidence of pathogenicity (ACMG PP3, as
 calibrated by [Bergquist et al. 2025](https://doi.org/10.1016/j.gim.2025.101402))
 to {sod1.alphaMissense.reached} of the {sod1.alphaMissense.scored} it scores.
 One it does not is {sod1.highlight?.change}, {sod1.highlight?.literature} in the
@@ -79,17 +79,16 @@ cardiac amyloidosis and common among people of West African ancestry.
 AlphaMissense scores it {ttr.highlight?.score}: {ttr.highlight?.evidence}, the
 side of the scale that counts against pathogenicity.
 
-## Where the single-chain view falls short
+## AlphaMissense at homodimer interfaces
 
 Across all homodimer interfaces, AlphaMissense gives pathogenic evidence to{' '}
 {p.itself.share} of the pathogenic variants it scores
 ({p.itself.reached.toLocaleString()} of {p.itself.scored.toLocaleString()}),
 against {p.others.share} at interfaces with other proteins only
 ({p.others.reached.toLocaleString()} of {p.others.scored.toLocaleString()}). The
-two sets come from different proteins, so this is a pointer rather than a
-measurement, but it marks the homodimer interfaces as where a single-chain
-score most often leaves a pathogenic variant without evidence, and where a
-view of the complex can add the most.
+two sets come from different proteins, so the comparison is a pointer rather
+than a measurement. It suggests that homodimer interfaces are where a
+single-chain score most often leaves a pathogenic variant without evidence.
 
 {p.leads.toLocaleString()} of the [leads](../../leads/), in{' '}
 {p.leadGenes.toLocaleString()} genes, sit on a homodimer interface: uncertain

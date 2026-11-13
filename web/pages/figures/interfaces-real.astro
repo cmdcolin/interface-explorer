@@ -9,9 +9,9 @@ const prph2 = gene('PRPH2')
 
 <Layout title="Interfaces hero figure" indexed={false}>
   <div class="hero-figure">
-    <h2>PRPH2: where its predicted partners touch it, and the variants there</h2>
+    <h2>PRPH2's predicted interface residues and ClinVar variants</h2>
     <Fragment set:html={proteinMap(prph2)} />
-    <h2>How much of the experimental interface the prediction finds</h2>
+    <h2>Share of each experimental interface the prediction covers</h2>
     <img src={href('figures/recall.svg')} width="1264" height="569" alt="" />
   </div>
 </Layout>

@@ -56,7 +56,7 @@ rows <- rbind(
   odds_row(matched, "Within phyloP quarters", summary$conservation$enrichment$orderedSurface$matched),
   do.call(rbind, lapply(bands, function(b) odds_row(confidence, b, e$byConfidenceBand[[b]]))),
   odds_row(kind, "With another protein", e$byKind[["with other proteins (heterodimers)"]][[surface]]),
-  odds_row(kind, "With its own copy", e$byKind[["with itself (homodimers)"]][[surface]]),
+  odds_row(kind, "With a copy of itself", e$byKind[["with itself (homodimers)"]][[surface]]),
   do.call(rbind, lapply(names(e$byAlphaMissenseClass), function(b) {
     odds_row(alphamissense, sub("AlphaMissense ", "", b), e$byAlphaMissenseClass[[b]])
   }))
@@ -139,7 +139,7 @@ save(
     scale_y_continuous(labels = percent_label, limits = c(0, 1)) +
     labs(
       title = "Across 100 vertebrates (phyloP)",
-      subtitle = "Interfaces more conserved than the median\nsurface patch; dashed: a random patch",
+      subtitle = "Share of complexes whose interface is more conserved\nthan the median surface patch; dashed: a random patch",
       x = NULL, y = NULL
     ) +
     panel_theme) +

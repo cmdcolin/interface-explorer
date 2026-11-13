@@ -47,16 +47,16 @@ The rows check the obvious confounders:
   odds ratio is {odds(e.orderedSurface).toFixed(1)}.
 - **Conservation.** Interfaces are conserved, and conserved bases are more often
   pathogenic. Comparing variants only within the same phyloP quarter of each
-  protein, it goes from {odds(c.orderedSurface.unmatched).toFixed(1)} to
+  protein, the odds ratio goes from {odds(c.orderedSurface.unmatched).toFixed(1)} to
   {odds(c.orderedSurface.matched).toFixed(1)}.
-- **Prediction confidence.** It is about the same in every ipSAE band.
+- **Prediction confidence.** The odds ratio is about the same in every ipSAE band.
 - **AlphaMissense.** Within its calibrated evidence bands
   ([Bergquist et al. 2025](https://doi.org/10.1016/j.gim.2025.101402)) the
-  difference is small or absent: the interface adds little to a predictor that
+  difference is small or absent, so the interface adds little to a predictor that
   already scores these residues.
 
-The comparison is not new; the [comparison](../../comparison/) page lists
-earlier work.
+Earlier work has made the same comparison; the
+[comparison](../../comparison/) page lists it.
 
 ## Variants without a classification
 
@@ -73,6 +73,6 @@ those.
 - Only {percent(s.withPartner, s.proteins)} of disease proteins have any
   confident predicted partner.
 - The complexes are predictions. A variant at an interface may matter for
-  folding, for another partner or not at all; sitting there is not evidence that
-  it changes the binding.
+  folding, for another partner or not at all, so its position does not show
+  that it changes the binding.
 - The method is on the [About](../../about/) page.

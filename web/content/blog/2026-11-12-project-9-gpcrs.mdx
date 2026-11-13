@@ -20,8 +20,8 @@ G protein-coupled receptors (GPCRs) are the cell's most common sensors. They
 sit in the cell membrane and answer to hormones, neurotransmitters, many drugs
 and, in the nose, smells. When a receptor catches its signal outside the cell,
 it changes shape inside and grabs a G protein, which passes the message on.
-The part of the G protein that does the grabbing is its Gα subunit: the end of
-one helix, α5, pushes up into a pocket that opens on the receptor's inner face.
+The G protein's Gα subunit pushes the end of one helix, α5, up into a pocket
+that opens on the receptor's inner face.
 
 BioHackathon Europe 2026 Project 9 picked {p.complexes} experimental
 structures (cryo-EM and X-ray) of receptors for dopamine, serotonin,
@@ -31,7 +31,7 @@ receptor, OR51E2. In each structure we took the residues of each protein within
 variants (single amino-acid changes) that ClinVar collects from clinical
 genetic testing.
 
-**{p.gAlphaPathogenic} variants classed as pathogenic land on these contact
+**{p.gAlphaPathogenic} variants classed as pathogenic sit on these contact
 surfaces, and all are on the G protein: {p.gnasPathogenic} on Gαs,
 {p.alpha5Pathogenic.length} of them on its α5 helix.** The receptor side has{' '}
 {p.receptorPathogenic || 'none'}.
@@ -45,8 +45,8 @@ How to read the figure above:
   variant.
 - Left, <a href={href(`gpcr/${p.featured.pdb}/`)}>the dopamine D1 receptor
   holding Gαs</a>, where the red variants cluster on α5. Middle and right, the
-  smell receptor check further down: <a href={href(`gpcr/${p.or51e2.pdb}/`)}>the
-  experiment</a> and <a href={`${geneHref('GNAL')}?partner=OR51E2`}>AlphaFold's
+  smell receptor from further down, in <a href={href(`gpcr/${p.or51e2.pdb}/`)}>the
+  experiment</a> and in <a href={`${geneHref('GNAL')}?partner=OR51E2`}>AlphaFold's
   prediction</a>. Each link opens the complex in 3D.
 
 ## The tip of Gαs
@@ -64,32 +64,31 @@ Bars: how many of the {p.gnas?.structures} Gαs structures put a receptor within
 common Gα numbering (CGN; Flock et al., Nature 2015), whose labels name the
 same position in every Gα: G.H5.25 is the 25th residue of α5 in Gαs, Gαolf or
 Gαi alike. The pathogenic variants by CGN element are{' '}
-{p.gnasPathogenicByElement}. Outside Gαs: {p.otherPathogenic}. So one α5
-position carries a pathogenic variant in two Gα genes.
+{p.gnasPathogenicByElement}. Outside Gαs they are {p.otherPathogenic}, so one
+α5 position has a pathogenic variant in two Gα genes.
 AlphaFold DB has no complex of Gαs with a GPCR, so this surface comes from
 experiment alone.
 
 ## The receptor side
 
-Why the gap between the two sides? Partly it is ClinVar: GNAS is a classic
-inherited-disease gene, so clinics test it and report what they find, while
-most amine receptors are not. The Project 9 receptors' contact residues have{' '}
+Part of the gap between the two sides comes from ClinVar's sources. Clinics
+test GNAS for inherited disease and report what they find, and they do not test
+most amine receptors. The Project 9 receptors' contact residues have{' '}
 {p.uncertain} variants of uncertain significance and {p.benign} benign ones,
 mostly from gene-panel testing. Some GPCRdb positions have variants in more than one receptor, but{' '}
 {p.variants} variants over {p.positions} numbered positions would produce that
 by chance, so we have not ranked them as leads.
 
-The Gαs surface above comes from experiment alone, but where AlphaFold DB has a
-matching complex it agrees: its DRD5–Golf complex covers {p.drd5Recall}% of the
+Where AlphaFold DB has a matching complex, it agrees with experiment: its DRD5–Golf complex covers {p.drd5Recall}% of the
 receptor residues DRD5 uses against Gs in the cryo-EM structure, and its GPCR
 complexes of Gαi1 cover {p.gnai1Recall}% of what the {p.gnai1Structures} Gαi1
 complexes use.
 
 ## Gαolf and the olfactory receptors
 
-Smell (olfactory) receptors do not use Gαs but a near twin, Gαolf, from the
-gene GNAL. No experiment has caught a smell receptor holding Gαolf, but
-AlphaFold DB predicts such pairs: GNAL complexes with {p.olfactory.length}{' '}
+Smell (olfactory) receptors signal through Gαolf, a close relative of Gαs,
+from the gene GNAL. There is no experimental structure of a smell receptor with
+Gαolf, but AlphaFold DB predicts such pairs: GNAL complexes with {p.olfactory.length}{' '}
 olfactory receptors ({p.olfactory.join(', ')}). Its confidence in each
 contact, the ipSAE score, is {p.ipsaeRange.join('–')}, just above the{' '}
 {t.ipsae} cutoff we use, so these predictions need checking.
@@ -110,7 +109,7 @@ of the residues it predicts are among them.
 
 ### The Gαolf side
 
-The mini-Gs is an engineered Gαs, but Gαs and Gαolf are{' '}
+Gαs and Gαolf are{' '}
 {p.or51e2.golf.identity}% identical and their α5 helices end alike (QYELL). Mapped onto Gαolf by sequence, the{' '}
 {p.or51e2.golf.experimental} mini-Gs residues within 5 Å of OR51E2 test the other
 half of the prediction. AlphaFold DB's OR51E2–Gαolf complex puts{' '}
@@ -121,13 +120,13 @@ finds {p.or51e2.golf.recall}% of the experimental surface, and{' '}
 {p.or51e2.golf.missed.join(', ')}.
 
 ClinVar has {p.gnalVariants.length} variants of uncertain significance where
-AlphaFold DB puts Gαolf against an olfactory receptor. Three GNAL variants are
-worth placing:
+AlphaFold DB puts Gαolf against an olfactory receptor. Three of them in
+detail:
 
 - **L380R**, on α5 like the Gαs variants above: L380 ({p.golfCgn[380]}, Gαs{' '}
   {p.gnasCounterpart(380)}) is{' '}
   {p.golfReach[380]} Å from OR51E2 in {p.or51e2.pdb}, so it touches the receptor
-  in the structure and in the prediction. It is the one to look at first.
+  in the structure and in the prediction, which makes it the first to look at.
 - **K376Q:** K376 is the residue the prediction misses. Its Gαs counterpart at{' '}
   {p.golfCgn[376]}, {p.gnasCounterpart(376)}, is {p.golfReach[376]} Å from OR51E2 in {p.or51e2.pdb}; AlphaFold DB puts
   K376 against OR2A1 and OR2J3 instead.
@@ -152,7 +151,7 @@ GNAL's other predicted GPCR complexes use the same face:
   and {p.drd5Golf.precision}% of the {p.drd5Golf.predicted} residues it
   predicts are among them.
 
-So on OR51E2, the Gαolf face AlphaFold DB predicts is the one a Gs mimic uses,
+On OR51E2, the Gαolf face AlphaFold DB predicts is the one a Gs mimic uses,
 despite an ipSAE just over the threshold. A Gαs structure cannot test the{' '}
 {100 - p.or51e2.golf.identity}% of Gαolf that differs from Gαs.
 

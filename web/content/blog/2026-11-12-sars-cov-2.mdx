@@ -31,8 +31,8 @@ export const etv6 = v.apart.find(pair => pair.gene === 'ETV6')
 AlphaFold DB's predicted complexes, which the rest of the explorer is built on,
 pair only human proteins. The PDB, though, has experimental structures of
 SARS-CoV-2 proteins bound to human ones, some of them disease proteins with
-ClinVar variants. Where does a viral protein touch one, and what does ClinVar
-say about the residues it touches?
+ClinVar variants. This post lists where a viral protein touches one, and the
+ClinVar variants on the residues it touches.
 
 Of the {v.summary['pairs in one PDB entry']}
 pairs that share a PDB entry, {v.summary['pairs that touch']} touch, across{' '}
@@ -45,14 +45,14 @@ pathogenic, {v.uncertain} uncertain and {v.benign} benign.
 Every touching pair, with its contact residues and the ClinVar variants on them, is
 on the <a href={href('viral/')}>SARS-CoV-2 contacts page</a>.
 
-Both numberings are in{' '}
-<a href={href('data/viral-contacts.tsv')}>viral-contacts.tsv</a>, one row per
-viral residue, for intersecting with a variant call set. Each row is a position
+<a href={href('data/viral-contacts.tsv')}>viral-contacts.tsv</a> lists each
+viral residue in both the polyprotein and the mature protein numbering, one row
+per residue, for intersecting with a variant call set. Each row is a position
 where a SARS-CoV-2 protein touches a human protein in an experimental
-structure. The explorer measures only the human side, and nothing here shows
-that a viral substitution there changes the contact or was selected.
+structure. The explorer measures the human side only, and does not test
+whether a viral substitution there changes the contact or was selected.
 
-## Three worth a second look
+## ISG15, NEMO and 14-3-3ζ
 
 **ISG15 and the papain-like protease.** PLpro strips ISG15 from host proteins,
 and the crystal structure of the inactive protease with ISG15 puts{' '}
@@ -87,8 +87,8 @@ the structure of the protease with the NEMO peptide holds residues{' '}
 ClinVar, is one of them. The {v.proteaseStructures} nsp5–substrate structures
 here, with NEMO, PTBP1 and TRMT1, share{' '}
 <span title={runs(v.proteaseSites)}>{v.proteaseSites.length} protease
-residues</span>: the substrate cleft around the catalytic H41 and C145, the same
-site in independent entries.
+residues</span> lining the substrate cleft around the catalytic H41 and C145,
+so independent entries put their substrates in the same site.
 
 <Shot
   src={nemoShot}
@@ -107,8 +107,8 @@ groove. On its residues sit{' '}
 {v.byGene('YWHAZ')?.variants.filter(x => x.label === 'pathogenic').length}{' '}
 variants ClinVar calls pathogenic, among them K49N and R127H for Popov–Chang
 syndrome. That groove is where 14-3-3 binds its hundreds of human
-phosphopeptide partners, so a variant there acts first on 14-3-3's own
-partners.
+phosphopeptide partners, so a variant there sits where all of those partners
+bind.
 
 <Shot
   src={ywhazShot}
@@ -120,18 +120,18 @@ partners.
   against. Red: the pathogenic ClinVar variants on them.
 </Shot>
 
-## What does not touch
+## Pairs in one entry that do not touch
 
 These pairs share entries but do not touch, so co-occurrence alone would have
 listed them:
 
 - **nsp1 and the ribosome.** {v.ribosomal.length} ribosomal disease proteins,
   including the Diamond–Blackfan anemia genes RPS19, RPS26 and RPS10, sit in the
-  same entries as nsp1. None touches it. What nsp1 does touch in those entries,
-  besides the rRNA, is {listed(v.nsp1Neighbours)} — the proteins around the 40S
-  mRNA channel, none of them a disease protein in UniProt.
-- **SLC6A20 and SLC6A19 with spike.** Both share entries with spike, neither
-  touches it: they are there bound to ACE2, which is what spike holds.
+  same entries as nsp1 without touching it. Besides the rRNA, nsp1 touches{' '}
+  {listed(v.nsp1Neighbours)}, the proteins around the 40S mRNA channel, and
+  UniProt lists none of them as a disease protein.
+- **SLC6A20 and SLC6A19 with spike.** They share entries with spike without
+  touching it, because they are bound to ACE2, which spike binds.
 - **B2M with the viral peptides.** B2M shares entries with the spike, N and
   nsp13 epitopes, but it is the HLA-B heavy chain that holds the peptide in its
   groove, and HLA-B is in the table above.
@@ -154,8 +154,8 @@ listed them:
 - A chain containing both sequences is a fusion construct, not a complex, and is
   left out. So are the {v.reagents.length} human proteins present as structural
   reagents ({listed(v.reagents.map(r => r.gene))}): a nanodisc scaffold or a
-  trimerisation domain touching the viral protein says nothing about infection.
-- Nothing here is evidence about COVID-19 susceptibility. These are variants
-  classified for Mendelian disease that happen to lie where a viral protein
-  binds. Several of the structures are peptide complexes, which show one side of
+  trimerisation domain touching the viral protein is not evidence about
+  infection.
+- The variants here are classified for Mendelian disease and lie where a
+  viral protein binds, so they are not evidence about COVID-19 susceptibility. Several of the structures are peptide complexes, which show one side of
   the interaction only.

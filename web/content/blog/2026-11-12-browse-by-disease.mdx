@@ -13,8 +13,8 @@ import { href } from '../../lib/site.ts'
 export const p = diseasePost()
 
 The explorer shows which predicted interface a variant sits on. The disease
-pages add one more fact to browse by: whether the partner on the other side is
-also listed as causing the same disease.
+pages also show whether the partner on the other side is listed as causing the
+same disease.
 
 ## A page per disease
 
@@ -33,9 +33,9 @@ series.
 
 {p.withPairs.toLocaleString()} diseases have at least one pair of predicted
 partners that both cause it, {p.pairs.toLocaleString()} pairs in all, and{' '}
-{p.seriesPairs.toLocaleString()} of those pairs are on series pages: the two
-proteins of a complex usually cause different numbered subtypes of a disease,
-not the same one.
+{p.seriesPairs.toLocaleString()} of those pairs are on series pages, because
+the two proteins of a complex usually cause different numbered subtypes of a
+disease.
 
 ## Three examples
 
@@ -70,13 +70,13 @@ not the same one.
 
 {p.noonan && (
   <p>
-    <a href={p.noonan.diseaseHref}>Noonan syndrome</a> is a RASopathy: its genes
-    sit along the RAS–MAPK pathway. KRAS and SOS1, the exchange factor that
-    switches RAS on, are paired by AlphaFold DB with ipSAE {p.noonan.ipsae}, and
+    <a href={p.noonan.diseaseHref}>Noonan syndrome</a> is a RASopathy, caused by
+    genes along the RAS–MAPK pathway. AlphaFold DB pairs KRAS with SOS1, the
+    exchange factor that switches RAS on, with ipSAE {p.noonan.ipsae}, and
     their interface holds {p.noonan.pathogenic} pathogenic and{' '}
     {p.noonan.uncertain} uncertain variants listing a Noonan-series condition.
     Many RAS variants keep RAS switched on rather than changing how it binds
-    SOS1, so the pair says nothing about what a variant does.{' '}
+    SOS1, so a variant's place on this interface does not tell what it does.{' '}
     <a href={p.noonan.href}>Open KRAS with SOS1</a>.
   </p>
 )}
@@ -91,7 +91,7 @@ Leads, the uncertain variants at a residue where another change is
 pathogenic, now prefer a partner with such a disease link when they touch
 several.
 
-## What to keep in mind
+## Caveats
 
 - **A series can be broad.** The series with pairs range from{' '}
   {p.smallestSeries} to {p.largestSeries} diseases. A small series like
@@ -101,7 +101,7 @@ several.
   classified pathogenic for one condition may list others from different
   submissions, so a listed condition is not always the one it was classified
   for.
-- **Only diseases UniProt says a gene causes count.** Susceptibility and "may
+- **Only diseases UniProt lists a gene as causing count.** Susceptibility and "may
   be caused by" annotations are left out.
 - **The interfaces are predictions,** and a variant at one may still act
   another way, by unfolding the protein or keeping it switched on.

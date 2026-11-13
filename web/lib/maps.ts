@@ -246,7 +246,7 @@ export function proteinMap(gene: Gene) {
         .join('')}
     </svg></div>
     <div class="legend">
-      <span><span class="swatch" style="background:var(--interface)"></span>interface residue, one row per partner, or per group of partners touching nearly the same residues; hover a row to run them up past the variants</span>
+      <span><span class="swatch" style="background:var(--interface)"></span>interface residue, one row per partner, or per group of partners with nearly the same interface residues; hover a row to draw its residues as columns through the variant rows</span>
       ${gene.features.length ? `<span><span class="swatch feature-swatch binding"></span>UniProt interaction or binding region</span>` : ''}
       ${LABEL_KEYS.map(label => `<span><span class="swatch" style="background:var(--${label})"></span>${LABELS[label].toLowerCase()} variant</span>`).join('')}
     </div>`

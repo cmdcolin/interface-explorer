@@ -26,8 +26,8 @@ export const ratio = x =>
 Most predicted interfaces have no experimental structure to check them
 against. Sequence variation offers two other checks, on very different
 timescales: UCSC's phyloP, from an alignment of 100 vertebrate genomes, and the
-variants gnomAD v4.1 finds in human exomes. They disagree in an instructive
-way.
+variants gnomAD v4.1 finds in human exomes. The two disagree for recessive
+genes.
 
 <figure class="plot">
   <img
@@ -40,7 +40,7 @@ way.
 
 **Across vertebrates.** For each confident complex we ranked the interface's
 mean phyloP against same-sized patches from the rest of the protein's folded
-surface. The interface beats the median patch in {share(patches.byInheritance.dominant)}
+surface. The interface ranks above the median patch in {share(patches.byInheritance.dominant)}
 of complexes in dominant disease genes and {share(patches.byInheritance.recessive)}
 in recessive ones. A random patch ranked the same way does in
 {randoms[0] === randoms[1] ? `${randoms[0]} of both` : `${randoms[0]} and ${randoms[1]}`}. Over all complexes the share
@@ -52,12 +52,12 @@ coverage. Within each protein, the missense-to-synonymous ratio at the
 interface, relative to the rest of the folded surface, is {ratio(g.dominant)}
 in dominant genes and {ratio(g.recessive)} in recessive ones.
 
-So the interfaces of recessive genes stand out in the vertebrate record but
-barely among living people. That is the pattern population genetics predicts:
-a damaging variant in a recessive gene does no harm in a carrier, so selection
-removes it slowly, while over vertebrate history it has had time to act. For
-browsing, it means gnomAD is a weak signal at the interfaces of recessive
-genes.
+The interfaces of recessive genes therefore stand out in the vertebrate
+record but barely among living people. Population genetics predicts this
+pattern. A damaging variant in a recessive gene does no harm in a carrier, so
+selection removes it slowly within a population, but over vertebrate history it
+has had time to act. For browsing, gnomAD is a weak signal at the interfaces of
+recessive genes.
 
 ## Caveats
 

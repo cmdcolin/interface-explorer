@@ -61,8 +61,8 @@ so burial has to be matched.
   {m.burialBackground}), so the matching changes little.
 - **AlphaMissense** does not single them out: {m.alphaMissense} against{' '}
   {m.alphaMissenseBackground} (p {m.alphaMissenseP}). It scores most of the
-  transmembrane core high already, and it scores a single structure, so it
-  cannot see the switch.
+  transmembrane core high already, and it scores from a single static
+  structure, which has no information about the switch.
 - **ClinVar:** {m.pathogenicOn} of the {m.pathogenicTotal} pathogenic variants
   sits on a switch residue (<Html html={m.pathogenicLinks} />; p {m.pathogenicP}), and{' '}
   {m.pathogenicNearby} within one residue of one (p {m.pathogenicNearbyP}). The
@@ -72,26 +72,24 @@ so burial has to be matched.
 The residues that move are more conserved than their burial explains, and
 ClinVar has little evidence about what changing them does.
 
-## The variants worth a look
+## Uncertain variants on switch residues
 
 The uncertain variants on switch residues are{' '}
 <Html html={m.uncertainLinks} />. Most of the top-ranked pairs run from{' '}
 {m.hub} to the stretch {m.stretch}, which holds {m.stretchUncertain} of them.
 {m.hub} also pairs with R314, L315 and F316. L315P is the one pathogenic variant
-on a switch residue, and R314C, uncertain, is next to it. A substitution here
-would most plausibly jam the transporter in one state, so these are the ones a
-new simulation would test first.
+on a switch residue, and R314C, uncertain, is next to it. A new simulation of
+these substitutions could test whether they hold the transporter in one state.
 
 SLC35A2's <a href={isoformHref('SLC35A2')}>isoform page</a> has its variants
 along the protein and in the genome.
 
-## What this does not show
+## Caveats
 
-- It sits beside the explorer's question rather than inside it: the switch
-  residues come from a simulation of one protein, not from a predicted
-  interface.
-- It is one protein, and the residue lists are StarMD's top-ranked rows, not
-  every residue that moves.
+- The switch residues come from a simulation of one protein, not from a
+  predicted interface.
+- The residue lists are StarMD's top-ranked rows, not every residue that
+  moves.
 - We don't label which conformer is lumen-open and which cytosol-open; the
   switch analysis doesn't depend on it.
 - {m.hub}, at the centre of most pairs, is modelled with pLDDT{' '}
