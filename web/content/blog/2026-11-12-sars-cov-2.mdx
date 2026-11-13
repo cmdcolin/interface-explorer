@@ -9,7 +9,6 @@ heroAlt: "The explorer's table of SARS-CoV-2 proteins on human disease proteins,
 
 import Html from '../../components/Html.astro'
 import Shot from '../../components/Shot.astro'
-import { clinvarHref } from '../../lib/html.ts'
 import { surfaceMap } from '../../lib/maps.ts'
 import {
   contactSurface,
@@ -17,7 +16,7 @@ import {
   runs,
   viralContacts,
 } from '../../lib/viral.ts'
-import { geneHref, href } from '../../lib/site.ts'
+import { href } from '../../lib/site.ts'
 import isg15Shot from './figures/isg15-plpro.jpg'
 import nemoShot from './figures/nemo-nsp5.jpg'
 import ywhazShot from './figures/ywhaz-n.jpg'
@@ -25,7 +24,6 @@ import ywhazShot from './figures/ywhaz-n.jpg'
 export const viralHref = pdb => href(`viral/${pdb}/`)
 
 export const v = viralContacts()
-export const pdb = id => `https://www.rcsb.org/structure/${id.toUpperCase()}`
 export const etv6 = v.apart.find(pair => pair.gene === 'ETV6')
 
 <p class="hero-credit"><small>Virus illustration in the hero by Alissa Eckert and Dan Higgins, <a href="https://phil.cdc.gov/Details.aspx?pid=23312">CDC</a>, public domain.</small></p>
@@ -44,53 +42,8 @@ pathogenic, {v.uncertain} uncertain and {v.benign} benign.
 
 ## The contacts
 
-<table>
-  <thead>
-    <tr>
-      <th>Gene</th>
-      <th>Viral protein</th>
-      <th>Entry</th>
-      <th class="num">Residues</th>
-      <th>Viral side</th>
-      <th>ClinVar on them</th>
-      <th>Open</th>
-    </tr>
-  </thead>
-  <tbody>
-    {v.contacts.map(c => (
-      <tr>
-        <td>
-          {v.pageOf(c.gene) ? <a href={geneHref(v.pageOf(c.gene))}>{c.gene}</a> : c.gene}
-        </td>
-        <td>{c.protein}</td>
-        <td><a href={pdb(c.pdb)}>{c.pdb}</a></td>
-        <td class="num" title={runs(c.residues)}>{c.residues.length}</td>
-        <td class="nowrap" title={`In ${c.viralName} numbering: ${runs(c.viralResidues)}`}>
-          {runs(c.viralNumbers.length ? c.viralNumbers : c.viralResidues)}
-        </td>
-        <td>
-          {c.variants.length
-            ? c.variants.map(variant => (
-                <>
-                  <a href={clinvarHref(variant.variation)}>{variant.change}</a>{' '}
-                  <span class={`count ${variant.label}`}>{variant.label}</span>{' '}
-                </>
-              ))
-            : '—'}
-        </td>
-        <td class="nowrap"><a href={viralHref(c.pdb)}>3D</a></td>
-      </tr>
-    ))}
-  </tbody>
-</table>
-
-Hover a residue count for the positions. A gene with no page of its own has no
-confident AlphaFold DB partner; it is here on experiment alone.
-
-The viral side is numbered within the mature protein, so the protease residues
-are the H41 and C145 that papers name. Hover the column for the precursor
-numbering, which for spike is the S numbering that lineage-defining
-substitutions are quoted in.
+Every touching pair, with its contact residues and the ClinVar variants on them, is
+on the <a href={href('viral/')}>SARS-CoV-2 contacts page</a>.
 
 Both numberings are in{' '}
 <a href={href('data/viral-contacts.tsv')}>viral-contacts.tsv</a>, one row per

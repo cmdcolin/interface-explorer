@@ -1,0 +1,50 @@
+---
+import { clinvarHref } from '../lib/html.ts'
+import { geneHref, href } from '../lib/site.ts'
+import { runs, viralContacts } from '../lib/viral.ts'
+
+const v = viralContacts()
+const pdb = (id: string) => `https://www.rcsb.org/structure/${id.toUpperCase()}`
+---
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Gene</th>
+        <th>Viral protein</th>
+        <th>Entry</th>
+        <th class="num">Residues</th>
+        <th>Viral side</th>
+        <th>ClinVar on them</th>
+        <th>Open</th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        v.contacts.map(c => (
+          <tr>
+            <td>{v.pageOf(c.gene) ? <a href={geneHref(v.pageOf(c.gene))}>{c.gene}</a> : c.gene}</td>
+            <td>{c.protein}</td>
+            <td><a href={pdb(c.pdb)}>{c.pdb}</a></td>
+            <td class="num" title={runs(c.residues)}>{c.residues.length}</td>
+            <td class="nowrap" title={`In ${c.viralName} numbering: ${runs(c.viralResidues)}`}>
+              {runs(c.viralNumbers.length ? c.viralNumbers : c.viralResidues)}
+            </td>
+            <td>
+              {c.variants.length
+                ? c.variants.map(variant => (
+                    <>
+                      <a href={clinvarHref(variant.variation)}>{variant.change}</a>{' '}
+                      <span class={`count ${variant.label}`}>{variant.label}</span>{' '}
+                    </>
+                  ))
+                : '—'}
+            </td>
+            <td class="nowrap"><a href={href(`viral/${c.pdb}/`)}>3D</a></td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</div>

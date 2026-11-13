@@ -1,4 +1,4 @@
-# GPCRs and their G proteins
+# Where GPCRs meet their G proteins
 
 From 24 experimental complexes.
 

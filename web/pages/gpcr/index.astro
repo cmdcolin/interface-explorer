@@ -1,0 +1,19 @@
+---
+import GpcrComplexes from '../../components/GpcrComplexes.astro'
+import Layout from '../../layouts/Layout.astro'
+import { gpcr } from '../../lib/data.ts'
+import { href } from '../../lib/site.ts'
+---
+
+<Layout title="GPCR–G protein complexes" description="Every GPCR structure in the explorer, with its G protein, contact residues and how well AlphaFold DB agrees.">
+  <article class="post">
+    <p><a href={href('blog/2026-11-12-project-9-gpcrs/')}>← Where GPCRs meet their G proteins</a></p>
+    <h1>GPCR–G protein complexes</h1>
+    <p>
+      All {gpcr().complexes.length} complexes. Hover a residue count for the residues with their GPCRdb
+      numbers on the receptor side and their CGN labels on the Gα side; "3D" opens the
+      structure beside the genome in JBrowse.
+    </p>
+    <GpcrComplexes />
+  </article>
+</Layout>

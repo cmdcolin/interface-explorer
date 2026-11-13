@@ -1,0 +1,23 @@
+---
+import ViralContacts from '../../components/ViralContacts.astro'
+import Layout from '../../layouts/Layout.astro'
+import { href } from '../../lib/site.ts'
+---
+
+<Layout title="SARS-CoV-2 contacts" description="SARS-CoV-2 proteins touching human disease proteins in PDB entries, with the ClinVar variants on the contact.">
+  <article class="post">
+    <p><a href={href('blog/2026-11-12-sars-cov-2/')}>← Where SARS-CoV-2 holds a human disease protein</a></p>
+    <h1>SARS-CoV-2 contacts</h1>
+    <p>
+      Hover a residue count for the positions. A gene with no page of its own has no
+      confident AlphaFold DB partner; it is here on experiment alone.
+    </p>
+    <p>
+      The viral side is numbered within the mature protein, so the protease residues
+      are the H41 and C145 that papers name. Hover the column for the precursor
+      numbering, which for spike is the S numbering that lineage-defining
+      substitutions are quoted in.
+    </p>
+    <ViralContacts />
+  </article>
+</Layout>

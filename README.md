@@ -17,7 +17,7 @@ browsing them.
 - [What is on the site](docs/site.md)
 - [Findings and caveats](docs/findings.md): the odds ratios, conservation, experimental checks
 - [Isoforms](docs/isoforms.md)
-- [GPCRs and their G proteins](docs/gpcrs.md)
+- [Where GPCRs meet their G proteins](docs/gpcrs.md)
 - [SARS-CoV-2 contacts](docs/sars-cov-2.md)
 - [Method](docs/method.md): how interfaces, variants, conservation and the rest are computed
 - [JBrowse tracks](docs/tracks.md)

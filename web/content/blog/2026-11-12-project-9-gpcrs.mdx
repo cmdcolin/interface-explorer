@@ -1,5 +1,5 @@
 ---
-title: 'GPCRs and their G proteins: the disease variants are on Gαs'
+title: 'Where GPCRs meet their G proteins'
 date: '2026-11-12'
 order: 0
 description: 'Where a receptor grabs its G protein, every pathogenic ClinVar variant in the experimental structures is on the G protein, most at the tip of Gαs that pushes into the receptor. And for a smell receptor, AlphaFold predicts the same grip the experiment shows.'
@@ -7,7 +7,6 @@ hero: './heroes/project-9-gpcrs.jpg'
 heroAlt: 'Three receptor–G protein complexes side by side, receptor in green above, Gα in grey below, the α5 helix of Gα labelled where it pushes up into the receptor: the dopamine D1 receptor with Gαs (7JVQ) with red disease variants where they meet; the smell receptor OR51E2 with a Gαs mimic (8F76); and AlphaFold’s prediction of OR51E2 with Gαolf, gripping the same way'
 ---
 
-import GpcrComplexes from '../../components/GpcrComplexes.astro'
 import Html from '../../components/Html.astro'
 import { summary } from '../../lib/data.ts'
 import { surfaceMap } from '../../lib/maps.ts'
@@ -171,8 +170,5 @@ despite an ipSAE just over the threshold. A Gαs structure cannot test the{' '}
 
 ## All {p.all} complexes
 
-Hover a residue count for the residues with their GPCRdb numbers on the
-receptor side and their CGN labels on the Gα side; "3D" opens the
-structure beside the genome in JBrowse.
-
-<GpcrComplexes />
+The <a href={href('gpcr/')}>complex table</a> lists each receptor, its G protein,
+the contact residues and how well AlphaFold DB agrees.
