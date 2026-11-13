@@ -7,6 +7,7 @@ import { download } from './cache.ts'
 import { CLINICAL_SIGNIFICANCE, SUMMARY } from './clinvar.ts'
 import { writeJson } from './json.ts'
 import { DATA, OUT } from './paths.ts'
+import { humanDiseases } from './uniprot.ts'
 
 const HPOA_URL = 'https://purl.obolibrary.org/obo/hp/hpoa/phenotype.hpoa'
 const HPOA = join(DATA, 'hpo', 'phenotype.hpoa')
@@ -16,6 +17,7 @@ const CLINGEN = join(DATA, 'clingen', 'ClinGen_gene_curation_list_GRCh38.tsv')
 export const MECHANISM = join(OUT, 'mechanism.json')
 
 export type Inheritance = 'dominant' | 'recessive'
+export const INHERITANCES: Inheritance[] = ['dominant', 'recessive']
 export type GeneClass = 'missense-only' | 'truncation-pathogenic'
 
 const MODES = new Map<string, Inheritance>([
@@ -117,6 +119,20 @@ export interface Mechanism {
 export function readMechanism() {
   const mechanism: Mechanism = JSON.parse(readFileSync(MECHANISM, 'utf8'))
   return mechanism
+}
+
+export async function proteinInheritance() {
+  const modes = new Map(Object.entries(readMechanism().inheritance))
+  const diseases = await humanDiseases()
+  return new Map(
+    [...diseases].flatMap(([accession, list]) => {
+      const mode = variantInheritance(
+        list.map(d => d.omim),
+        modes,
+      )
+      return mode ? [[accession, mode] satisfies [string, Inheritance]] : []
+    }),
+  )
 }
 
 export function notHaploinsufficient(score: number | undefined) {

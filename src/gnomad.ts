@@ -14,6 +14,7 @@ import { IPSAE_BANDS, bandName, inBand, patientFetch } from './conservation.ts'
 import { codingPositions, mergeBlocks } from './coordinates.ts'
 import type { CodingPositions } from './coordinates.ts'
 import { list, number, readJson, writeAtomically, writeJson } from './json.ts'
+import { INHERITANCES, proteinInheritance } from './mechanism.ts'
 import { pythonRound } from './numeric.ts'
 import { DATA, OUT } from './paths.ts'
 
@@ -181,10 +182,14 @@ export async function main(workers = 4) {
       },
     )
   ).flat()
-  const tablesFor = (accepts: (ipsae: number) => boolean) =>
-    counted.flatMap(({ protein, counts }) =>
-      proteinTable(protein, counts, accepts),
-    )
+  const inheritance = await proteinInheritance()
+  const tablesFor = (
+    accepts: (ipsae: number) => boolean,
+    keep: (accession: string) => boolean = () => true,
+  ) =>
+    counted
+      .filter(({ protein }) => keep(protein.accession))
+      .flatMap(({ protein, counts }) => proteinTable(protein, counts, accepts))
   const result = {
     source: GNOMAD,
     all: summary(tablesFor(() => true)),
@@ -192,6 +197,17 @@ export async function main(workers = 4) {
       IPSAE_BANDS.map(band => [
         bandName(band),
         summary(tablesFor(ipsae => inBand(ipsae, band))),
+      ]),
+    ),
+    byInheritance: Object.fromEntries(
+      INHERITANCES.map(mode => [
+        mode,
+        summary(
+          tablesFor(
+            () => true,
+            accession => inheritance.get(accession) === mode,
+          ),
+        ),
       ]),
     ),
   }

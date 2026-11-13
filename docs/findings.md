@@ -87,7 +87,10 @@ Across all 5,350 UniProt disease proteins.
   0.90, 0.94, 0.92, 0.93 from the lowest ipSAE band to the highest. The
   synonymous variants at the same residues control for mutation rate and
   coverage. The effect is small, since the rest of the surface is also
-  constrained.
+  constrained. It comes mostly from dominant genes, 0.87× (95% CI 0.84–0.91)
+  (342 proteins), against 0.96× (95% CI 0.94–0.98)
+  for recessive ones (821), though phyloP marks the
+  interfaces of both about equally.
 - 34,309 classified missense variants sit at a confident interface:
   3,686 pathogenic, 29,538 of uncertain significance and 1,085 benign. Examples:
   VHL's 48 pathogenic variants at the elongin C interface, and GNAO1's at the

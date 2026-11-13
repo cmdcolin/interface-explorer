@@ -36,6 +36,7 @@ import {
 import { codingPositions } from './coordinates.ts'
 import type { CodingPositions } from './coordinates.ts'
 import { readCrossrefs } from './crossrefs.ts'
+import { GNOMAD_RESULT } from './gnomad.ts'
 import type { Complex } from './crossrefs.ts'
 import { pairKey, readInteractions, readSources } from './interactions.ts'
 import type { PairEvidence } from './interactions.ts'
@@ -576,6 +577,7 @@ async function main() {
       },
       residues: conservation.residues,
     },
+    gnomad: readJson(GNOMAD_RESULT),
     validation: validation(comparisons),
     thresholds: { ipsae: CONFIDENT, plddt: MIN_PLDDT, contact: CONTACT },
     provenance: {

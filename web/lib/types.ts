@@ -70,6 +70,17 @@ export interface PatchConservation {
 export interface PatchTest {
   all: PatchConservation
   byConfidenceBand: Record<string, PatchConservation>
+  byInheritance: Record<Inheritance, PatchConservation>
+}
+
+export type Inheritance = 'dominant' | 'recessive'
+
+export interface PopulationConstraint {
+  proteins: number
+  'missense / synonymous at interface': string
+  'missense / synonymous at other surface': string
+  'Mantel–Haenszel odds ratio': number
+  '95% CI (bootstrap over proteins)': [number, number]
 }
 
 export interface Validation {
@@ -123,6 +134,12 @@ export interface Summary {
       patches: PatchTest
       nearbyPatches: PatchTest
     }
+  }
+  gnomad: {
+    source: string
+    all: PopulationConstraint
+    byConfidenceBand: Record<string, PopulationConstraint>
+    byInheritance: Record<Inheritance, PopulationConstraint>
   }
   validation: { cutoff: string; all: Validation; unseen: Validation }
   thresholds: { ipsae: number; plddt: number; contact: number }

@@ -3,6 +3,7 @@ import { join } from 'node:path'
 
 import type { Enrichment, Summary } from '../web/lib/types.ts'
 import { ALPHAMISSENSE_LIKELY_PATHOGENIC } from './constants.ts'
+import type { Inheritance } from './mechanism.ts'
 import type { GenePage } from './pages.ts'
 import { OUT, ROOT, SITE_DATA } from './paths.ts'
 
@@ -23,6 +24,7 @@ interface GnomadRow {
 interface GnomadResult {
   all: GnomadRow
   byConfidenceBand: Record<string, GnomadRow>
+  byInheritance: Record<Inheritance, GnomadRow>
 }
 
 function int(n: number) {
@@ -226,7 +228,10 @@ ${amBands.map(([name, band]) => `  ${name.replace('AlphaMissense ', '')}, ${odds
     .join(', ')} from the lowest ipSAE band to the highest. The
   synonymous variants at the same residues control for mutation rate and
   coverage. The effect is small, since the rest of the surface is also
-  constrained.
+  constrained. It comes mostly from dominant genes, ${ratio(gnomad.byInheritance.dominant, 2)}
+  (${int(gnomad.byInheritance.dominant.proteins)} proteins), against ${ratio(gnomad.byInheritance.recessive, 2)}
+  for recessive ones (${int(gnomad.byInheritance.recessive.proteins)}), though phyloP marks the
+  interfaces of both about equally.
 - ${int(v.pathogenic + v.uncertain + v.benign)} classified missense variants sit at a confident interface:
   ${int(v.pathogenic)} pathogenic, ${int(v.uncertain)} of uncertain significance and ${int(v.benign)} benign. Examples:
   VHL's ${vhl.length} pathogenic variants at the elongin C interface, and GNAO1's at the

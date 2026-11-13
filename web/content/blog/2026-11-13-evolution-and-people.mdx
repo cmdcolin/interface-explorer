@@ -1,0 +1,72 @@
+---
+title: 'Interfaces in evolution and in people'
+date: '2026-11-13'
+order: 0
+description: 'Across 100 vertebrates, predicted interfaces are more conserved than the rest of the protein surface in dominant and recessive disease genes alike. Among people in gnomAD, they carry fewer missense variants mainly in dominant genes.'
+hero: './heroes/evolution-and-people.jpg'
+heroAlt: 'Two panels. Left: interfaces beat the median surface patch for conservation in about the same share of dominant and recessive genes. Right: the gnomAD missense-to-synonymous ratio at the interface is clearly below the rest of the surface for dominant genes and only slightly below for recessive ones.'
+heroInPost: true
+---
+
+import { summary } from '../../lib/data.ts'
+import { percent } from '../../lib/html.ts'
+import { href } from '../../lib/site.ts'
+
+export const s = summary()
+export const patches = s.conservation.residues.patches
+export const median = 'above the median patch'
+export const share = p => percent(p[median].interface, p.complexes)
+export const randomShare = p => percent(p[median].fake, p.complexes)
+export const randoms = [patches.byInheritance.dominant, patches.byInheritance.recessive].map(randomShare)
+export const bands = Object.values(patches.byConfidenceBand)
+export const g = s.gnomad.byInheritance
+export const ratio = x =>
+  `${x['Mantel–Haenszel odds ratio'].toFixed(2)} (95% CI ${x['95% CI (bootstrap over proteins)'].join('–')}, ${x.proteins.toLocaleString()} proteins)`
+
+Most predicted interfaces have no experimental structure to check them
+against. Sequence variation offers two other checks, on very different
+timescales: UCSC's phyloP, from an alignment of 100 vertebrate genomes, and the
+variants gnomAD v4.1 finds in human exomes. They disagree in an instructive
+way.
+
+<figure class="plot">
+  <img
+    src={href('figures/inheritance.svg')}
+    width="800"
+    height="380"
+    alt="Left: interfaces beat the median surface patch for conservation in about the same share of dominant and recessive genes, well above a random patch. Right: the gnomAD missense-to-synonymous ratio at the interface is clearly below the rest of the surface for dominant genes and only slightly below for recessive ones."
+  />
+</figure>
+
+**Across vertebrates.** For each confident complex we ranked the interface's
+mean phyloP against same-sized patches from the rest of the protein's folded
+surface. The interface beats the median patch in {share(patches.byInheritance.dominant)}
+of complexes in dominant disease genes and {share(patches.byInheritance.recessive)}
+in recessive ones. A random patch ranked the same way does in
+{randoms[0] === randoms[1] ? `${randoms[0]} of both` : `${randoms[0]} and ${randoms[1]}`}. Over all complexes the share
+rises with ipSAE, from {share(bands[0])} to {share(bands.at(-1))}.
+
+**Among people.** At each interface residue we counted gnomAD's missense and
+synonymous variants; the synonymous ones control for mutation rate and
+coverage. Within each protein, the missense-to-synonymous ratio at the
+interface, relative to the rest of the folded surface, is {ratio(g.dominant)}
+in dominant genes and {ratio(g.recessive)} in recessive ones.
+
+So the interfaces of recessive genes stand out in the vertebrate record but
+barely among living people. That is the pattern population genetics predicts:
+a damaging variant in a recessive gene does no harm in a carrier, so selection
+removes it slowly, while over vertebrate history it has had time to act. For
+browsing, it means gnomAD is a weak signal at the interfaces of recessive
+genes.
+
+## Caveats
+
+- A gene counts as dominant or recessive when every disease UniProt says it
+  causes has that mode in the Human Phenotype Ontology's annotations; genes
+  with both modes or none are left out.
+- AlphaFold reads the same alignments, so conservation supports the site, not
+  the partner: a wrong partner, such as a paralog, can sit on a real conserved
+  surface.
+- The rest of the folded surface is constrained too, so the gnomAD differences
+  are small, and phyloP scores DNA, so a codon can be conserved for splicing
+  rather than for the protein.

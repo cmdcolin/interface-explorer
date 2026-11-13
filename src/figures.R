@@ -1,6 +1,7 @@
 suppressPackageStartupMessages({
   library(ggplot2)
   library(jsonlite)
+  library(patchwork)
 })
 
 root <- normalizePath(file.path(dirname(sub("--file=", "", grep("--file=", commandArgs(FALSE), value = TRUE))), ".."))
@@ -102,23 +103,58 @@ save(
   3.6
 )
 
-patches <- summary$conservation$residues$patches
 median_patch <- "above the median patch"
-conserved <- data.frame(
-  band = factor(names(patches$byConfidenceBand), levels = names(patches$byConfidenceBand)),
-  share = vapply(patches$byConfidenceBand, function(p) p[[median_patch]]$interface / p$complexes, numeric(1))
+modes <- c(dominant = "Dominant genes", recessive = "Recessive genes")
+mode_colours <- c("Dominant genes" = interface_colour, "Recessive genes" = "#9cbde6")
+by_mode <- summary$conservation$residues$patches$byInheritance
+deep <- data.frame(
+  mode = factor(modes, levels = modes),
+  share = vapply(names(modes), function(m) by_mode[[m]][[median_patch]]$interface / by_mode[[m]]$complexes, numeric(1)),
+  random = vapply(names(modes), function(m) by_mode[[m]][[median_patch]]$fake / by_mode[[m]]$complexes, numeric(1))
 )
-random <- patches$all[[median_patch]]$fake / patches$all$complexes
+population <- do.call(rbind, lapply(names(modes), function(m) {
+  x <- summary$gnomad$byInheritance[[m]]
+  data.frame(
+    mode = factor(modes[[m]], levels = modes),
+    odds = x[["Mantel–Haenszel odds ratio"]],
+    low = x[["95% CI (bootstrap over proteins)"]][[1]],
+    high = x[["95% CI (bootstrap over proteins)"]][[2]]
+  )
+}))
+percent_label <- function(x) paste0(round(100 * x), "%")
+panel_theme <- theme(
+  legend.position = "none",
+  panel.grid.major.y = element_line(colour = "grey90"),
+  panel.grid.major.x = element_blank(),
+  plot.title = element_text(face = "bold", size = 13),
+  plot.subtitle = element_text(colour = "grey35", size = 11)
+)
 
 save(
-  ggplot(conserved, aes(band, share)) +
-    geom_col(fill = interface_colour, width = 0.7) +
-    geom_hline(yintercept = random, linetype = "dashed", colour = benign_colour) +
-    annotate("label", x = 4.45, y = random, label = "a random patch ranked\nin the interface's place", hjust = 0, colour = benign_colour, size = 3.6, linewidth = 0) +
-    coord_cartesian(xlim = c(0.6, 5.4)) +
-    scale_y_continuous(labels = function(x) paste0(round(100 * x), "%"), limits = c(0, 1)) +
-    labs(x = "Complexes by ipSAE", y = "Interfaces more conserved\nthan the median surface patch") +
-    theme(panel.grid.major.y = element_line(colour = "grey90"), panel.grid.major.x = element_blank()),
-  "conservation",
-  3.4
+  (ggplot(deep, aes(mode, share, fill = mode)) +
+    geom_col(width = 0.6) +
+    geom_errorbar(aes(ymin = random, ymax = random), width = 0.6, linetype = "dashed", colour = "grey30") +
+    geom_text(aes(label = percent_label(share)), vjust = -0.5, size = 4.2) +
+    scale_fill_manual(values = mode_colours) +
+    scale_y_continuous(labels = percent_label, limits = c(0, 1)) +
+    labs(
+      title = "Across 100 vertebrates (phyloP)",
+      subtitle = "Interfaces more conserved than the median\nsurface patch; dashed: a random patch",
+      x = NULL, y = NULL
+    ) +
+    panel_theme) +
+    (ggplot(population, aes(mode, odds, colour = mode)) +
+      geom_hline(yintercept = 1, linetype = "dashed", colour = "grey30") +
+      geom_errorbar(aes(ymin = low, ymax = high), width = 0, linewidth = 1) +
+      geom_point(size = 3) +
+      scale_colour_manual(values = mode_colours) +
+      scale_y_continuous(limits = c(0.8, 1.05)) +
+      labs(
+        title = "Among people today (gnomAD)",
+        subtitle = "Missense-to-synonymous ratio at the interface,\nrelative to the rest of the surface; dashed: equal",
+        x = NULL, y = NULL
+      ) +
+      panel_theme),
+  "inheritance",
+  3.8
 )

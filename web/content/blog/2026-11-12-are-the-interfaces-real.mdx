@@ -2,24 +2,24 @@
 title: 'How the predicted interfaces compare with experiment'
 date: '2026-11-12'
 order: 3
-description: 'Where the PDB holds both proteins, the predicted interface covers most of the experimental one, including for pairs solved after AlphaFold was trained. Predicted interfaces are also more conserved than other patches of the same surface.'
+description: 'Where the PDB holds both proteins, the predicted interface covers most of the experimental one, including for pairs solved after AlphaFold was trained.'
 hero: './heroes/are-the-interfaces-real.jpg'
 heroAlt: 'PRPH2 protein map with its predicted interface residues and ClinVar variants, above a histogram of how much of each experimental interface the prediction covers, for all pairs with a structure and for pairs solved after AlphaFold was trained'
 ---
 
 import { gene, summary } from '../../lib/data.ts'
-import { percent } from '../../lib/html.ts'
 import { href } from '../../lib/site.ts'
 
 export const s = summary()
 export const all = s.validation.all
 export const unseen = s.validation.unseen
-export const pa = s.conservation.residues.patches.all
 export const share = x => `${Math.round(100 * x)}%`
 export const rom1 = gene('PRPH2').partners.find(p => p.gene === 'ROM1')
 
 Every interface in the explorer is a prediction. Here is how they compare with
-experimental structures and with conservation.
+experimental structures where those exist; for the rest,
+[conservation and gnomAD](../2026-11-13-evolution-and-people/) are checks that
+need no structure.
 
 ## Experimental structures
 
@@ -48,28 +48,6 @@ came after the cutoff. It puts {rom1.experiment.experimental} residues of PRPH2
 against ROM1, and the prediction has {rom1.experiment.shared} of them. Each gene
 page names the structure its partners were checked against.
 
-## Conservation
-
-Most pairs have no structure. For each confident complex we ranked the mean
-phyloP of the interface against same-sized patches from the rest of the
-protein's folded surface. The interface ranks above the median patch in
-**{percent(pa['above the median patch'].interface, pa.complexes)}** of
-{pa.complexes.toLocaleString()} complexes; a random patch ranked the same way
-does in {percent(pa['above the median patch'].fake, pa.complexes)}.
-
-<figure class="plot">
-  <img
-    src={href('figures/conservation.svg')}
-    width="800"
-    height="340"
-    alt="Share of interfaces more conserved than the median surface patch by ipSAE band, rising with ipSAE and well above a random patch"
-  />
-</figure>
-
-Conservation supports the site, not the partner: AlphaFold reads the same
-alignments and could place a wrong partner, such as a paralog, on a real
-conserved surface.
-
 ## Caveats
 
 - One structure is compared per pair: among those covering nearly the most of
@@ -78,5 +56,3 @@ conserved surface.
   touching, mostly subunits of rings and large assemblies.
 - A pair first deposited after the cutoff can still resemble older structures
   of related proteins.
-- phyloP scores DNA, so a codon can be conserved for splicing rather than for
-  the protein.

@@ -37,6 +37,8 @@ import {
   writeAtomically,
   writeJson,
 } from './json.ts'
+import { INHERITANCES, proteinInheritance } from './mechanism.ts'
+import type { Inheritance } from './mechanism.ts'
 import { nanPercentile, pythonRound, seededRandom } from './numeric.ts'
 import { DATA, OUT } from './paths.ts'
 import { readVariants } from './variants.ts'
@@ -457,9 +459,19 @@ function differenceSummary(differences: number[]) {
   }
 }
 
-function patchSummaries(complexes: { ipsae: number; ranks: Ranks }[]) {
+function patchSummaries(
+  complexes: { ipsae: number; inheritance?: Inheritance; ranks: Ranks }[],
+) {
   return {
     all: patchSummary(complexes.map(c => c.ranks)),
+    byInheritance: Object.fromEntries(
+      INHERITANCES.map(mode => [
+        mode,
+        patchSummary(
+          complexes.filter(c => c.inheritance === mode).map(c => c.ranks),
+        ),
+      ]),
+    ),
     byConfidenceBand: Object.fromEntries(
       IPSAE_BANDS.map(band => [
         bandName(band),
@@ -522,6 +534,7 @@ export async function main(workers = 4) {
   const edges = quartileEdges(scoredVariants.flatMap(v => v.phylop ?? []))
   const withContext = proteins.filter(p => Object.keys(p.context).length)
   const random = seededRandom(0)
+  const inheritance = await proteinInheritance()
   const differences = scored.flatMap(({ protein, scores }) =>
     complexDifferences(
       protein,
@@ -572,10 +585,18 @@ export async function main(workers = 4) {
         ]),
       ),
       patches: patchSummaries(
-        differences.map(d => ({ ipsae: d.ipsae, ranks: d.anywhere })),
+        differences.map(d => ({
+          ipsae: d.ipsae,
+          inheritance: inheritance.get(d.accession),
+          ranks: d.anywhere,
+        })),
       ),
       nearbyPatches: patchSummaries(
-        differences.map(d => ({ ipsae: d.ipsae, ranks: d.nearby })),
+        differences.map(d => ({
+          ipsae: d.ipsae,
+          inheritance: inheritance.get(d.accession),
+          ranks: d.nearby,
+        })),
       ),
     },
   }
