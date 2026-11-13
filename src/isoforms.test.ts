@@ -53,14 +53,25 @@ describe('isoformTotals', () => {
   it('counts alternative isoforms and the genes and isoforms that lose something', () => {
     expect(
       isoformTotals([
-        { modelled: 3, interfaceLost: 2, pathogenicLost: 4 },
-        { modelled: 2, interfaceLost: 0, pathogenicLost: 0 },
+        {
+          modelled: 3,
+          interfaceLost: 2,
+          pathogenicLost: 4,
+          pathogenicAtInterface: 0,
+        },
+        {
+          modelled: 2,
+          interfaceLost: 0,
+          pathogenicLost: 0,
+          pathogenicAtInterface: 3,
+        },
       ]),
     ).toEqual({
       genes: 2,
       alternativeIsoforms: 3,
       lackingInterface: 2,
       genesLackingPathogenic: 1,
+      genesPathogenicAtInterface: 1,
     })
   })
 })

@@ -31,6 +31,12 @@ const table = sortableTable({
     { label: 'Shared residues losing confidence', num: true, cell: r => r.unfolded, sort: r => r.unfolded },
     { label: 'Pathogenic sites absent', num: true, cell: r => r.pathogenicLost, sort: r => r.pathogenicLost },
     {
+      label: 'Pathogenic sites at an interface',
+      num: true,
+      cell: r => r.pathogenicAtInterface,
+      sort: r => r.pathogenicAtInterface,
+    },
+    {
       label: 'Isoforms lacking half or more of an interface',
       num: true,
       cell: r => r.interfaceLost,

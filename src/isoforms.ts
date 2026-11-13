@@ -389,6 +389,7 @@ async function inPool<T, R>(
 
 function summaryRow(gene: GeneRecord, page: string) {
   const { isoforms } = gene
+  const interfaceResidues = new Set(Object.values(gene.interfaces).flat())
   return {
     gene: gene.gene,
     page,
@@ -400,6 +401,8 @@ function summaryRow(gene: GeneRecord, page: string) {
     foldedChanged: Math.max(...isoforms.map(i => i.foldedChanged)),
     unfolded: Math.max(...isoforms.map(i => i.unfolded)),
     pathogenicLost: Math.max(...isoforms.map(i => i.pathogenicLost.length)),
+    pathogenicAtInterface: gene.pathogenic.filter(p => interfaceResidues.has(p))
+      .length,
     interfaceLost: isoforms.filter(i =>
       Object.values(i.interfaceLost).some(
         ([lostCount = 0, total = 0]) => lostCount >= MOST * total,
@@ -409,13 +412,21 @@ function summaryRow(gene: GeneRecord, page: string) {
 }
 
 export function isoformTotals(
-  rows: { modelled: number; interfaceLost: number; pathogenicLost: number }[],
+  rows: {
+    modelled: number
+    interfaceLost: number
+    pathogenicLost: number
+    pathogenicAtInterface: number
+  }[],
 ) {
   return {
     genes: rows.length,
     alternativeIsoforms: rows.reduce((n, row) => n + row.modelled - 1, 0),
     lackingInterface: rows.reduce((n, row) => n + row.interfaceLost, 0),
     genesLackingPathogenic: rows.filter(row => row.pathogenicLost > 0).length,
+    genesPathogenicAtInterface: rows.filter(
+      row => row.pathogenicAtInterface > 0,
+    ).length,
   }
 }
 
