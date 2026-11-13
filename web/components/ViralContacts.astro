@@ -4,6 +4,7 @@ import { geneHref, href } from '../lib/site.ts'
 import { runs, viralContacts } from '../lib/viral.ts'
 
 const v = viralContacts()
+const rows = v.contacts.map(c => ({ ...c, page: v.pageOf(c.gene) }))
 const pdb = (id: string) => `https://www.rcsb.org/structure/${id.toUpperCase()}`
 ---
 
@@ -22,9 +23,9 @@ const pdb = (id: string) => `https://www.rcsb.org/structure/${id.toUpperCase()}`
     </thead>
     <tbody>
       {
-        v.contacts.map(c => (
+        rows.map(c => (
           <tr>
-            <td>{v.pageOf(c.gene) ? <a href={geneHref(v.pageOf(c.gene))}>{c.gene}</a> : c.gene}</td>
+            <td>{c.page ? <a href={geneHref(c.page)}>{c.gene}</a> : c.gene}</td>
             <td>{c.protein}</td>
             <td><a href={pdb(c.pdb)}>{c.pdb}</a></td>
             <td class="num" title={runs(c.residues)}>{c.residues.length}</td>
