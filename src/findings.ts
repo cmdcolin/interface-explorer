@@ -183,10 +183,10 @@ Across all ${int(s.proteins)} UniProt disease proteins.
   UniProt's curated binding, active and other sites hold ${int(atSite('pathogenic'))} pathogenic and
   ${int(atSite('benign'))} benign variants across all four. The folded surface away from any
   interface holds ${int(r['exposed surface'].pathogenic)} pathogenic variants in ${int(s.regions['exposed surface pathogenic genes'])} genes, the most in
-  ${exposedGenes.map(([gene, n]) => `${gene} (${n})`).join(', ')}. Several of these form
-  tetramers, filaments or other assemblies larger than the two chains
-  AlphaFold DB models, so some of those residues may sit at an interface the
-  atlas does not have. For predicted effects on folding stability,
+  ${exposedGenes.map(([gene, n]) => `${gene} (${n})`).join(', ')}. AlphaFold DB models
+  two chains, so contacts within larger assemblies (tetramers, filaments) are
+  not shown; [PDBe PISA](https://www.ebi.ac.uk/pdbe/pisa/) lists them for
+  deposited structures. For predicted effects on folding stability,
   [ProtVar](https://www.ebi.ac.uk/ProtVar/) gives FoldX estimates for each
   variant ([Jänes et al. 2024](https://doi.org/10.1101/2024.05.29.596373)).
 - Within each protein, pathogenic missense variants sit at a predicted

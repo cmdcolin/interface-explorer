@@ -22,10 +22,10 @@ Across all 5,350 UniProt disease proteins.
   UniProt's curated binding, active and other sites hold 1,109 pathogenic and
   48 benign variants across all four. The folded surface away from any
   interface holds 3,648 pathogenic variants in 712 genes, the most in
-  PAH (139), GLA (78), ACTA1 (71), GCDH (61), G6PD (52), HBB (50), TTR (48), TUBA1A (43), EDA (41), PSEN1 (41), PTEN (41), ABCD1 (39). Several of these form
-  tetramers, filaments or other assemblies larger than the two chains
-  AlphaFold DB models, so some of those residues may sit at an interface the
-  atlas does not have. For predicted effects on folding stability,
+  PAH (139), GLA (78), ACTA1 (71), GCDH (61), G6PD (52), HBB (50), TTR (48), TUBA1A (43), EDA (41), PSEN1 (41), PTEN (41), ABCD1 (39). AlphaFold DB models
+  two chains, so contacts within larger assemblies (tetramers, filaments) are
+  not shown; [PDBe PISA](https://www.ebi.ac.uk/pdbe/pisa/) lists them for
+  deposited structures. For predicted effects on folding stability,
   [ProtVar](https://www.ebi.ac.uk/ProtVar/) gives FoldX estimates for each
   variant ([Jänes et al. 2024](https://doi.org/10.1101/2024.05.29.596373)).
 - Within each protein, pathogenic missense variants sit at a predicted
