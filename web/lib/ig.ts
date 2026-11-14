@@ -168,7 +168,13 @@ export function spliceDiagram() {
   ]
   const boxWidth = 120
   const boxHeight = 40
-  const rows = { gene: 62, full: 172, spliced: 282 }
+  const rows = {
+    gene: 62,
+    full: 160,
+    fullProtein: 250,
+    spliced: 350,
+    splicedProtein: 440,
+  }
   const [first, second, third, fourth] = exons
   const box = (x: number, y: number, name: string, kind: string) =>
     `<rect x="${x}" y="${y}" width="${boxWidth}" height="${boxHeight}" rx="6" class="${kind}"/><text x="${x + boxWidth / 2}" y="${y + 25}" text-anchor="middle" class="${kind === 'ghost' ? 'splice-ghost-text' : 'splice-text'}">${name}</text>`
@@ -180,8 +186,18 @@ export function spliceDiagram() {
     from: exon.x + boxWidth,
     to: exons[index + 1]?.x ?? 0,
   }))
+  const brick = 64
+  const protein = (y: number, lost: boolean) =>
+    Array.from({ length: 7 }, (_, index) => {
+      const x = 267 + index * (brick + 8)
+      const domain = index + 1
+      const spliced = domain === 3 || domain === 4
+      return `<rect x="${x}" y="${y}" width="${brick}" height="30" rx="6" class="${spliced ? (lost ? 'ghost' : 'skipped') : 'kept'}"/><text x="${x + brick / 2}" y="${y + 20}" text-anchor="middle" class="${spliced && lost ? 'splice-ghost-text' : 'splice-text'}">${domain}</text>`
+    }).join('')
+  const arrow = (y: number) =>
+    `<path d="M515 ${y} V${y + 24} m-6 -8 l6 8 l6 -8" class="splice-line"/>`
   return `
-    <div class="map-wrap"><svg class="map splice" viewBox="0 0 1000 350" role="img" aria-label="How splicing skips exons 5 and 6 of the CD22 gene: in the full-length mRNA every exon is joined to the next, in the spliced mRNA exon 4 is joined straight to exon 7">
+    <div class="map-wrap"><svg class="map splice" viewBox="0 0 1000 520" role="img" aria-label="How splicing skips exons 5 and 6 of the CD22 gene: the full-length mRNA joins every exon and is built into a protein of seven Ig domains, the spliced mRNA joins exon 4 straight to exon 7 and is built into a protein with domains 3 and 4 missing">
       <style>
         .splice .kept { fill: var(--interface); }
         .splice .skipped { fill: var(--uncertain); }
@@ -201,9 +217,15 @@ export function spliceDiagram() {
       <text class="label" x="0" y="${rows.full + 25}">Full-length mRNA</text>
       ${exons.map(e => box(e.x, rows.full, e.name, kind(e.name))).join('')}
       ${gaps.map(g => caret(g.from, g.to, rows.full, rows.full - 22)).join('')}
+      ${arrow(rows.full + boxHeight + 4)}
+      <text class="label" x="0" y="${rows.fullProtein + 20}">Protein: 7 domains</text>
+      ${protein(rows.fullProtein, false)}
       <text class="label" x="0" y="${rows.spliced + 25}">Spliced mRNA</text>
       ${exons.map(e => (kind(e.name) === 'skipped' ? box(e.x, rows.spliced, e.name, 'ghost') : box(e.x, rows.spliced, e.name, 'kept'))).join('')}
-      ${caret((first?.x ?? 0) + boxWidth, fourth?.x ?? 0, rows.spliced, rows.spliced - 52)}
-      <text class="note" x="${((second?.x ?? 0) + (third?.x ?? 0) + boxWidth) / 2}" y="${rows.spliced + 66}" text-anchor="middle">exons 5 and 6 skipped, so domains 3 and 4 are never built</text>
+      ${caret((first?.x ?? 0) + boxWidth, fourth?.x ?? 0, rows.spliced, rows.spliced - 44)}
+      ${arrow(rows.spliced + boxHeight + 4)}
+      <text class="label" x="0" y="${rows.splicedProtein + 20}">Protein: 5 domains</text>
+      ${protein(rows.splicedProtein, true)}
+      <text class="note" x="515" y="${rows.splicedProtein + 62}" text-anchor="middle">the exons are skipped, so domains 3 and 4 are never built</text>
     </svg></div>`
 }
