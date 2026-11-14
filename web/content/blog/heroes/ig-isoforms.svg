@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 760" font-family="Open Sans, Helvetica, Arial, sans-serif">
 <rect width="1600" height="760" fill="#fcfcfb"/>
-<text x="800" y="70" font-size="50" text-anchor="middle" fill="#0b0b0b">Some leukaemia cells make a CD22 the therapy can't grab</text>
+<text x="800" y="70" font-size="46" text-anchor="middle" fill="#0b0b0b">Some leukaemia cells make a CD22 that a CAR T-cell therapy can't grab</text>
 <rect x="60" y="567" width="1480" height="36" rx="14" fill="#bdb8ab"/>
 <rect x="370.0" y="125" width="200" height="54" rx="13" fill="#2a78d6"/>
 <rect x="370.0" y="187" width="200" height="54" rx="13" fill="#2a78d6"/>
@@ -11,7 +11,7 @@
 <rect x="370.0" y="497" width="200" height="54" rx="13" fill="#2a78d6"/>
 <rect x="346.0" y="254.0" width="32" height="44" rx="10" fill="#e8890c"/>
 <g transform=""><path d="M124.0 276.0 L254.0 276.0" stroke="#0b0b0b" stroke-width="18" stroke-linecap="round"/><path d="M342.0 256.0 L312.0 226.0 L254.0 276.0 L312.0 326.0 L342.0 296.0" stroke="#0b0b0b" stroke-width="18" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="342.0" cy="256.0" r="11" fill="#e8890c"/><circle cx="342.0" cy="296.0" r="11" fill="#e8890c"/></g>
-<text x="124.0" y="242.0" font-size="32" fill="#0b0b0b">therapy</text>
+<text x="94" y="228" font-size="32" fill="#0b0b0b">CAR T cell</text>
 <text x="470" y="659" font-size="58" text-anchor="middle" fill="#3f9b78">Killed</text>
 <text x="470" y="705" font-size="34" text-anchor="middle" fill="#0b0b0b">Full-length CD22</text>
 <rect x="1100.0" y="125" width="200" height="54" rx="13" fill="#2a78d6"/>
