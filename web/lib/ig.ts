@@ -161,27 +161,25 @@ export function igGenes() {
 
 export function spliceDiagram() {
   const exons = [
-    { name: 'exon 4', x: 170 },
-    { name: 'exon 5', x: 360 },
-    { name: 'exon 6', x: 550 },
-    { name: 'exon 7', x: 740 },
+    { label: '', x: 170, skipped: false },
+    { label: '5', x: 360, skipped: true },
+    { label: '6', x: 550, skipped: true },
+    { label: '', x: 740, skipped: false },
   ]
   const boxWidth = 120
   const boxHeight = 40
   const rows = {
-    gene: 62,
-    full: 160,
-    fullProtein: 250,
-    spliced: 350,
-    splicedProtein: 440,
+    gene: 20,
+    full: 110,
+    fullProtein: 190,
+    spliced: 270,
+    splicedProtein: 350,
   }
-  const [first, second, third, fourth] = exons
-  const box = (x: number, y: number, name: string, kind: string) =>
-    `<rect x="${x}" y="${y}" width="${boxWidth}" height="${boxHeight}" rx="6" class="${kind}"/><text x="${x + boxWidth / 2}" y="${y + 25}" text-anchor="middle" class="${kind === 'ghost' ? 'splice-ghost-text' : 'splice-text'}">${name}</text>`
+  const [first, , , fourth] = exons
+  const box = (x: number, y: number, label: string, kind: string) =>
+    `<rect x="${x}" y="${y}" width="${boxWidth}" height="${boxHeight}" rx="6" class="${kind}"/><text x="${x + boxWidth / 2}" y="${y + 27}" text-anchor="middle" class="${kind === 'ghost' ? 'splice-ghost-text' : 'splice-text'}">${label}</text>`
   const caret = (fromX: number, toX: number, y: number, peak: number) =>
     `<path d="M${fromX} ${y} L${(fromX + toX) / 2} ${peak} L${toX} ${y}" class="splice-line"/>`
-  const kind = (name: string) =>
-    name === 'exon 5' || name === 'exon 6' ? 'skipped' : 'kept'
   const gaps = exons.slice(0, -1).map((exon, index) => ({
     from: exon.x + boxWidth,
     to: exons[index + 1]?.x ?? 0,
@@ -192,40 +190,34 @@ export function spliceDiagram() {
       const x = 267 + index * (brick + 8)
       const domain = index + 1
       const spliced = domain === 3 || domain === 4
-      return `<rect x="${x}" y="${y}" width="${brick}" height="30" rx="6" class="${spliced ? (lost ? 'ghost' : 'skipped') : 'kept'}"/><text x="${x + brick / 2}" y="${y + 20}" text-anchor="middle" class="${spliced && lost ? 'splice-ghost-text' : 'splice-text'}">${domain}</text>`
+      return `<rect x="${x}" y="${y}" width="${brick}" height="30" rx="6" class="${spliced ? (lost ? 'ghost' : 'skipped') : 'kept'}"/>${spliced ? `<text x="${x + brick / 2}" y="${y + 21}" text-anchor="middle" class="${lost ? 'splice-ghost-text' : 'splice-text'}">${domain}</text>` : ''}`
     }).join('')
   const arrow = (y: number) =>
-    `<path d="M515 ${y} V${y + 24} m-6 -8 l6 8 l6 -8" class="splice-line"/>`
+    `<path d="M515 ${y} V${y + 22} m-6 -8 l6 8 l6 -8" class="splice-line"/>`
   return `
-    <div class="map-wrap"><svg class="map splice" viewBox="0 0 1000 520" role="img" aria-label="How splicing skips exons 5 and 6 of the CD22 gene: the full-length mRNA joins every exon and is built into a protein of seven Ig domains, the spliced mRNA joins exon 4 straight to exon 7 and is built into a protein with domains 3 and 4 missing">
+    <div class="map-wrap"><svg class="map splice" viewBox="0 0 1000 420" role="img" aria-label="Splicing can skip exons 5 and 6 of the CD22 gene. The full-length mRNA joins every exon and gives a protein with seven domains. The spliced mRNA skips exons 5 and 6 and gives a protein without domains 3 and 4">
       <style>
         .splice .kept { fill: var(--interface); }
         .splice .skipped { fill: var(--uncertain); }
         .splice .ghost { fill: none; stroke: var(--benign); stroke-width: 2; stroke-dasharray: 6 5; }
-        .splice .splice-text { fill: #fff; font-size: 14px; }
-        .splice .splice-ghost-text { fill: var(--text-2); font-size: 14px; }
+        .splice .splice-text { fill: #fff; font-size: 17px; }
+        .splice .splice-ghost-text { fill: var(--text-2); font-size: 17px; }
         .splice .splice-line { fill: none; stroke: var(--text-2); stroke-width: 2; }
-        .splice .label { fill: var(--text); font-size: 15px; }
-        .splice .note { fill: var(--text-2); font-size: 14px; }
+        .splice .label { fill: var(--text); font-size: 17px; }
         .splice .intron { stroke: var(--text-2); stroke-width: 2; }
       </style>
-      <text class="label" x="0" y="${rows.gene + 25}">Gene (DNA)</text>
+      <text class="label" x="0" y="${rows.gene + 27}">Gene</text>
       <line class="intron" x1="${(first?.x ?? 0) - 40}" x2="${(fourth?.x ?? 0) + boxWidth + 40}" y1="${rows.gene + 20}" y2="${rows.gene + 20}"/>
-      ${exons.map(e => box(e.x, rows.gene, e.name, kind(e.name))).join('')}
-      <path d="M${second?.x ?? 0} ${rows.gene - 12} v-8 H${(third?.x ?? 0) + boxWidth} v8" class="splice-line"/>
-      <text class="note" x="${((second?.x ?? 0) + (third?.x ?? 0) + boxWidth) / 2}" y="${rows.gene - 30}" text-anchor="middle">exons 5 and 6 encode domains 3 and 4</text>
-      <text class="label" x="0" y="${rows.full + 25}">Full-length mRNA</text>
-      ${exons.map(e => box(e.x, rows.full, e.name, kind(e.name))).join('')}
-      ${gaps.map(g => caret(g.from, g.to, rows.full, rows.full - 22)).join('')}
-      ${arrow(rows.full + boxHeight + 4)}
-      <text class="label" x="0" y="${rows.fullProtein + 20}">Protein: 7 domains</text>
+      ${exons.map(e => box(e.x, rows.gene, e.label, e.skipped ? 'skipped' : 'kept')).join('')}
+      <text class="label" x="0" y="${rows.full + 27}">Full length</text>
+      ${exons.map(e => box(e.x, rows.full, e.label, e.skipped ? 'skipped' : 'kept')).join('')}
+      ${gaps.map(g => caret(g.from, g.to, rows.full, rows.full - 20)).join('')}
+      ${arrow(rows.full + boxHeight + 6)}
       ${protein(rows.fullProtein, false)}
-      <text class="label" x="0" y="${rows.spliced + 25}">Spliced mRNA</text>
-      ${exons.map(e => (kind(e.name) === 'skipped' ? box(e.x, rows.spliced, e.name, 'ghost') : box(e.x, rows.spliced, e.name, 'kept'))).join('')}
-      ${caret((first?.x ?? 0) + boxWidth, fourth?.x ?? 0, rows.spliced, rows.spliced - 44)}
-      ${arrow(rows.spliced + boxHeight + 4)}
-      <text class="label" x="0" y="${rows.splicedProtein + 20}">Protein: 5 domains</text>
+      <text class="label" x="0" y="${rows.spliced + 27}">Spliced</text>
+      ${exons.map(e => (e.skipped ? box(e.x, rows.spliced, e.label, 'ghost') : box(e.x, rows.spliced, e.label, 'kept'))).join('')}
+      ${caret((first?.x ?? 0) + boxWidth, fourth?.x ?? 0, rows.spliced, rows.spliced - 40)}
+      ${arrow(rows.spliced + boxHeight + 6)}
       ${protein(rows.splicedProtein, true)}
-      <text class="note" x="515" y="${rows.splicedProtein + 62}" text-anchor="middle">the exons are skipped, so domains 3 and 4 are never built</text>
     </svg></div>`
 }
