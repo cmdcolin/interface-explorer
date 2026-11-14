@@ -7,11 +7,13 @@ description:
   clinical antibody or CAR. CD33 and CD22 show how.'
 hero: './heroes/ig-isoforms.jpg'
 heroAlt:
-  'Two stacks of seven blocks on a cell surface, each block a domain of the
-  protein CD22. In the full-length stack an antibody-based CAR grips an orange
-  epitope on domain 3 and the cell is attacked. In the spliced stack domains 3
-  and 4 are removed, the epitope is gone, the CAR drifts off without a grip and
-  the cell escapes'
+  'Title: a leukaemia therapy aims at one piece of CD22, and the cancer cells of
+  some patients make a version without it. Two stacks of seven blocks on a cell
+  surface, each block a domain of CD22. In the full-length stack the therapy
+  grips an orange epitope on domain 3 and the cell is killed. In the spliced
+  stack, found in leukaemia cells, domains 3 and 4 are removed, the epitope is
+  gone and the cell escapes. A footnote says the spliced version was in 16 of 18
+  childhood leukaemias tested and almost absent from normal B cells'
 ---
 
 import Html from '../../components/Html.astro'
@@ -25,6 +27,11 @@ export const genes = igGenes()
 An immunoglobulin-like (Ig) domain folds on its own, so splicing can remove one
 whole and leave the rest of the protein intact. If an antibody or CAR binds that
 domain, the isoform has no epitope for it.
+
+That is a problem in cancer therapy when the shorter isoform is made by the
+tumour and not by healthy cells, or in patients who inherit a variant that
+favours it. The drug then misses exactly the cells it is meant to kill. The two
+cases below, CD33 and CD22, are one of each.
 
 Each map below shows a protein's Ig-like domains from UniProt, numbered from the
 N-terminus, and the isoforms that lack one. Red bars mark the domains that
