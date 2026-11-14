@@ -368,3 +368,31 @@ export interface Viral {
     neighbours: string[]
   }[]
 }
+
+export interface IgDomain {
+  start: number
+  end: number
+  name: string
+}
+
+export interface IgIsoform {
+  accession: string
+  name: string
+  removed: [number, number][]
+  lost: number[]
+}
+
+export interface IgRecord {
+  gene: string
+  accession: string
+  length: number
+  domains: IgDomain[]
+  isoforms: IgIsoform[]
+}
+
+export interface IgIsoforms {
+  genes: number
+  genesLosingDomain: number
+  isoformsLosingDomain: number
+  records: IgRecord[]
+}

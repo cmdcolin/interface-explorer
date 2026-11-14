@@ -9,6 +9,7 @@ import type {
   Gene,
   GeneRow,
   Gpcr,
+  IgIsoforms,
   IsoformIndex,
   IsoformRecord,
   IsoformTotals,
@@ -41,6 +42,7 @@ type Md = Awaited<ReturnType<typeof mdResult>>
 export const md = once<Md>('md.json')
 export const isoformIndex = once<IsoformIndex>('isoforms.json')
 export const isoformTotals = once<IsoformTotals>('isoformTotals.json')
+export const igIsoforms = once<IgIsoforms>('igIsoforms.json')
 export const gene = (page: string) => read<Gene>(`genes/${page}.json`)
 export const diseaseRows = once<DiseaseRow[]>('diseases.json')
 export const disease = (page: string) => read<Disease>(`diseases/${page}.json`)

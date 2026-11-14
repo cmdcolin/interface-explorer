@@ -1,0 +1,116 @@
+---
+title: 'Splicing removes whole Ig domains: CD33 and CD22'
+date: '2026-11-14'
+order: 1
+description:
+  'An isoform can lose a whole Ig-like domain, and with it the epitope of a
+  clinical antibody or CAR. CD33 and CD22 show how.'
+hero: './heroes/ig-isoforms.jpg'
+heroAlt:
+  'Two stacks of seven blocks on a cell surface, each block a domain of the
+  protein CD22. In the full-length stack an antibody-based CAR grips an orange
+  epitope on domain 3 and the cell is attacked. In the spliced stack domains 3
+  and 4 are removed, the epitope is gone, the CAR drifts off without a grip and
+  the cell escapes'
+---
+
+import Html from '../../components/Html.astro'
+import { igCase, igFacts, igGenes, igTotals } from '../../lib/ig.ts'
+
+export const ig = igTotals()
+export const cd33 = igFacts('CD33')
+export const cd22 = igFacts('CD22')
+export const genes = igGenes()
+
+An immunoglobulin-like (Ig) domain folds on its own, so splicing can remove one
+whole and leave the rest of the protein intact. If an antibody or CAR binds that
+domain, the isoform has no epitope for it.
+
+Each map below shows a protein's Ig-like domains from UniProt, numbered from the
+N-terminus, and the isoforms that lack one. Red bars mark the domains that
+clinical antibodies bind.
+
+## CD33
+
+CD33 has {cd33.domains} Ig-like domains. The isoform CD33m lacks the first, the
+V-type domain.
+
+<Html html={igCase('CD33')} />
+
+The V-type domain is encoded by exon 2, and a common variant, rs12459419, makes
+skipping that exon more likely. The domain is where gemtuzumab ozogamicin and
+the P67.6 antibody bind
+([Lamba et al., 2017](https://pmc.ncbi.nlm.nih.gov/articles/PMC5549451)). In the
+Children's Oncology Group AAML0531 trial, gemtuzumab lowered relapse risk only
+in patients with the CC genotype. A smaller study of a related conjugate found
+no link to the genotype
+([Stanchina et al., 2019](https://pmc.ncbi.nlm.nih.gov/articles/PMC6704571)), so
+the effect is not settled.
+
+## CD22
+
+CD22 has {cd22.domains} Ig-like domains. UniProt lists {cd22.isoforms.length}
+isoforms that lack at least one whole. CD22-alpha lacks domains 3 and 4, which
+exons 5 and 6 encode.
+
+<Html html={igCase('CD22')} />
+
+[Zheng et al. (2022)](https://pmc.ncbi.nlm.nih.gov/articles/PMC9780083) found
+that the isoform skipping exons 5 and 6 is in 16 of 18 diagnostic childhood
+leukaemias and almost absent from normal B cells. It reaches the cell surface
+and works as a protein. What it costs depends on the antibody:
+
+- **HA22 CAR:** binds an epitope encoded by exon 5, and cells with only this
+  isoform resisted it.
+- **m971 CAR:** binds domain 7, which the isoform keeps, and killed these cells
+  about as well as full-length ones
+  ([Ereño-Orbea et al., 2021](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8353475/)
+  place its epitope there).
+- **Inotuzumab ozogamicin:** binds the N-terminus, so these cells stayed
+  sensitive.
+
+Skipping exon 2 is a different problem. Exon 2 holds the start codon, so those
+isoforms make no detectable protein and the map can't show them. Forcing exon 2
+skipping cut CD22 to about a seventh and made cells resistant to inotuzumab. One
+inotuzumab non-responder's blasts expressed mainly such isoforms.
+
+Epratuzumab binds across domains 2 and 3
+([Ereño-Orbea et al., 2021](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8353475/)),
+but the paper did not test it. UniProt also lists an isoform that lacks domain
+1, P20273-5, which nobody has tested.
+
+## Why it happens
+
+- **CD33:** an inherited variant favours the shorter isoform from birth.
+- **CD22:** the domain 3–4 isoform is already in most leukaemias at diagnosis,
+  so a domain 3 binder has a gap before treatment starts. Exon 2 skipping can
+  rise further at relapse.
+
+Which cells make an isoform, and what sets that, is what the protein models
+cannot tell us.
+
+## Across the proteome
+
+Of {ig.genes} reviewed human proteins with described isoforms and an Ig-like
+domain annotation, {ig.genesLosingDomain} have an isoform that lacks one of
+those domains whole, {ig.isoformsLosingDomain} isoforms in all. A domain counts
+as lost when the isoform deletes at least 90% of its residues.
+
+<details>
+<summary>The {ig.genesLosingDomain} proteins</summary>
+
+<p>{genes.map(g => `${g.gene} (${g.isoforms})`).join(', ')}</p>
+
+The number in brackets is how many isoforms lack a whole Ig-like domain. Each
+isoform's deletions are in `site/data/igIsoforms.json`, built by `pnpm ig`.
+
+</details>
+
+## What this does not show
+
+- **Expression.** UniProt says an isoform exists, not when or where it is made.
+- **Multimers.** Each map is one chain. Whether an isoform still joins its
+  partners, or sits in the synapse a CAR makes, needs the assembly. Neither CD33
+  nor CD22 has predicted interfaces in this atlas, so that is the next step.
+- **Epitopes.** The red bars are whole domains from the cited papers. An
+  antibody's contacts can cover part of a domain, or two.

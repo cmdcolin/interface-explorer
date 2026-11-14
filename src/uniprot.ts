@@ -38,7 +38,7 @@ export interface Feature {
   description: string
 }
 
-async function uniprotEntries(
+export async function uniprotEntries(
   query: string,
   path: string,
   fields = ENTRY_FIELDS,
