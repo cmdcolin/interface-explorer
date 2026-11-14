@@ -7,11 +7,12 @@ description:
   clinical antibody or CAR. CD33 and CD22 show how.'
 hero: './heroes/ig-isoforms.jpg'
 heroAlt:
-  'Title: some leukaemia cells make a CD22 that a CAR T-cell therapy cannot grab.
-  Two stacks of seven blocks on a cell surface. In the full-length CD22 stack a
-  CAR T cell grips an orange patch on the orange third block, and the cell is
-  killed. In the spliced CD22 stack the third and fourth blocks are missing, the
-  patch is gone, the CAR T cell drifts off and the cell escapes'
+  'Title: some leukaemia cells make a CD22 that a CAR T-cell therapy cannot
+  grab. Two stacks of seven blocks on a cell surface. On the left a CAR T cell
+  holds out an antibody that grips an orange patch on the orange third block of
+  full-length CD22, and the cell is killed. On the right, in spliced CD22, the
+  third and fourth blocks are missing, the patch is gone, the antibody finds
+  nothing to grip and the cell escapes'
 ---
 
 import Html from '../../components/Html.astro'
@@ -31,8 +32,9 @@ export const genes = igGenes()
 An immunoglobulin-like (Ig) domain folds on its own, so splicing can remove one
 whole and leave the rest of the protein intact. If an antibody or CAR binds that
 domain, the isoform has no epitope for it. (A CAR T cell is one of the patient's
-own T cells, engineered to carry an antibody-based receptor that grips a chosen
-protein on cancer cells.)
+own T cells, engineered to carry a receptor whose outer part is an antibody
+fragment. The fragment grips a chosen protein on cancer cells, and the T cell
+then attacks.)
 
 That is a problem in cancer therapy when the shorter isoform is made by the
 tumour and not by healthy cells, or in patients who inherit a variant that

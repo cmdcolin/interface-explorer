@@ -2,27 +2,26 @@
 <rect width="1600" height="760" fill="#fcfcfb"/>
 <text x="800" y="70" font-size="46" text-anchor="middle" fill="#0b0b0b">Some leukaemia cells make a CD22 that a CAR T-cell therapy can't grab</text>
 <rect x="60" y="567" width="1480" height="36" rx="14" fill="#bdb8ab"/>
-<rect x="370.0" y="125" width="200" height="54" rx="13" fill="#2a78d6"/>
-<rect x="370.0" y="187" width="200" height="54" rx="13" fill="#2a78d6"/>
-<rect x="370.0" y="249" width="200" height="54" rx="13" fill="#e8890c"/>
-<rect x="370.0" y="311" width="200" height="54" rx="13" fill="#e8890c"/>
-<rect x="370.0" y="373" width="200" height="54" rx="13" fill="#2a78d6"/>
-<rect x="370.0" y="435" width="200" height="54" rx="13" fill="#2a78d6"/>
-<rect x="370.0" y="497" width="200" height="54" rx="13" fill="#2a78d6"/>
-<rect x="346.0" y="254.0" width="32" height="44" rx="10" fill="#e8890c"/>
-<g transform=""><path d="M124.0 276.0 L254.0 276.0" stroke="#0b0b0b" stroke-width="18" stroke-linecap="round"/><path d="M342.0 256.0 L312.0 226.0 L254.0 276.0 L312.0 326.0 L342.0 296.0" stroke="#0b0b0b" stroke-width="18" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="342.0" cy="256.0" r="11" fill="#e8890c"/><circle cx="342.0" cy="296.0" r="11" fill="#e8890c"/></g>
-<text x="94" y="228" font-size="32" fill="#0b0b0b">CAR T cell</text>
-<text x="470" y="659" font-size="58" text-anchor="middle" fill="#3f9b78">Killed</text>
-<text x="470" y="705" font-size="34" text-anchor="middle" fill="#0b0b0b">Full-length CD22</text>
-<rect x="1100.0" y="125" width="200" height="54" rx="13" fill="#2a78d6"/>
-<rect x="1100.0" y="187" width="200" height="54" rx="13" fill="#2a78d6"/>
-<rect x="1100.0" y="249" width="200" height="54" rx="13" fill="#fcfcfb" stroke="#7a7975" stroke-width="4" stroke-dasharray="14 10"/>
-<rect x="1100.0" y="311" width="200" height="54" rx="13" fill="#fcfcfb" stroke="#7a7975" stroke-width="4" stroke-dasharray="14 10"/>
-<rect x="1100.0" y="373" width="200" height="54" rx="13" fill="#2a78d6"/>
-<rect x="1100.0" y="435" width="200" height="54" rx="13" fill="#2a78d6"/>
-<rect x="1100.0" y="497" width="200" height="54" rx="13" fill="#2a78d6"/>
-<rect x="1076.0" y="254.0" width="32" height="44" rx="10" fill="none" stroke="#e8890c" stroke-width="4" stroke-dasharray="8 6"/>
-<g transform="translate(-60 -30) rotate(-10 984.0 276.0)"><path d="M854.0 276.0 L984.0 276.0" stroke="#0b0b0b" stroke-width="18" stroke-linecap="round"/><path d="M1072.0 256.0 L1042.0 226.0 L984.0 276.0 L1042.0 326.0 L1072.0 296.0" stroke="#0b0b0b" stroke-width="18" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="1072.0" cy="256.0" r="11" fill="#e8890c"/><circle cx="1072.0" cy="296.0" r="11" fill="#e8890c"/></g>
-<text x="1200" y="659" font-size="58" text-anchor="middle" fill="#c42c2c">Escapes</text>
-<text x="1200" y="705" font-size="34" text-anchor="middle" fill="#0b0b0b">Spliced CD22</text>
+<rect x="460.0" y="125" width="200" height="54" rx="13" fill="#2a78d6"/>
+<rect x="460.0" y="187" width="200" height="54" rx="13" fill="#2a78d6"/>
+<rect x="460.0" y="249" width="200" height="54" rx="13" fill="#e8890c"/>
+<rect x="460.0" y="311" width="200" height="54" rx="13" fill="#e8890c"/>
+<rect x="460.0" y="373" width="200" height="54" rx="13" fill="#2a78d6"/>
+<rect x="460.0" y="435" width="200" height="54" rx="13" fill="#2a78d6"/>
+<rect x="460.0" y="497" width="200" height="54" rx="13" fill="#2a78d6"/>
+<rect x="436.0" y="254.0" width="32" height="44" rx="10" fill="#e8890c"/>
+<g transform=""><path d="M204.0 276.0 L344.0 276.0" stroke="#0b0b0b" stroke-width="18" stroke-linecap="round"/><circle cx="154.0" cy="276.0" r="56" fill="#cfe7dd" stroke="#3f9b78" stroke-width="6"/><path d="M432.0 256.0 L402.0 226.0 L344.0 276.0 L402.0 326.0 L432.0 296.0" stroke="#0b0b0b" stroke-width="18" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="432.0" cy="256.0" r="11" fill="#e8890c"/><circle cx="432.0" cy="296.0" r="11" fill="#e8890c"/><text x="154.0" y="376.0" font-size="30" text-anchor="middle" fill="#0b0b0b">CAR T cell</text><text x="354.0" y="204.0" font-size="30" text-anchor="middle" fill="#0b0b0b">antibody</text></g>
+<text x="560" y="659" font-size="58" text-anchor="middle" fill="#3f9b78">Killed</text>
+<text x="560" y="705" font-size="34" text-anchor="middle" fill="#0b0b0b">Full-length CD22</text>
+<rect x="1170.0" y="125" width="200" height="54" rx="13" fill="#2a78d6"/>
+<rect x="1170.0" y="187" width="200" height="54" rx="13" fill="#2a78d6"/>
+<rect x="1170.0" y="249" width="200" height="54" rx="13" fill="#fcfcfb" stroke="#7a7975" stroke-width="4" stroke-dasharray="14 10"/>
+<rect x="1170.0" y="311" width="200" height="54" rx="13" fill="#fcfcfb" stroke="#7a7975" stroke-width="4" stroke-dasharray="14 10"/>
+<rect x="1170.0" y="373" width="200" height="54" rx="13" fill="#2a78d6"/>
+<rect x="1170.0" y="435" width="200" height="54" rx="13" fill="#2a78d6"/>
+<rect x="1170.0" y="497" width="200" height="54" rx="13" fill="#2a78d6"/>
+<rect x="1146.0" y="254.0" width="32" height="44" rx="10" fill="none" stroke="#e8890c" stroke-width="4" stroke-dasharray="8 6"/>
+<g transform="translate(-40 -30) rotate(-10 1054.0 276.0)"><path d="M914.0 276.0 L1054.0 276.0" stroke="#0b0b0b" stroke-width="18" stroke-linecap="round"/><circle cx="864.0" cy="276.0" r="56" fill="#cfe7dd" stroke="#3f9b78" stroke-width="6"/><path d="M1142.0 256.0 L1112.0 226.0 L1054.0 276.0 L1112.0 326.0 L1142.0 296.0" stroke="#0b0b0b" stroke-width="18" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="1142.0" cy="256.0" r="11" fill="#e8890c"/><circle cx="1142.0" cy="296.0" r="11" fill="#e8890c"/><text x="864.0" y="376.0" font-size="30" text-anchor="middle" fill="#0b0b0b">CAR T cell</text><text x="1064.0" y="204.0" font-size="30" text-anchor="middle" fill="#0b0b0b">antibody</text></g>
+<text x="1270" y="659" font-size="58" text-anchor="middle" fill="#c42c2c">Escapes</text>
+<text x="1270" y="705" font-size="34" text-anchor="middle" fill="#0b0b0b">Spliced CD22</text>
 </svg>
