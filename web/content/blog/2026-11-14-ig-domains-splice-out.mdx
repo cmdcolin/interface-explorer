@@ -17,7 +17,13 @@ heroAlt:
 ---
 
 import Html from '../../components/Html.astro'
-import { igCase, igFacts, igGenes, igTotals } from '../../lib/ig.ts'
+import {
+  igCase,
+  igFacts,
+  igGenes,
+  igTotals,
+  spliceDiagram,
+} from '../../lib/ig.ts'
 
 export const ig = igTotals()
 export const cd33 = igFacts('CD33')
@@ -59,6 +65,12 @@ the effect is not settled.
 CD22 has {cd22.domains} Ig-like domains. UniProt lists {cd22.isoforms.length}
 isoforms that lack at least one whole. CD22-alpha lacks domains 3 and 4, which
 exons 5 and 6 encode.
+
+The gene is the same in every cell. Splicing, the step that edits the RNA copy
+of the gene, decides which exons are kept. Skipping exons 5 and 6 leaves out
+domains 3 and 4:
+
+<Html html={spliceDiagram()} />
 
 <Html html={igCase('CD22')} />
 

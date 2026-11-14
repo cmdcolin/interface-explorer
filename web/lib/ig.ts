@@ -118,7 +118,7 @@ export function igMap(record: IgRecord) {
     </svg></div>
     <div class="legend">
       <span><span class="swatch" style="background:var(--interface)"></span>Ig-like domain, numbered from the N-terminus</span>
-      <span>dashed box: domain the isoform lacks</span>
+      <span>dashed box: domain skipped by splicing</span>
       ${epitopes.length ? `<span><span class="swatch" style="background:var(--pathogenic)"></span>domains the antibody binds</span>` : ''}
     </div>`
 }
@@ -157,4 +157,53 @@ export function igGenes() {
     accession: r.accession,
     isoforms: r.isoforms.filter(i => i.lost.length > 0).length,
   }))
+}
+
+export function spliceDiagram() {
+  const exons = [
+    { name: 'exon 4', x: 170 },
+    { name: 'exon 5', x: 360 },
+    { name: 'exon 6', x: 550 },
+    { name: 'exon 7', x: 740 },
+  ]
+  const boxWidth = 120
+  const boxHeight = 40
+  const rows = { gene: 62, full: 172, spliced: 282 }
+  const [first, second, third, fourth] = exons
+  const box = (x: number, y: number, name: string, kind: string) =>
+    `<rect x="${x}" y="${y}" width="${boxWidth}" height="${boxHeight}" rx="6" class="${kind}"/><text x="${x + boxWidth / 2}" y="${y + 25}" text-anchor="middle" class="${kind === 'ghost' ? 'splice-ghost-text' : 'splice-text'}">${name}</text>`
+  const caret = (fromX: number, toX: number, y: number, peak: number) =>
+    `<path d="M${fromX} ${y} L${(fromX + toX) / 2} ${peak} L${toX} ${y}" class="splice-line"/>`
+  const kind = (name: string) =>
+    name === 'exon 5' || name === 'exon 6' ? 'skipped' : 'kept'
+  const gaps = exons.slice(0, -1).map((exon, index) => ({
+    from: exon.x + boxWidth,
+    to: exons[index + 1]?.x ?? 0,
+  }))
+  return `
+    <div class="map-wrap"><svg class="map splice" viewBox="0 0 1000 350" role="img" aria-label="How splicing skips exons 5 and 6 of the CD22 gene: in the full-length mRNA every exon is joined to the next, in the spliced mRNA exon 4 is joined straight to exon 7">
+      <style>
+        .splice .kept { fill: var(--interface); }
+        .splice .skipped { fill: var(--uncertain); }
+        .splice .ghost { fill: none; stroke: var(--benign); stroke-width: 2; stroke-dasharray: 6 5; }
+        .splice .splice-text { fill: #fff; font-size: 14px; }
+        .splice .splice-ghost-text { fill: var(--text-2); font-size: 14px; }
+        .splice .splice-line { fill: none; stroke: var(--text-2); stroke-width: 2; }
+        .splice .label { fill: var(--text); font-size: 15px; }
+        .splice .note { fill: var(--text-2); font-size: 14px; }
+        .splice .intron { stroke: var(--text-2); stroke-width: 2; }
+      </style>
+      <text class="label" x="0" y="${rows.gene + 25}">Gene (DNA)</text>
+      <line class="intron" x1="${(first?.x ?? 0) - 40}" x2="${(fourth?.x ?? 0) + boxWidth + 40}" y1="${rows.gene + 20}" y2="${rows.gene + 20}"/>
+      ${exons.map(e => box(e.x, rows.gene, e.name, kind(e.name))).join('')}
+      <path d="M${second?.x ?? 0} ${rows.gene - 12} v-8 H${(third?.x ?? 0) + boxWidth} v8" class="splice-line"/>
+      <text class="note" x="${((second?.x ?? 0) + (third?.x ?? 0) + boxWidth) / 2}" y="${rows.gene - 30}" text-anchor="middle">exons 5 and 6 encode domains 3 and 4</text>
+      <text class="label" x="0" y="${rows.full + 25}">Full-length mRNA</text>
+      ${exons.map(e => box(e.x, rows.full, e.name, kind(e.name))).join('')}
+      ${gaps.map(g => caret(g.from, g.to, rows.full, rows.full - 22)).join('')}
+      <text class="label" x="0" y="${rows.spliced + 25}">Spliced mRNA</text>
+      ${exons.map(e => (kind(e.name) === 'skipped' ? box(e.x, rows.spliced, e.name, 'ghost') : box(e.x, rows.spliced, e.name, 'kept'))).join('')}
+      ${caret((first?.x ?? 0) + boxWidth, fourth?.x ?? 0, rows.spliced, rows.spliced - 52)}
+      <text class="note" x="${((second?.x ?? 0) + (third?.x ?? 0) + boxWidth) / 2}" y="${rows.spliced + 66}" text-anchor="middle">exons 5 and 6 skipped, so domains 3 and 4 are never built</text>
+    </svg></div>`
 }
