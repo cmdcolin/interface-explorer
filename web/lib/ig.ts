@@ -54,6 +54,7 @@ export function igMap(record: IgRecord) {
       label: record.accession,
       removed: [] as Span[],
       lost: [] as number[],
+      signalTruncated: false,
     },
     ...record.isoforms
       .filter(i => i.lost.length > 0)
@@ -61,6 +62,7 @@ export function igMap(record: IgRecord) {
         label: `${i.accession} (${i.name})`,
         removed: i.removed,
         lost: i.lost,
+        signalTruncated: i.signalTruncated,
       })),
   ]
   const labelsY = 14
@@ -90,7 +92,10 @@ export function igMap(record: IgRecord) {
       ${rows
         .map((row, index) => {
           const y = top + index * ROW
-          return `<g class="map-row"><text class="row-label" x="0" y="${y + 14}">${esc(row.label)}</text>
+          const note = row.signalTruncated
+            ? ' †<title>Its deletion also removes the signal peptide, so this product may never reach the cell surface</title>'
+            : ''
+          return `<g class="map-row"><text class="row-label" x="0" y="${y + 14}">${esc(row.label)}${note}</text>
             <line class="baseline" x1="${scale(0)}" x2="${scale(record.length)}" y1="${y + 10}" y2="${y + 10}" />
             ${record.domains
               .map((domain, d) =>
@@ -120,6 +125,7 @@ export function igMap(record: IgRecord) {
       <span><span class="swatch" style="background:var(--interface)"></span>Ig-like domain, numbered from the N-terminus</span>
       <span>dashed box: domain skipped by splicing</span>
       ${epitopes.length ? `<span><span class="swatch" style="background:var(--pathogenic)"></span>domains the antibody binds</span>` : ''}
+      ${rows.some(r => r.signalTruncated) ? `<span>† the deletion also removes the signal peptide, so the protein may never reach the cell surface</span>` : ''}
     </div>`
 }
 
@@ -133,8 +139,21 @@ export function igCase(gene: string) {
 }
 
 export function igTotals() {
-  const { genes, genesLosingDomain, isoformsLosingDomain } = igIsoforms()
-  return { genes, genesLosingDomain, isoformsLosingDomain }
+  const {
+    genes,
+    genesLosingDomain,
+    isoformsLosingDomain,
+    isoformsTruncatingSignal,
+    genesTruncatingSignal,
+  } = igIsoforms()
+  return {
+    genes,
+    genesLosingDomain,
+    isoformsLosingDomain,
+    isoformsTruncatingSignal,
+    genesTruncatingSignal,
+    isoformsKeepingSignal: isoformsLosingDomain - isoformsTruncatingSignal,
+  }
 }
 
 export function igFacts(gene: string) {
@@ -147,6 +166,7 @@ export function igFacts(gene: string) {
         accession: i.accession,
         name: i.name,
         lost: i.lost.map(d => d + 1),
+        signalTruncated: i.signalTruncated,
       })),
   }
 }

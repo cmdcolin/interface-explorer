@@ -63,6 +63,15 @@ no link to the genotype
 ([Stanchina et al., 2019](https://pmc.ncbi.nlm.nih.gov/articles/PMC6704571)), so
 the effect is not settled.
 
+CD33m carries a dagger on the map because exon 2 encodes the start of the
+protein as well as the V-type domain: the deletion begins inside the signal
+peptide, so it rewrites the sequence that takes CD33 to the cell surface.
+Whether CD33m is displayed there is a question the annotation cannot answer.
+Note which way this cuts. The trial result compares patients by how much
+full-length CD33 they make, so an isoform that is poorly presented fits it as
+well as one that competes for the surface — fewer epitopes to hit, rather than a
+decoy. These maps cannot separate those two readings.
+
 ## CD22
 
 CD22 has {cd22.domains} Ig-like domains. UniProt lists {cd22.isoforms.length}
@@ -92,14 +101,22 @@ and works as a protein. What it costs depends on the antibody:
   sensitive.
 
 Skipping exon 2 is a different problem. Exon 2 holds the start codon, so those
-isoforms make no detectable protein and the map can't show them. Forcing exon 2
-skipping cut CD22 to about a seventh and made cells resistant to inotuzumab. One
-inotuzumab non-responder's blasts expressed mainly such isoforms.
+isoforms make no detectable protein. Forcing exon 2 skipping cut CD22 to about a
+seventh and made cells resistant to inotuzumab. One inotuzumab non-responder's
+blasts expressed mainly such isoforms.
+
+The map marks that class with a dagger rather than leaving it out. P20273-5 is
+one: its deletion starts inside the signal peptide that takes the protein to the
+cell surface, and runs through domain 1 and into domain 2. It reads on the map
+as an isoform that lacks the inotuzumab epitope, but a product missing its
+signal peptide has no established route to the surface, where an antibody could
+reach it. Losing a brick from the middle of the stalk and failing to be exported
+are different events, and only the first is this post's subject.
 
 Epratuzumab binds across domains 2 and 3
 ([Ereño-Orbea et al., 2021](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8353475/)),
-but the paper did not test it. UniProt also lists an isoform that lacks domain
-1, P20273-5, which nobody has tested.
+and the domain 3–4 isoform deletes domain 3. The paper did not test it, so what
+that costs is unmeasured.
 
 ## Why it happens
 
@@ -118,6 +135,16 @@ domain annotation, {ig.genesLosingDomain} have an isoform that lacks one of
 those domains whole, {ig.isoformsLosingDomain} isoforms in all. A domain counts
 as lost when the isoform deletes at least 90% of its residues.
 
+Those {ig.isoformsLosingDomain} are two different phenomena, and the split
+matters more than the total. In {ig.isoformsTruncatingSignal} of them, across
+{ig.genesTruncatingSignal} proteins, the deletion also removes part of the
+signal peptide, so the isoform is an N-terminal truncation that may never be
+exported rather than a domain swapped out of a stalk. That leaves
+{ig.isoformsKeepingSignal} isoforms that keep their signal peptide and lose a
+domain from the body of the protein — the brick-removal case. These proteins are
+cell-surface and secreted receptors, so the distinction decides whether anything
+is there for an antibody to bind.
+
 <details>
 <summary>The {ig.genesLosingDomain} proteins</summary>
 
@@ -131,8 +158,20 @@ isoform's deletions are in `site/data/igIsoforms.json`, built by `pnpm ig`.
 ## What this does not show
 
 - **Expression.** UniProt says an isoform exists, not when or where it is made.
+  A dagger on the map says a product may not reach the surface; no row on the
+  map is evidence that one does.
 - **Multimers.** Each map is one chain. Whether an isoform still joins its
-  partners, or sits in the synapse a CAR makes, needs the assembly. Neither CD33
-  nor CD22 has predicted interfaces in this atlas, so that is the next step.
+  partners, or sits in the synapse a CAR makes, needs the assembly, and these
+  maps are not a step toward it. CD33 and CD22 sit outside the rest of this
+  atlas, which covers proteins with a UniProt disease annotation, and their
+  defining ligand is a sialylated glycan rather than a protein, which predicted
+  protein–protein interfaces cannot represent at all.
+- **Geometry, not only epitopes.** Deleting domains 3 and 4 shortens the stalk
+  by two Ig domains, so every domain above the gap sits closer to the membrane.
+  That could matter to a CAR independently of whether its epitope survives. The
+  one relevant measurement argues it did not dominate here: m971 binds domain 7,
+  which the isoform keeps, and killed these cells about as well as full-length
+  ones. Epitope loss, not changed spacing, is what the tested antibodies
+  tracked.
 - **Epitopes.** The red bars are whole domains from the cited papers. An
   antibody's contacts can cover part of a domain, or two.

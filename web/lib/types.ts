@@ -380,12 +380,19 @@ export interface IgIsoform {
   name: string
   removed: [number, number][]
   lost: number[]
+  signalTruncated: boolean
+}
+
+export interface SignalPeptide {
+  start: number
+  end: number
 }
 
 export interface IgRecord {
   gene: string
   accession: string
   length: number
+  signal?: SignalPeptide
   domains: IgDomain[]
   isoforms: IgIsoform[]
 }
@@ -394,5 +401,7 @@ export interface IgIsoforms {
   genes: number
   genesLosingDomain: number
   isoformsLosingDomain: number
+  isoformsTruncatingSignal: number
+  genesTruncatingSignal: number
   records: IgRecord[]
 }
