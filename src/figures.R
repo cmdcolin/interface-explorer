@@ -221,3 +221,76 @@ save(
   "families",
   6.5
 )
+
+runs <- function(flag) {
+  r <- rle(flag)
+  ends <- cumsum(r$lengths)
+  data.frame(start = (ends - r$lengths + 1)[r$values], end = ends[r$values])
+}
+listed <- function(x) if (length(x) < 2) x else paste(paste(head(x, -1), collapse = ", "), "and", tail(x, 1))
+
+example <- fromJSON(file.path(root, "site", "data", "conservationExample.json"))
+residues <- example$residues
+length_aa <- nrow(residues)
+partners <- listed(ifelse(example$partners == example$gene, "itself", example$partners))
+surface_residues <- residues[residues$region %in% c("interface", "surface") & !is.na(residues$phylop), ]
+groups <- aggregate(phylop ~ region, surface_residues, mean)
+groups$x <- ifelse(groups$region == "interface", min(surface_residues$residue[surface_residues$region == "interface"]), length_aa)
+groups$hjust <- ifelse(groups$region == "interface", 0, 1)
+groups$label <- ifelse(
+  groups$region == "interface",
+  sprintf("Interface with %s\naverage %.1f", partners, groups$phylop),
+  sprintf("Rest of the folded surface\naverage %.1f", groups$phylop)
+)
+group_colours <- c(interface = interface_colour, surface = "#a9a7a0")
+label_colours <- c(interface = "#1a5aa8", surface = "grey30")
+residue_axis <- scale_x_continuous(limits = c(0.5, length_aa + 0.5), expand = c(0.01, 0))
+top <- max(surface_residues$phylop) * 1.25
+
+protein_track <- ggplot() +
+  annotate("segment", x = 1, xend = length_aa, y = 0, yend = 0, colour = "grey70", linewidth = 0.8) +
+  geom_rect(data = runs(residues$region != "low confidence"), aes(xmin = start - 0.5, xmax = end + 0.5, ymin = -0.35, ymax = 0.35), fill = "#dcdad3") +
+  geom_rect(data = runs(residues$region == "interface"), aes(xmin = start - 0.5, xmax = end + 0.5, ymin = -0.35, ymax = 0.35), fill = interface_colour) +
+  residue_axis +
+  scale_y_continuous(limits = c(-0.5, 0.5), breaks = 0, labels = example$gene) +
+  theme_void() +
+  theme(axis.text.y = element_text(face = "bold", size = 13, hjust = 1, margin = margin(r = 6)))
+
+phylop_track <- ggplot(surface_residues, aes(residue, phylop, fill = region)) +
+  geom_col(width = 1) +
+  geom_segment(
+    data = groups,
+    aes(x = 1, xend = length_aa, y = phylop, yend = phylop, colour = region),
+    linetype = "dashed", linewidth = 0.6, inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = groups,
+    aes(x, top, label = label, colour = region, hjust = hjust),
+    vjust = 1, size = 3.9, lineheight = 0.95, inherit.aes = FALSE
+  ) +
+  scale_fill_manual(values = group_colours) +
+  scale_colour_manual(values = label_colours) +
+  residue_axis +
+  scale_y_continuous(limits = c(min(0, surface_residues$phylop), top), breaks = seq(0, floor(max(surface_residues$phylop) / 2.5) * 2.5, 2.5)) +
+  labs(x = "Residue", y = "phyloP") +
+  theme(
+    legend.position = "none",
+    panel.grid.major.x = element_blank(),
+    panel.grid.major.y = element_line(colour = "grey92"),
+    axis.title.y = element_text(colour = "grey30")
+  )
+
+ggsave(
+  file.path(root, "web", "content", "blog", "heroes", "evolution-and-people.jpg"),
+  (protein_track / phylop_track) +
+    plot_layout(heights = c(1, 6)) +
+    plot_annotation(
+      title = sprintf("%s: the interface is more conserved than the rest of the surface", example$gene),
+      subtitle = "phyloP across 100 vertebrates for each residue on the folded surface; dashed: average of each group",
+      theme = theme(
+        plot.title = element_text(face = "bold", size = 15),
+        plot.subtitle = element_text(colour = "grey35", size = 11.5)
+      )
+    ),
+  width = 8, height = 4.2, dpi = 265, device = ragg::agg_jpeg, quality = 92
+)

@@ -54,7 +54,7 @@ const VERY_CONFIDENT = 90
 export const IPSAE_BANDS = bands([CONFIDENT, 0.7, 0.8, 0.9, Infinity])
 const QUARTERS = [0, 1, 2, 3]
 
-type CodonScores = (number | null)[][]
+export type CodonScores = (number | null)[][]
 
 export interface PatchRank {
   anywhere?: number
@@ -228,7 +228,7 @@ export function matchedDifference(inside: Residue[], outside: Residue[]) {
   }
 }
 
-function codonMean(scores: CodonScores, residue: number) {
+export function codonMean(scores: CodonScores, residue: number) {
   const codon = (scores[residue - 1] ?? []).filter(s => s !== null)
   return codon.length === 3
     ? codon.reduce((sum, s) => sum + s, 0) / 3
