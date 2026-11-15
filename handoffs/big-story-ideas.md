@@ -67,6 +67,11 @@ description: "Ideas left after the 2026-11-13 'where variants sit' work, which w
   cache.
 - **A mechanism hint per variant from inheritance or truncation class.** See
   `handoffs/mechanism-split.md`: the split is flat on the folded surface.
+- **Everything the Ig collaboration asked for except one correctness fix.** See
+  `handoffs/ig-collaboration.md`: interfaces for CD22 and CD33 (outside the
+  disease-gene scope, and their ligand is a glycan), epitope-deletion
+  percentages, an Ig contact graph (the collaborator's own `msa2d` track), a
+  chimeric receptor as a chain in an assembly, and proteome-wide Ig expansion.
 
 ## Working rules
 
