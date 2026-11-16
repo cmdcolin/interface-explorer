@@ -420,6 +420,14 @@ a.button[href^="http"]::after {
   text-align: center;
 }
 
+.site-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
 .map .variant-mark {
   cursor: pointer;
 }
