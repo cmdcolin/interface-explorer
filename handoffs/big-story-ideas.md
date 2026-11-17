@@ -39,9 +39,6 @@ description: "Ideas left after the 2026-11-13 'where variants sit' work, which w
   isoform session's pages settle, consider one homepage sentence on isoforms,
   generated from `isoformTotals`, beside the "most pathogenic variants are not
   at an interface" paragraph. Ask a reviewer first; the page is already long.
-- **Full production build and link check.** The 2026-11-13 changes were checked
-  on the dev server only. Run `pnpm build && pnpm check-links` before the next
-  deploy.
 - **Per-gene ProtVar deep link.** The gene lede links ProtVar's home page.
   Change it to a deep link to the protein only if ProtVar has a stable URL for
   that (check it; don't guess the URL format).
@@ -65,8 +62,12 @@ description: "Ideas left after the 2026-11-13 'where variants sit' work, which w
   proposed by the isoform session. It would add a category to explain without
   clarifying the main point, and it needs PAE files the pipeline doesn't
   cache.
-- **A mechanism hint per variant from inheritance or truncation class.** See
-  `handoffs/mechanism-split.md`: the split is flat on the folded surface.
+- **A mechanism hint per variant from inheritance or truncation class.** The
+  split (`src/mechanism.ts`, `by_mechanism`, the result in `docs/findings.md`)
+  is flat on the folded surface. Reviving it needs a dosage arm large enough to
+  read (gnomAD v4.1 LOEUF tertiles crossed with inheritance; the ClinGen arm
+  was too small) and a per-variant binding-versus-folding ΔΔG that separates
+  pathogenic from benign.
 - **Everything the Ig collaboration asked for except one correctness fix.** See
   `handoffs/ig-collaboration.md`: interfaces for CD22 and CD33 (outside the
   disease-gene scope, and their ligand is a glycan), epitope-deletion
