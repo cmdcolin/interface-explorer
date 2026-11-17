@@ -119,14 +119,29 @@ a {
 .site-header nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 18px;
+  gap: 4px;
+}
+
+.site-header nav a,
+.nav-menu > summary {
+  padding: 4px 12px;
+  border-radius: 999px;
+  color: var(--text-2);
+  text-decoration: none;
+}
+
+.site-header nav a:hover,
+.nav-menu > summary:hover,
+.nav-menu[open] > summary {
+  background: var(--surface-2);
+  color: var(--text);
 }
 
 .site-header nav a[aria-current],
 .site-header nav .nav-menu > summary[aria-current] {
+  background: var(--surface-2);
   color: var(--text);
   font-weight: 650;
-  text-decoration: none;
 }
 
 .nav-menu {
@@ -135,8 +150,6 @@ a {
 
 .nav-menu > summary {
   cursor: pointer;
-  color: var(--link);
-  text-decoration: underline;
   list-style: none;
 }
 
@@ -153,15 +166,19 @@ a {
   position: absolute;
   z-index: 10;
   top: 100%;
-  left: -12px;
+  left: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  min-width: 130px;
+  gap: 2px;
+  min-width: 150px;
   margin-top: 6px;
-  padding: 10px 12px;
+  padding: 6px;
   background: var(--surface);
   border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.nav-menu-items a {
   border-radius: 8px;
 }
 
